@@ -358,21 +358,17 @@ async function sbLoad(userKey) {
   }
 }
 
-async function sbSave(userKey, email, stateJson, smokeStats, regStats) {
+async function sbSave(userKey, email, stateJson) {
   setSyncStatus('saving', 'Saving...');
   try {
     var r = await fetch(SUPABASE_URL + '/rest/v1/' + TABLE, {
       method:  'POST',
       headers: sbHeaders(),
       body: JSON.stringify({
-        user_key:           userKey,
-        name:               email,
-        smoke_pass:         smokeStats.pass,
-        smoke_issues:       smokeStats.issues,
-        regression_pass:    regStats.pass,
-        regression_issues:  regStats.issues,
-        state_json:         stateJson,
-        last_saved:         new Date().toISOString()
+        user_key:   userKey,
+        name:       email,
+        state_json: stateJson,
+        last_saved: new Date().toISOString()
       })
     });
     if (r.ok || r.status === 409) {
@@ -509,10 +505,7 @@ async function saveToSupabase() {
   var newKeys = new Set([...currentKeys].filter(function(k){ return !_prevIssueKeys.has(k); }));
   _prevIssueKeys = currentKeys;
 
-  var smokeStats = countStats(stateObj, 'smoke');
-  var regStats   = countStats(stateObj, 'regression');
-
-  await sbSave(_userKey, _email, stateJson, smokeStats, regStats);
+  await sbSave(_userKey, _email, stateJson);
 
   if (newKeys.size > 0) {
     await notifyNewIssues(newKeys, stateObj);
