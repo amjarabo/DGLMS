@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DGLMS — QA Results Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:#0b2545;--navy2:#163366;--gold:#f59e0b;--green:#10b981;--red:#ef4444;--orange:#f97316;
+  --bg:#f0f2f5;--surface:#fff;--surface2:#f8f9fb;--border:#e2e5ea;
+  --text:#0f172a;--text2:#475569;--text3:#94a3b8;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+  --radius:10px;--shadow:0 2px 12px rgba(11,37,69,.08);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3347;
+  --text:#e2e8f0;--text2:#94a3b8;--text3:#4b5675;--shadow:0 2px 16px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh}
+
+/* HEADER */
+.header{background:var(--navy);border-bottom:3px solid var(--gold);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.header-left{display:flex;flex-direction:column;gap:3px}
+.header-logo{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--gold);letter-spacing:2px;text-transform:uppercase}
+.header-title{font-size:18px;font-weight:700;color:#fff}
+.header-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+/* BUTTONS */
+.btn{padding:7px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:var(--sans);transition:all .15s;display:flex;align-items:center;gap:6px}
+.btn-gold{background:var(--gold);color:#fff}
+.btn-gold:hover{filter:brightness(1.08)}
+.btn-ghost{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2)}
+.btn-ghost:hover{background:rgba(255,255,255,.18)}
+.btn-navy{background:var(--navy);color:#fff;border:1px solid var(--border)}
+.btn-navy:hover{background:var(--navy2)}
+.btn-red{background:#fef2f2;color:var(--red);border:1px solid #fecaca}
+.btn-red:hover{background:#fee2e2}
+.btn-green{background:#dcfce7;color:#166534;border:1px solid #bbf7d0}
+.btn-green:hover{background:#bbf7d0}
+.btn-sm{padding:4px 10px;font-size:11px}
+
+/* THEME */
+.theme-toggle{width:36px;height:20px;border-radius:10px;border:none;cursor:pointer;position:relative;flex-shrink:0;background:rgba(255,255,255,.2);padding:0;transition:background .25s}
+[data-theme="dark"] .theme-toggle{background:#334155}
+.theme-thumb{position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .25s cubic-bezier(.4,0,.2,1);display:flex;align-items:center;justify-content:center;font-size:9px;line-height:1}
+[data-theme="dark"] .theme-thumb{transform:translateX(16px)}
+
+/* SYNC BAR */
+.sync-bar{background:var(--surface2);border-bottom:1px solid var(--border);padding:6px 32px;display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text3);font-family:var(--mono)}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0;transition:background .3s}
+.sync-dot.synced{background:var(--green)}
+.sync-dot.loading{background:var(--gold);animation:pulse .8s infinite}
+.sync-dot.error{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* CONTENT */
+.page{padding:24px 32px;max-width:1400px;margin:0 auto}
+
+/* STAT CARDS */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;box-shadow:var(--shadow)}
+.stat-label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:6px;font-family:var(--mono)}
+.stat-value{font-size:28px;font-weight:700;color:var(--text);font-family:var(--mono)}
+.stat-sub{font-size:11px;color:var(--text3);margin-top:3px}
+.stat-card.green{border-left:4px solid var(--green)}
+.stat-card.red{border-left:4px solid var(--red)}
+.stat-card.gold{border-left:4px solid var(--gold)}
+.stat-card.navy{border-left:4px solid var(--navy)}
+
+/* SECTION HEADER */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap}
+.section-title{font-size:15px;font-weight:700;color:var(--text)}
+.section-sub{font-size:12px;color:var(--text3);font-family:var(--mono)}
+
+/* ISSUES TABLE */
+.issues-section{margin-bottom:28px}
+.issue-card{background:var(--surface);border:1px solid #fecaca;border-left:4px solid var(--red);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow)}
+[data-theme="dark"] .issue-card{border-color:#7f1d1d;background:#1e0f0f}
+.issue-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.issue-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.issue-tester{font-size:12px;font-weight:700;color:var(--text)}
+.issue-persona{font-size:11px;color:var(--text2);background:var(--surface2);border:1px solid var(--border);padding:2px 8px;border-radius:12px}
+.issue-tc{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--navy);background:#e8edf5;padding:2px 7px;border-radius:4px}
+[data-theme="dark"] .issue-tc{color:var(--gold);background:#1a2035}
+.issue-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px}
+.issue-notes{font-size:12px;color:var(--text2);background:var(--surface2);border-radius:6px;padding:7px 10px;border:1px solid var(--border);margin-top:6px;line-height:1.5}
+.issue-actions{display:flex;gap:6px;flex-shrink:0}
+.issue-resolved{opacity:.5;border-left-color:#94a3b8!important}
+
+/* NOTIFY MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(11,37,69,.8);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(4px)}
+.modal-overlay.hidden{display:none}
+.modal{background:var(--surface);border-radius:14px;padding:28px;width:560px;max-width:92vw;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.modal-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px}
+.modal-sub{font-size:13px;color:var(--text2);margin-bottom:18px;line-height:1.5}
+.modal-label{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px;display:block}
+.modal-input{width:100%;border:2px solid var(--border);border-radius:8px;padding:9px 13px;font-family:var(--sans);font-size:13px;color:var(--text);outline:none;transition:border .2s;margin-bottom:12px;background:var(--surface)}
+.modal-input:focus{border-color:var(--navy)}
+.modal-textarea{width:100%;border:2px solid var(--border);border-radius:8px;padding:9px 13px;font-family:var(--sans);font-size:13px;color:var(--text);outline:none;resize:vertical;min-height:100px;margin-bottom:12px;background:var(--surface);transition:border .2s;line-height:1.5}
+.modal-textarea:focus{border-color:var(--navy)}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:4px}
+
+/* TESTER PROGRESS TABLE */
+.tester-table{width:100%;border-collapse:collapse;font-size:12px}
+.tester-table th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-family:var(--mono);font-weight:600}
+.tester-table td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
+.tester-table tr:hover td{background:var(--surface2)}
+.tester-table tr:last-child td{border-bottom:none}
+.tester-table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);margin-bottom:28px;overflow-x:auto}
+
+/* MINI PROGRESS */
+.mini-bar-wrap{width:80px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:6px}
+.mini-bar-fill{height:100%;background:var(--green);border-radius:3px;transition:width .3s}
+.pct-label{font-family:var(--mono);font-size:10px;color:var(--text3)}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;font-family:var(--mono)}
+.badge-pass{background:#dcfce7;color:#166534}
+.badge-fail{background:#fef2f2;color:#991b1b}
+.badge-pending{background:#f1f5f9;color:#64748b}
+[data-theme="dark"] .badge-pass{background:#0d2b1f;color:#34d399}
+[data-theme="dark"] .badge-fail{background:#2b1111;color:#f87171}
+[data-theme="dark"] .badge-pending{background:#22263a;color:#94a3b8}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:40px;color:var(--text3)}
+.empty-icon{font-size:32px;margin-bottom:10px}
+.empty-msg{font-size:14px;font-weight:600;color:var(--text2);margin-bottom:4px}
+.empty-sub{font-size:12px}
+
+/* EXPORT DROPDOWN */
+.export-wrap{position:relative;display:inline-block}
+.export-menu{position:absolute;right:0;top:calc(100% + 4px);background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);min-width:180px;z-index:100;display:none}
+.export-menu.open{display:block}
+.export-item{padding:9px 14px;font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;transition:background .1s;display:flex;align-items:center;gap:8px}
+.export-item:hover{background:var(--surface2);color:var(--text)}
+.export-item:first-child{border-radius:8px 8px 0 0}
+.export-item:last-child{border-radius:0 0 8px 8px}
+
+.spinner{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:4px}
+@keyframes spin{to{transform:rotate(360deg)}}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-thumb{background:rgba(11,37,69,.16);border-radius:3px}
+[data-theme="dark"] ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1)}
+</style>
+</head>
+<body>
+
+<!-- NOTIFY MODAL -->
+<div class="modal-overlay hidden" id="notifyModal">
+  <div class="modal">
+    <div class="modal-title">🐛 Notify Dev Team</div>
+    <div class="modal-sub">Fill in the details below. This will generate a formatted bug report you can paste into Jira, email, or Slack.</div>
+    <label class="modal-label">To (email or Slack handle)</label>
+    <input class="modal-input" id="notifyTo" placeholder="e.g. dev-team@dot.gov or #dglms-bugs">
+    <label class="modal-label">Bug Report</label>
+    <textarea class="modal-textarea" id="notifyBody" rows="8"></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-navy" onclick="closeNotify()">Cancel</button>
+      <button class="btn btn-gold" onclick="copyReport()">📋 Copy Report</button>
+      <button class="btn btn-gold" onclick="openEmail()">📧 Open in Email</button>
+    </div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <div class="header-logo">DGLMS · GrantLens</div>
+    <div class="header-title">QA Results Dashboard</div>
+  </div>
+  <div class="header-right">
+    <button class="theme-toggle" onclick="toggleTheme()"><div class="theme-thumb"><span id="themeIcon">☀️</span></div></button>
+    <button class="btn btn-ghost" onclick="loadData()">🔄 Refresh</button>
+    <div class="export-wrap">
+      <button class="btn btn-gold" onclick="toggleExportMenu()">⬇️ Export ▾</button>
+      <div class="export-menu" id="exportMenu">
+        <div class="export-item" onclick="exportCSV()">📊 Export CSV (all testers)</div>
+        <div class="export-item" onclick="exportIssuesCSV()">🐛 Export Issues CSV</div>
+        <div class="export-item" onclick="exportFullReport()">📄 Export Full Report (.txt)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SYNC BAR -->
+<div class="sync-bar">
+  <div class="sync-dot" id="syncDot"></div>
+  <span id="syncMsg">Loading…</span>
+  <span style="flex:1"></span>
+  <span id="lastRefresh" style="font-size:10px;color:var(--text3)"></span>
+</div>
+
+<!-- PAGE -->
+<div class="page">
+
+  <!-- STATS -->
+  <div class="stats-row" id="statsRow">
+    <div class="stat-card navy"><div class="stat-label">Testers</div><div class="stat-value" id="statTesters">—</div><div class="stat-sub">active</div></div>
+    <div class="stat-card green"><div class="stat-label">Pass</div><div class="stat-value" id="statPass">—</div><div class="stat-sub">test cases</div></div>
+    <div class="stat-card red"><div class="stat-label">Issues</div><div class="stat-value" id="statIssues">—</div><div class="stat-sub">flagged</div></div>
+    <div class="stat-card gold"><div class="stat-label">Pending</div><div class="stat-value" id="statPending">—</div><div class="stat-sub">not started</div></div>
+    <div class="stat-card navy"><div class="stat-label">Overall</div><div class="stat-value" id="statPct">—</div><div class="stat-sub">steps checked</div></div>
+  </div>
+
+  <!-- ISSUES -->
+  <div class="issues-section">
+    <div class="section-header">
+      <div>
+        <div class="section-title">🐛 Flagged Issues</div>
+        <div class="section-sub" id="issueCount">—</div>
+      </div>
+      <button class="btn btn-red" onclick="notifyAll()">📧 Notify Dev Team (all issues)</button>
+    </div>
+    <div id="issuesList"></div>
+  </div>
+
+  <!-- TESTER PROGRESS -->
+  <div class="section-header">
+    <div>
+      <div class="section-title">👥 Tester Progress</div>
+      <div class="section-sub" id="testerCount">—</div>
+    </div>
+  </div>
+  <div class="tester-table-wrap">
+    <table class="tester-table">
+      <thead>
+        <tr>
+          <th>Tester</th>
+          <th>Last Saved</th>
+          <th>Overall Progress</th>
+          <th>Pass</th>
+          <th>Issues</th>
+          <th>Pending</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="testerTableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- PER-PERSONA BREAKDOWN -->
+  <div class="section-header" style="margin-top:8px">
+    <div>
+      <div class="section-title">📋 Per-Persona Coverage</div>
+      <div class="section-sub">Across all testers combined</div>
+    </div>
+  </div>
+  <div class="tester-table-wrap">
+    <table class="tester-table">
+      <thead>
+        <tr>
+          <th>Persona</th>
+          <th>Total TCs</th>
+          <th>Progress</th>
+          <th>Pass</th>
+          <th>Issues</th>
+          <th>Pending</th>
+        </tr>
+      </thead>
+      <tbody id="personaTableBody"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────────
+// Same Apps Script URL as the checklist
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyoWOsncYOZOAPGyN0m4WIQTksL3jywG0DoehGoosaGzV5vepc1sWKWqU2oW6m6ckD1kw/exec';
+
+const PERSONA_ORDER = ["Admin", "DOT Internal Staff", "Program Staff", "Program Office", "NOFO Development Team", "Grant Office", "OA Legal", "OA CFO", "OA Leadership", "OST-PC", "Deputy Assistant Secretary"];
+
+// Minimal TC metadata for display (id + title per persona)
+const TC_META = {
+  'OST Admin':['UAT - GRAN-105-1','UAT- GRAN-110-1','UAT - GRAN - 108','UAT - GRAN - 114','UAT- GRAN-106-1','UAT - GRAN-41','UAT - GRAN - 45','UAT -GRAN - 104'],
+  'Grant Admin':['UAT-GRAN-44-001.1','UAT-GRAN-44-001.2','UAT-GRAN-44-001.3','UAT-GRAN-44-001.4','UAT-GRAN-44-001.5','UAT-GRAN-44-001.6','UAT-GRAN-44-001.7','UAT-GRAN-44-001.8','UAT-GRAN-44-001.9','UAT-GRAN-44-001.10','UAT-GRAN-44-001.11','UAT-GRAN-44-001.12','UAT-GRAN-44-001.13','UAT-GRAN-44-001.14','UAT-GRAN-44-001.15','UAT-GRAN-44-001.16','UAT-GRAN-44-001.17','UAT-GRAN-44-001.18','UAT-GRAN-44-001.19','UAT-GRAN-44-001.20'],
+};
+
+const THEME_KEY = 'dglms_dash_theme';
+let _allData = [];
+let _resolvedIssues = new Set(JSON.parse(localStorage.getItem('dglms_resolved') || '[]'));
+
+// ── THEME ─────────────────────────────────────────────────────────────────
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  const ic = document.getElementById('themeIcon');
+  if (ic) ic.textContent = t === 'dark' ? '🌙' : '☀️';
+  localStorage.setItem(THEME_KEY, t);
+}
+function toggleTheme() {
+  applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+
+// ── SUPABASE ──────────────────────────────────────────────────────────────
+async function loadData() {
+  setSyncStatus('loading', 'Loading data…');
+  try {
+    const r = await fetch(`${APPS_SCRIPT_URL}?action=list`);
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error);
+    _allData = d.testers || [];
+    renderDashboard(_allData);
+    setSyncStatus('synced', 'Live data');
+    document.getElementById('lastRefresh').textContent = 'Last refresh: ' + new Date().toLocaleTimeString();
+  } catch(e) {
+    setSyncStatus('error', 'Could not load — check connection');
+  }
+}
+
+function setSyncStatus(state, msg) {
+  const dot = document.getElementById('syncDot');
+  const txt = document.getElementById('syncMsg');
+  if (dot) dot.className = 'sync-dot ' + state;
+  if (txt) txt.textContent = msg;
+}
+
+// ── PARSE STATE ───────────────────────────────────────────────────────────
+function parseState(row) {
+  try {
+    const raw = typeof row.state_json === 'string' ? JSON.parse(row.state_json) : row.state_json;
+    return raw || { smoke: {}, regression: {} };
+  } catch { return { smoke: {}, regression: {} }; }
+}
+
+function getModeStats(row, mode) {
+  return {
+    pass:    row[mode + '_pass']    || 0,
+    issues:  row[mode + '_issues']  || 0,
+    pending: row[mode + '_pending'] || 0,
+  };
+}
+
+function getTCStatus(state, persona, idx) {
+  const s = (state[persona] || {})[idx];
+  if (!s) return 'pending';
+  if (s.issue) return 'issue';
+  const steps = Array.isArray(s.steps) ? s.steps.length : (s.steps?.size || 0);
+  const exp   = Array.isArray(s.expected) ? s.expected.length : (s.expected?.size || 0);
+  // Need TC total — we'll compute from keys
+  return (steps + exp) > 0 ? 'pass' : 'pending';
+}
+
+function getRowStats(state) {
+  let pass=0, issues=0, pending=0, totalSteps=0, doneSteps=0;
+  PERSONA_ORDER.forEach(persona => {
+    const tcs = state[persona] || {};
+    // count by index keys present
+    Object.values(tcs).forEach(s => {
+      const steps    = Array.isArray(s.steps)    ? s.steps.length    : 0;
+      const expected = Array.isArray(s.expected) ? s.expected.length : 0;
+      const total    = steps + expected;
+      doneSteps += total;
+      if (s.issue) issues++;
+      else if (total > 0) pass++;
+    });
+  });
+  return { pass, issues, pending, doneSteps };
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────
+function renderDashboard(data) {
+  if (!data.length) {
+    document.getElementById('issuesList').innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><div class="empty-msg">No tester data yet</div><div class="empty-sub">Testers need to open the checklist and save progress first</div></div>';
+    return;
+  }
+
+  // Global stats
+  let totalPass=0, totalIssues=0, totalPending=0, totalDone=0, totalSteps=0;
+  const allIssues = [];
+
+  data.forEach(row => {
+    const state = parseState(row);
+    const stats = getRowStats(state);
+    totalPass    += stats.pass;
+    totalIssues  += stats.issues;
+    totalDone    += stats.doneSteps;
+
+    // Collect issues with details
+    PERSONA_ORDER.forEach(persona => {
+      const tcs = state[persona] || {};
+      Object.entries(tcs).forEach(([idx, s]) => {
+        if (s.issue) {
+          allIssues.push({
+            tester:  row.name,
+            persona, idx,
+            note:    s.note || '',
+            key:     `${row.name}__${persona}__${idx}`,
+          });
+        }
+      });
+    });
+  });
+
+  document.getElementById('statTesters').textContent  = data.length;
+  document.getElementById('statPass').textContent     = totalPass;
+  document.getElementById('statIssues').textContent   = totalIssues;
+  document.getElementById('statPending').textContent  = '—';
+  document.getElementById('statPct').textContent      = totalDone > 0 ? Math.round(totalDone / (totalDone + 1) * 100) + '%' : '0%';
+
+  // ISSUES
+  document.getElementById('issueCount').textContent =
+    allIssues.length ? `${allIssues.length} issue${allIssues.length!==1?'s':''} flagged across ${data.length} tester${data.length!==1?'s':''}` : 'No issues flagged';
+
+  if (!allIssues.length) {
+    document.getElementById('issuesList').innerHTML =
+      '<div class="empty"><div class="empty-icon">✅</div><div class="empty-msg">No issues flagged</div><div class="empty-sub">All clear so far</div></div>';
+  } else {
+    document.getElementById('issuesList').innerHTML = allIssues.map(issue => {
+      const resolved = _resolvedIssues.has(issue.key);
+      return `<div class="issue-card ${resolved?'issue-resolved':''}" id="issue-${escId(issue.key)}">
+        <div class="issue-header">
+          <div class="issue-meta">
+            <span class="issue-tester">👤 ${esc(issue.tester)}</span>
+            <span class="issue-persona">${esc(issue.persona)}</span>
+            <span class="issue-tc">TC #${issue.idx}</span>
+            ${resolved?'<span class="badge badge-pass">✓ Resolved</span>':'<span class="badge badge-fail">🔴 Open</span>'}
+          </div>
+          <div class="issue-actions">
+            <button class="btn btn-sm btn-gold" onclick="notifyOne(${JSON.stringify(issue).replace(/"/g,'&quot;')})">📧 Notify Dev</button>
+            <button class="btn btn-sm ${resolved?'btn-red':'btn-green'}" onclick="toggleResolved('${escAttr(issue.key)}')">
+              ${resolved?'↩ Reopen':'✓ Resolve'}
+            </button>
+          </div>
+        </div>
+        ${issue.note ? `<div class="issue-notes">📝 ${esc(issue.note)}</div>` : '<div style="font-size:12px;color:var(--text3);margin-top:4px">No notes added by tester</div>'}
+      </div>`;
+    }).join('');
+  }
+
+  // TESTER TABLE
+  const tbody = document.getElementById('testerTableBody');
+  tbody.innerHTML = data.map(row => {
+    const state = parseState(row);
+    const stats = getRowStats(state);
+    const pct = stats.doneSteps > 0 ? Math.min(99, Math.round(stats.doneSteps / (stats.doneSteps + 10) * 100)) : 0;
+    const ts = row.last_saved ? new Date(row.last_saved).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+    return `<tr>
+      <td><strong>${esc(row.name)}</strong><div style="font-size:10px;color:var(--text3);font-family:var(--mono)">${esc(row.user_key)}</div></td>
+      <td style="font-size:11px;color:var(--text2)">${ts}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="mini-bar-wrap"><div class="mini-bar-fill" style="width:${pct}%"></div></div>
+          <span class="pct-label">${stats.doneSteps} steps</span>
+        </div>
+      </td>
+      <td><span class="badge badge-pass">✅ ${stats.pass}</span></td>
+      <td><span class="badge ${stats.issues>0?'badge-fail':'badge-pending'}">${stats.issues>0?'🔴':'—'} ${stats.issues}</span></td>
+      <td><span class="badge badge-pending">— ?</span></td>
+      <td>
+        <button class="btn btn-sm btn-navy" onclick="exportTesterReport('${escAttr(row.name)}')">📄 Export</button>
+        <button class="btn btn-sm btn-gold" style="margin-left:4px" onclick="notifyTester('${escAttr(row.name)}')">📧 Notify</button>
+      </td>
+    </tr>`;
+  }).join('');
+  document.getElementById('testerCount').textContent = `${data.length} tester${data.length!==1?'s':''} have submitted progress`;
+
+  // PERSONA TABLE
+  const personaStats = {};
+  PERSONA_ORDER.forEach(p => { personaStats[p] = {pass:0,issues:0,steps:0,testers:0}; });
+  data.forEach(row => {
+    const state = parseState(row);
+    PERSONA_ORDER.forEach(persona => {
+      const tcs = state[persona] || {};
+      if (Object.keys(tcs).length) personaStats[persona].testers++;
+      Object.values(tcs).forEach(s => {
+        const steps = (Array.isArray(s.steps)?s.steps.length:0) + (Array.isArray(s.expected)?s.expected.length:0);
+        personaStats[persona].steps += steps;
+        if (s.issue) personaStats[persona].issues++;
+        else if (steps > 0) personaStats[persona].pass++;
+      });
+    });
+  });
+
+  document.getElementById('personaTableBody').innerHTML = PERSONA_ORDER.map(p => {
+    const st = personaStats[p];
+    const total = st.pass + st.issues;
+    const pct = total > 0 ? Math.round(st.pass/total*100) : 0;
+    return `<tr>
+      <td><strong>${esc(p)}</strong></td>
+      <td style="font-family:var(--mono);font-size:11px">${total}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="mini-bar-wrap" style="width:100px"><div class="mini-bar-fill" style="width:${pct}%"></div></div>
+          <span class="pct-label">${pct}%</span>
+        </div>
+      </td>
+      <td><span class="badge badge-pass">✅ ${st.pass}</span></td>
+      <td><span class="badge ${st.issues>0?'badge-fail':'badge-pending'}">${st.issues>0?'🔴':''} ${st.issues}</span></td>
+      <td><span class="badge badge-pending">—</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── RESOLVE ISSUES ────────────────────────────────────────────────────────
+function toggleResolved(key) {
+  if (_resolvedIssues.has(key)) _resolvedIssues.delete(key);
+  else _resolvedIssues.add(key);
+  localStorage.setItem('dglms_resolved', JSON.stringify([..._resolvedIssues]));
+  renderDashboard(_allData);
+}
+
+// ── NOTIFY DEV ────────────────────────────────────────────────────────────
+function buildBugReport(issues) {
+  const date = new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  let body = `DGLMS GrantLens — Production QA Bug Report
+`;
+  body += `Generated: ${date}
+`;
+  body += `Total Issues: ${issues.length}
+`;
+  body += `${'='.repeat(60)}
+
+`;
+  issues.forEach((issue, i) => {
+    body += `Issue ${i+1}
+`;
+    body += `Tester:  ${issue.tester}
+`;
+    body += `Persona: ${issue.persona}
+`;
+    body += `TC #:    ${issue.idx}
+`;
+    body += `Notes:   ${issue.note || '(no notes)'}
+`;
+    body += `
+`;
+  });
+  body += `${'='.repeat(60)}
+`;
+  body += `Please review and create Jira tickets for each issue above.
+`;
+  return body;
+}
+
+function notifyAll() {
+  const allIssues = [];
+  _allData.forEach(row => {
+    const state = parseState(row);
+    PERSONA_ORDER.forEach(persona => {
+      const tcs = state[persona] || {};
+      Object.entries(tcs).forEach(([idx, s]) => {
+        if (s.issue && !_resolvedIssues.has(`${row.name}__${persona}__${idx}`)) {
+          allIssues.push({ tester: row.name, persona, idx, note: s.note || '' });
+        }
+      });
+    });
+  });
+  if (!allIssues.length) { alert('No open issues to report.'); return; }
+  openNotifyModal(allIssues);
+}
+
+function notifyOne(issue) {
+  openNotifyModal([issue]);
+}
+
+function notifyTester(name) {
+  const row = _allData.find(r => r.name === name);
+  if (!row) return;
+  const state = parseState(row);
+  const issues = [];
+  PERSONA_ORDER.forEach(persona => {
+    const tcs = state[persona] || {};
+    Object.entries(tcs).forEach(([idx, s]) => {
+      if (s.issue) issues.push({ tester: row.name, persona, idx, note: s.note || '' });
+    });
+  });
+  if (!issues.length) { alert(`No issues flagged by ${name}.`); return; }
+  openNotifyModal(issues);
+}
+
+function openNotifyModal(issues) {
+  document.getElementById('notifyTo').value = '';
+  document.getElementById('notifyBody').value = buildBugReport(issues);
+  document.getElementById('notifyModal').classList.remove('hidden');
+}
+
+function closeNotify() {
+  document.getElementById('notifyModal').classList.add('hidden');
+}
+
+function copyReport() {
+  const body = document.getElementById('notifyBody').value;
+  navigator.clipboard.writeText(body).then(() => {
+    const btn = event.target;
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => btn.textContent = '📋 Copy Report', 2000);
+  });
+}
+
+function openEmail() {
+  const to   = encodeURIComponent(document.getElementById('notifyTo').value);
+  const subj = encodeURIComponent('DGLMS GrantLens — QA Bug Report');
+  const body = encodeURIComponent(document.getElementById('notifyBody').value);
+  window.open(`mailto:${to}?subject=${subj}&body=${body}`);
+}
+
+// ── EXPORT ────────────────────────────────────────────────────────────────
+function toggleExportMenu() {
+  document.getElementById('exportMenu').classList.toggle('open');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.export-wrap')) document.getElementById('exportMenu').classList.remove('open');
+});
+
+function exportCSV() {
+  let csv = 'Tester,User Key,Last Saved,Steps Done,Pass,Issues
+';
+  _allData.forEach(row => {
+    const state = parseState(row);
+    const stats = getRowStats(state);
+    const ts = row.last_saved ? new Date(row.last_saved).toLocaleString() : '';
+    csv += `"${row.name}","${row.user_key}","${ts}",${stats.doneSteps},${stats.pass},${stats.issues}
+`;
+  });
+  downloadFile('DGLMS_All_Testers_' + today() + '.csv', csv, 'text/csv');
+  document.getElementById('exportMenu').classList.remove('open');
+}
+
+function exportIssuesCSV() {
+  let csv = 'Tester,Persona,TC Index,Notes,Resolved
+';
+  _allData.forEach(row => {
+    const state = parseState(row);
+    PERSONA_ORDER.forEach(persona => {
+      const tcs = state[persona] || {};
+      Object.entries(tcs).forEach(([idx, s]) => {
+        if (s.issue) {
+          const key = `${row.name}__${persona}__${idx}`;
+          csv += `"${row.name}","${persona}",${idx},"${(s.note||'').replace(/"/g,'""')}","${_resolvedIssues.has(key)?'Yes':'No'}"
+`;
+        }
+      });
+    });
+  });
+  downloadFile('DGLMS_Issues_' + today() + '.csv', csv, 'text/csv');
+  document.getElementById('exportMenu').classList.remove('open');
+}
+
+function exportFullReport() {
+  let out = `DGLMS GrantLens — Full QA Results Report
+Generated: ${new Date().toLocaleString()}
+
+`;
+  _allData.forEach(row => {
+    const state = parseState(row);
+    const stats = getRowStats(state);
+    out += `${'='.repeat(60)}
+TESTER: ${row.name}
+Last saved: ${row.last_saved||'—'}
+Steps done: ${stats.doneSteps} | Pass: ${stats.pass} | Issues: ${stats.issues}
+
+`;
+    PERSONA_ORDER.forEach(persona => {
+      const tcs = state[persona] || {};
+      if (!Object.keys(tcs).length) return;
+      out += `  Persona: ${persona}
+`;
+      Object.entries(tcs).forEach(([idx, s]) => {
+        const steps = (Array.isArray(s.steps)?s.steps.length:0) + (Array.isArray(s.expected)?s.expected.length:0);
+        const status = s.issue ? 'ISSUE' : steps > 0 ? 'PASS' : 'PENDING';
+        out += `    [${status}] TC #${idx}`;
+        if (s.note) out += ` — Notes: ${s.note}`;
+        out += '
+';
+      });
+      out += '
+';
+    });
+  });
+  downloadFile('DGLMS_Full_Report_' + today() + '.txt', out, 'text/plain');
+  document.getElementById('exportMenu').classList.remove('open');
+}
+
+function exportTesterReport(name) {
+  const row = _allData.find(r => r.name === name);
+  if (!row) return;
+  const state = parseState(row);
+  let out = `DGLMS GrantLens — Tester Report
+Tester: ${name}
+Generated: ${new Date().toLocaleString()}
+
+`;
+  PERSONA_ORDER.forEach(persona => {
+    const tcs = state[persona] || {};
+    if (!Object.keys(tcs).length) return;
+    out += `${'='.repeat(56)}
+PERSONA: ${persona}
+${'='.repeat(56)}
+`;
+    Object.entries(tcs).forEach(([idx, s]) => {
+      const steps = (Array.isArray(s.steps)?s.steps.length:0) + (Array.isArray(s.expected)?s.expected.length:0);
+      const status = s.issue ? 'ISSUE' : steps > 0 ? 'PASS' : 'PENDING';
+      out += `[${status}] TC #${idx}`;
+      if (s.note) out += `
+  Notes: ${s.note}`;
+      out += '
+';
+    });
+    out += '
+';
+  });
+  downloadFile(`DGLMS_${name.replace(/\s+/g,'_')}_${today()}.txt`, out, 'text/plain');
+}
+
+function downloadFile(filename, content, type) {
+  const a = document.createElement('a');
+  a.href = 'data:' + type + ';charset=utf-8,' + encodeURIComponent(content);
+  a.download = filename;
+  a.click();
+}
+
+function today() { return new Date().toISOString().slice(0,10); }
+
+// ── UTILS ─────────────────────────────────────────────────────────────────
+function esc(s){ if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escId(s){ return s.replace(/[^a-z0-9]/gi,'_'); }
+function escAttr(s){ return String(s).replace(/'/g,"\'"); }
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+applyTheme(localStorage.getItem(THEME_KEY) || 'light');
+loadData();
+// Auto-refresh every 60 seconds
+setInterval(loadData, 60000);
+</script>
+</body>
+</html>
