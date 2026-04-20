@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DGLMS GrantLens &mdash; QA Results Dashboard</title>
+<title>DGLMS GrantLens &mdash; Smoke Test Results</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
@@ -133,11 +133,11 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 <div class="header">
   <div class="header-left">
     <div class="header-logo">DGLMS &middot; GrantLens</div>
-    <div class="header-title">&#127968; QA Results Dashboard</div>
+    <div class="header-title">&#128293; Smoke Test Results</div>
   </div>
   <div class="header-right">
-    <a href="https://amjarabo.github.io/DGLMS/dglms-dashboard.html" class="nav-link active">&#127968; Home</a>
-<a href="https://amjarabo.github.io/DGLMS/dglms-smoke.html" class="nav-link">&#128293; Smoke Results</a>
+    <a href="https://amjarabo.github.io/DGLMS/dglms-dashboard.html" class="nav-link">&#127968; Home</a>
+<a href="https://amjarabo.github.io/DGLMS/dglms-smoke.html" class="nav-link smoke-active">&#128293; Smoke Results</a>
 <a href="https://amjarabo.github.io/DGLMS/dglms-regression.html" class="nav-link">&#128300; Regression Results</a>
 <a href="https://amjarabo.github.io/DGLMS/dglms-checklist.html" class="nav-link">&#9989; Checklist</a>
 
@@ -314,110 +314,62 @@ async function loadData(){
 }
 
 function renderPage(data){
-  var allIssues=getAllIssues(data);
-  var openIssues=allIssues.filter(function(i){ return !_resolved.has(i.key); });
-  var sPass=0,sIss=0,rPass=0,rIss=0;
-  data.forEach(function(row){
-    var st=parseState(row),ss=getStats(st,'smoke'),rs=getStats(st,'regression');
-    sPass+=ss.pass; sIss+=ss.issues; rPass+=rs.pass; rIss+=rs.issues;
-  });
+  var sPass=0,sIss=0,sPend=0;
+  data.forEach(function(row){ var st=getStats(parseState(row),'smoke'); sPass+=st.pass; sIss+=st.issues; sPend+=st.pending; });
 
   var html='';
-  // Stat row
   html+='<div class="stats-row">';
-  html+='<div class="stat navy"><div class="stat-label">Testers</div><div class="stat-value">'+data.length+'</div><div class="stat-sub">active</div></div>';
-  html+='<div class="stat smoke"><div class="stat-label">&#128293; Smoke Pass</div><div class="stat-value">'+sPass+'</div></div>';
-  html+='<div class="stat red"><div class="stat-label">&#128293; Smoke Issues</div><div class="stat-value">'+sIss+'</div></div>';
-  html+='<div class="stat green"><div class="stat-label">&#128300; Reg Pass</div><div class="stat-value">'+rPass+'</div></div>';
-  html+='<div class="stat red"><div class="stat-label">&#128300; Reg Issues</div><div class="stat-value">'+rIss+'</div></div>';
+  html+='<div class="stat navy"><div class="stat-label">Testers</div><div class="stat-value">'+data.length+'</div></div>';
+  html+='<div class="stat green"><div class="stat-label">Pass</div><div class="stat-value">'+sPass+'</div><div class="stat-sub">test cases</div></div>';
+  html+='<div class="stat red"><div class="stat-label">Issues</div><div class="stat-value">'+sIss+'</div><div class="stat-sub">flagged</div></div>';
+  html+='<div class="stat gold"><div class="stat-label">Pending</div><div class="stat-value">'+sPend+'</div><div class="stat-sub">not started</div></div>';
   html+='</div>';
 
-  // Both mode summaries side by side
-  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px">';
-  ['smoke','regression'].forEach(function(mode){
-    var isSm=mode==='smoke';
-    var mPass=isSm?sPass:rPass, mIss=isSm?sIss:rIss;
-    var ps={};
-    PERSONAS.forEach(function(p){ ps[p]={pass:0,issues:0,pending:0}; });
-    data.forEach(function(row){
-      var md=parseState(row)[mode]||{};
-      PERSONAS.forEach(function(p){
-        Object.values(md[p]||{}).forEach(function(tc){
-          var s=(tc.steps||[]).length+(tc.expected||[]).length;
-          if(tc.issue)ps[p].issues++; else if(s>0)ps[p].pass++; else ps[p].pending++;
-        });
-      });
-    });
-    html+='<div class="card '+(isSm?'card-smoke':'card-reg')+'">';
-    html+='<div class="card-hdr"><div>';
-    html+='<div class="card-title">'+(isSm?'&#128293; Smoke Test Summary':'&#128300; Regression Test Summary')+'</div>';
-    html+='<div class="card-sub">Pass: '+mPass+' &nbsp; Issues: '+mIss+'</div>';
-    html+='</div>';
-    html+='<a href="'+(isSm?'https://amjarabo.github.io/DGLMS/dglms-smoke.html':'https://amjarabo.github.io/DGLMS/dglms-regression.html')+'" class="btn btn-sm '+(isSm?'btn-smoke':'btn-navy')+'">View Detail &#8594;</a>';
-    html+='</div>';
-    html+='<div class="table-wrap"><table class="tbl"><thead><tr>';
-    html+='<th>Persona</th><th>Pass</th><th>Issues</th><th>Pending</th>';
-    html+='</tr></thead><tbody>';
-    PERSONAS.forEach(function(p){
-      var st=ps[p];
-      html+='<tr>';
-      html+='<td style="font-size:12px"><strong>'+esc(p)+'</strong></td>';
-      html+='<td><span class="badge pass">'+st.pass+'</span></td>';
-      html+='<td><span class="badge '+(st.issues>0?'fail':'neutral')+'">'+st.issues+'</span></td>';
-      html+='<td><span class="badge pending">'+st.pending+'</span></td>';
-      html+='</tr>';
-    });
-    html+='</tbody></table></div></div>';
-  });
-  html+='</div>';
+  html+='<div class="card card-smoke">';
+  html+='<div class="card-hdr"><div><div class="card-title">&#128293; Smoke Test &mdash; Individual Results</div>';
+  html+='<div class="card-sub">Click a tester to expand their full smoke test results</div></div></div>';
 
-  // Open Issues
-  html+='<div class="card">';
-  html+='<div class="card-hdr"><div><div class="card-title">&#128308; Open Issues <span style="background:#fef2f2;color:var(--red);font-size:11px;padding:1px 8px;border-radius:10px;font-weight:700;margin-left:6px">'+openIssues.length+'</span></div>';
-  html+='<div class="card-sub">'+allIssues.length+' total flags across all testers</div></div>';
-  html+='<button class="btn btn-red btn-sm" onclick="notifyAll()">&#128231; Email All Issues</button></div>';
-  if(!openIssues.length){
-    html+='<div class="empty"><div class="empty-icon">&#9989;</div><div class="empty-msg">No open issues</div></div>';
+  if(!data.length){
+    html+='<div class="empty"><div class="empty-icon">&#128293;</div><div class="empty-msg">No data yet</div></div>';
   } else {
-    openIssues.forEach(function(iss){
-      var ka=iss.key.replace(/"/g,'&quot;');
-      html+='<div class="issue-block">';
-      html+='<div><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:5px">';
-      html+='<span style="font-size:12px;font-weight:700">&#128100; '+esc(iss.tester)+'</span>';
-      html+='<span class="itag '+iss.mode+'">'+iss.mode+'</span>';
-      html+='<span class="itag persona">'+esc(iss.persona)+'</span>';
-      html+='<span class="tc-chip">TC #'+iss.idx+'</span>';
-      html+='</div>';
-      html+='<div style="font-size:12px;color:var(--text2)">'+(iss.note?'&#128221; '+esc(iss.note):'<em style="color:var(--text3)">No notes</em>')+'</div>';
-      html+='</div>';
-      html+='<div style="display:flex;gap:6px;flex-shrink:0">';
-      html+='<button class="btn btn-sm btn-gold" data-iss="'+ka+'" onclick="notifyOneBtn(this)">&#128231;</button>';
-      html+='<button class="btn btn-sm btn-green" data-key="'+ka+'" onclick="resolveBtn(this)">&#10003; Resolve</button>';
+    data.forEach(function(row,ri){
+      var st=getStats(parseState(row),'smoke');
+      html+='<div class="tester-block">';
+      html+='<div class="tester-hdr" id="th'+ri+'" onclick="toggleTester('+ri+')">';
+      html+='<div><div class="tester-name">&#9654; <span class="expand-icon" id="ei'+ri+'"></span> '+esc(row.name||row.user_key)+'</div>';
+      html+='<div class="tester-email">'+esc(row.user_key)+'</div></div>';
+      html+='<div class="tester-stats">';
+      html+='<span class="badge pass">&#9989; '+st.pass+' Pass</span>';
+      html+='<span class="badge '+(st.issues>0?'fail':'neutral')+'">'+( st.issues>0?'&#128308; ':'')+st.issues+' Issues</span>';
+      html+='<span class="badge pending">'+st.pending+' Pending</span>';
       html+='</div></div>';
+      html+='<div class="tester-body" id="tb'+ri+'">';
+      html+='<div id="tc'+ri+'"></div>';
+      html+='</div>';
+      html+='</div>';
     });
   }
   html+='</div>';
-
   document.getElementById('pageContent').innerHTML=html;
-
-  // Wire up buttons
-  document.querySelectorAll('.resolve-btn,[onclick*=resolveBtn]').forEach(function(b){
-    // handled inline via data attrs
-  });
 }
 
-function resolveBtn(btn){
-  var key=btn.getAttribute('data-key'); if(!key)return;
-  toggleResolved(key); renderPage(_allData);
-}
-function notifyOneBtn(btn){
-  var raw=btn.getAttribute('data-iss'); if(!raw)return;
-  try{ openNotifyModal([JSON.parse(raw.replace(/&quot;/g,'"'))]); } catch(e){}
-}
-function notifyAll(){
-  var open=getAllIssues(_allData).filter(function(i){ return !_resolved.has(i.key); });
-  if(!open.length){ alert('No open issues.'); return; }
-  openNotifyModal(open);
+function toggleTester(ri){
+  var hdr=document.getElementById('th'+ri);
+  var body=document.getElementById('tb'+ri);
+  var ei=document.getElementById('ei'+ri);
+  var isOpen=body.classList.contains('open');
+  if(isOpen){
+    body.classList.remove('open');
+    hdr.classList.remove('open');
+  } else {
+    body.classList.add('open');
+    hdr.classList.add('open');
+    var tc=document.getElementById('tc'+ri);
+    if(!tc.dataset.rendered){
+      tc.dataset.rendered='1';
+      tc.innerHTML=buildTesterResultsHTML(_allData[ri],'smoke');
+    }
+  }
 }
 
 function exportAll(){
