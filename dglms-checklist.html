@@ -23,6 +23,8 @@
   --tester-bg:rgba(11,37,69,.07);--tester-border:rgba(11,37,69,.12);--tester-text:#0b2545;
   --sync-bg:#f8f9fb;
 }
+.nav-link{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;text-decoration:none;border:1px solid rgba(11,37,69,.15);color:var(--navy);background:rgba(11,37,69,.05);transition:all .15s;white-space:nowrap}
+.nav-link:hover{background:rgba(11,37,69,.1)}
 [data-theme=dark]{
   --bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3347;
   --text:#e2e8f0;--text2:#94a3b8;--text3:#4b5675;
@@ -270,6 +272,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
           <div class="topbar-meta" id="topbarMeta">&mdash;</div>
         </div>
         <div class="topbar-right">
+          <a href="https://amjarabo.github.io/DGLMS/dglms-dashboard.html" class="nav-link" style="font-size:11px;padding:5px 10px">&#128202; Dashboard</a>
           <div class="tester-badge" onclick="switchUser()">
             <div class="tester-av" id="testerAvatar">?</div>
             <span id="testerName" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px">&mdash;</span>
