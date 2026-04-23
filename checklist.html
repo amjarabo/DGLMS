@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Sprint Checklist — DGLMS Portal</title>
+  <link rel="stylesheet" href="portal.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+  <aside id="sidebar"></aside>
+  <div id="main">
+    <header class="topbar"></header>
+    <main class="page" id="page-content">
+      <div class="sh">
+        <div>
+          <div class="st">Sprint <span>Checklist</span></div>
+          <div class="sm">// Pre-release gates — sprint 6</div>
+        </div>
+        <div class="brow"></div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="ch"><div class="ct">Add checklist item</div></div>
+          <form id="clForm" style="display:flex;gap:8px">
+            <input class="fi" id="clInput" placeholder="e.g. All GRAN stories have test case coverage" required style="flex:1">
+            <button class="btn btn-p" type="submit">ADD</button>
+          </form>
+          <div class="sm" style="margin-top:10px">Items added here are visible to the whole @dot.gov team in real time.</div>
+        </div>
+        <div class="card">
+          <div class="ch"><div class="ct">Progress</div></div>
+          <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:8px">
+            <div style="font-size:36px;font-weight:700" id="clPct">0%</div>
+            <div class="sm" id="clCounts">0 of 0 complete</div>
+          </div>
+          <div class="pb"><div class="pf gr" id="clBar" style="width:0%"></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ch"><div class="ct">Checklist <span class="live-pill"><span class="dot"></span>LIVE</span></div></div>
+        <div id="clList" class="empty"><div class="empty-icon">☐</div>No items yet — add one above.</div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+
+  <script src="portal.js"></script>
+
+  <script>
+    (async () => {
+      const session = await Portal.init({ title: 'Sprint Checklist', subtitle: 'Pre-release gates' });
+      if (!session) return;
+
+      const SECTION = 'checklist';
+      await load();
+      Upload.subscribe(SECTION, () => load());
+      document.getElementById('clForm').addEventListener('submit', async e => {
+        e.preventDefault();
+        const text = document.getElementById('clInput').value.trim();
+        if (!text) return;
+        const user = await Portal.currentUser();
+        await window.sb.from('shared_workbooks').insert({
+          uploaded_by: user.id,
+          uploader_email: user.email,
+          section: SECTION,
+          filename: 'checklist-item',
+          parsed_data: [{ text, done: false, created_at: new Date().toISOString() }],
+        });
+        document.getElementById('clInput').value = '';
+      });
+
+      async function load() {
+        const rows = await Upload.list(SECTION, 200);
+        const items = rows.map(r => ({ id: r.id, by: r.uploader_email, when: r.created_at, ...(r.parsed_data?.[0]||{}) }));
+        render(items);
+      }
+      function render(items) {
+        const el = document.getElementById('clList');
+        const done = items.filter(i=>i.done).length;
+        const pct = items.length ? Math.round(done/items.length*100) : 0;
+        document.getElementById('clPct').textContent = pct + '%';
+        document.getElementById('clCounts').textContent = `${done} of ${items.length} complete`;
+        document.getElementById('clBar').style.width = pct + '%';
+        if (!items.length) { el.className='empty'; el.innerHTML='<div class="empty-icon">☐</div>No items yet — add one above.'; return; }
+        el.className='';
+        el.innerHTML = items.map(i => `
+          <div style="display:flex;align-items:center;gap:12px;padding:10px;border-bottom:1px solid var(--border)">
+            <input type="checkbox" ${i.done?'checked':''} data-id="${i.id}" onchange="toggleItem(${i.id}, this.checked, ${JSON.stringify(i).replace(/"/g,'&quot;')})">
+            <div style="flex:1;${i.done?'opacity:.5;text-decoration:line-through':''}">${esc(i.text||'')}</div>
+            <div class="sm">${esc(i.by||'')} · ${new Date(i.when).toLocaleDateString()}</div>
+            <button class="btn btn-xs btn-r" onclick="deleteItem(${i.id})">DELETE</button>
+          </div>
+        `).join('');
+      }
+      window.toggleItem = async function(id, done, itemJson) {
+        await window.sb.from('shared_workbooks').delete().eq('id', id);
+        const user = await Portal.currentUser();
+        await window.sb.from('shared_workbooks').insert({
+          uploaded_by: user.id,
+          uploader_email: user.email,
+          section: SECTION,
+          filename: 'checklist-item',
+          parsed_data: [{ text: itemJson.text, done, created_at: itemJson.created_at || new Date().toISOString() }],
+        });
+      };
+      window.deleteItem = async function(id) {
+        if (!confirm('Delete this item?')) return;
+        await window.sb.from('shared_workbooks').delete().eq('id', id);
+      };
+      function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+
+    })();
+  </script>
+</body>
+</html>

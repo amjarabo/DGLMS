@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Test Cases — DGLMS Portal</title>
+  <link rel="stylesheet" href="portal.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+  <aside id="sidebar"></aside>
+  <div id="main">
+    <header class="topbar"></header>
+    <main class="page" id="page-content">
+      <div class="sh">
+        <div>
+          <div class="st">Test <span>Cases</span></div>
+          <div class="sm">// GRAN stories — sprint 6</div>
+        </div>
+        <div class="brow"></div>
+      </div>
+      <div class="sg">
+        <div class="sc bl"><div class="sl2">CASES</div><div class="sv" id="tc-total">—</div><div class="ss">across pushes</div></div>
+        <div class="sc gr"><div class="sl2">STORIES</div><div class="sv" id="tc-stories">—</div><div class="ss">distinct</div></div>
+        <div class="sc go"><div class="sl2">UPLOADS</div><div class="sv" id="tc-pushes">—</div><div class="ss">total</div></div>
+        <div class="sc pu"><div class="sl2">CONTRIBUTORS</div><div class="sv" id="tc-contrib">—</div><div class="ss">unique</div></div>
+      </div>
+      <div id="tcUpload"></div>
+      <div class="card">
+        <div class="ch">
+          <div class="ct">Shared test case pushes <span class="live-pill"><span class="dot"></span>LIVE</span></div>
+          <input class="fi" id="tcSearch" placeholder="Filter by filename or email…" style="max-width:280px">
+        </div>
+        <div id="tcFeed" class="empty"><div class="empty-icon">▤</div>No test case workbooks pushed yet.</div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="portal.js"></script>
+  <script src="upload.js"></script>
+  <script>
+    (async () => {
+      const session = await Portal.init({ title: 'Test Cases', subtitle: 'GRAN / Sprint 6' });
+      if (!session) return;
+
+      Upload.mount('#tcUpload', { section: 'testcases' });
+      let cache = [];
+      await load();
+      Upload.subscribe('testcases', () => load());
+      document.getElementById('tcSearch').addEventListener('input', render);
+
+      async function load() { cache = await Upload.list('testcases', 50); render(); }
+      function render() {
+        const q = document.getElementById('tcSearch').value.toLowerCase();
+        const rows = q ? cache.filter(r => (r.filename||'').toLowerCase().includes(q) || (r.uploader_email||'').toLowerCase().includes(q)) : cache;
+        document.getElementById('tc-total').textContent = cache.reduce((a,r)=>a+(r.row_count||0),0);
+        document.getElementById('tc-pushes').textContent = cache.length;
+        document.getElementById('tc-contrib').textContent = new Set(cache.map(r=>r.uploader_email)).size;
+        document.getElementById('tc-stories').textContent = new Set(cache.flatMap(r => {
+          const rr = Array.isArray(r.parsed_data) ? r.parsed_data : [];
+          return rr.map(row => row['Story'] || row['story'] || row['Jira'] || '').filter(Boolean);
+        })).size || '—';
+        const feed = document.getElementById('tcFeed');
+        if (!rows.length) { feed.className='empty'; feed.innerHTML='<div class="empty-icon">▤</div>No matches.'; return; }
+        feed.className='';
+        feed.innerHTML = `<table class="dt"><thead><tr><th>File</th><th>Uploader</th><th>Rows</th><th>Cols</th><th>When</th><th></th></tr></thead><tbody>
+          ${rows.map(r => {
+            const cols = (Array.isArray(r.parsed_data) && r.parsed_data[0]) ? Object.keys(r.parsed_data[0]).length : 0;
+            return `<tr>
+              <td><span class="mono">${esc(r.filename)}</span></td>
+              <td>${esc(r.uploader_email)}</td>
+              <td>${r.row_count||0}</td>
+              <td>${cols}</td>
+              <td class="mono">${new Date(r.created_at).toLocaleString()}</td>
+              <td><button class="btn btn-xs btn-o" onclick="viewPush(${r.id})">VIEW</button></td>
+            </tr>`;
+          }).join('')}
+        </tbody></table>`;
+      }
+      window.viewPush = async function(id) {
+        const row = cache.find(r => r.id === id);
+        if (!row) return;
+        const rr = row.parsed_data || [];
+        if (!rr.length) return alert('No rows in that push.');
+        const cols = Object.keys(rr[0]);
+        const w = window.open('', '_blank');
+        w.document.write(`<title>${esc(row.filename)}</title><style>body{font-family:system-ui;padding:20px;background:#0a1628;color:#f0f4ff}table{border-collapse:collapse;width:100%}th,td{border:1px solid rgba(0,188,212,.15);padding:6px 10px;font-size:12px;text-align:left}th{background:#112240}</style>
+          <h2>${esc(row.filename)}</h2><p>${row.row_count} rows · pushed by ${esc(row.uploader_email)} · ${new Date(row.created_at).toLocaleString()}</p>
+          <table><thead><tr>${cols.map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>
+          ${rr.map(r=>`<tr>${cols.map(c=>`<td>${esc(String(r[c]??''))}</td>`).join('')}</tr>`).join('')}
+          </tbody></table>`);
+        w.document.close();
+      };
+      function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+
+    })();
+  </script>
+</body>
+</html>

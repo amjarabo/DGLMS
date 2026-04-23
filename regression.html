@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Regression — DGLMS Portal</title>
+  <link rel="stylesheet" href="portal.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+  <aside id="sidebar"></aside>
+  <div id="main">
+    <header class="topbar"></header>
+    <main class="page" id="page-content">
+      <div class="sh">
+        <div>
+          <div class="st">Regression <span>Suite</span></div>
+          <div class="sm">// Full sweep — sprint 6</div>
+        </div>
+        <div class="brow"></div>
+      </div>
+      <div class="sg">
+        <div class="sc bl"><div class="sl2">SUITES</div><div class="sv" id="rg-suites">—</div><div class="ss">uploaded</div></div>
+        <div class="sc gr"><div class="sl2">TOTAL ROWS</div><div class="sv" id="rg-rows">—</div><div class="ss">across pushes</div></div>
+        <div class="sc go"><div class="sl2">LAST PUSH</div><div class="sv" id="rg-last" style="font-size:14px">—</div><div class="ss">most recent</div></div>
+        <div class="sc pu"><div class="sl2">CONTRIBUTORS</div><div class="sv" id="rg-contrib">—</div><div class="ss">unique</div></div>
+      </div>
+      <div id="regUpload"></div>
+      <div class="card">
+        <div class="ch"><div class="ct">Regression pushes <span class="live-pill"><span class="dot"></span>LIVE</span></div></div>
+        <div id="regFeed" class="empty"><div class="empty-icon">↻</div>No regression runs pushed yet.</div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="portal.js"></script>
+  <script src="upload.js"></script>
+  <script>
+    (async () => {
+      const session = await Portal.init({ title: 'Regression', subtitle: 'Sprint 6' });
+      if (!session) return;
+
+      Upload.mount('#regUpload', { section: 'regression' });
+      await refreshFeed();
+      Upload.subscribe('regression', () => refreshFeed());
+
+      async function refreshFeed() {
+        const rows = await Upload.list('regression', 30);
+        const feed = document.getElementById('regFeed');
+        document.getElementById('rg-suites').textContent = rows.length;
+        document.getElementById('rg-rows').textContent = rows.reduce((a,r)=>a+(r.row_count||0),0);
+        document.getElementById('rg-last').textContent = rows[0] ? new Date(rows[0].created_at).toLocaleString() : '—';
+        document.getElementById('rg-contrib').textContent = new Set(rows.map(r=>r.uploader_email)).size;
+        if (!rows.length) { feed.className='empty'; feed.innerHTML='<div class="empty-icon">↻</div>No regression runs pushed yet.'; return; }
+        feed.className='';
+        feed.innerHTML = `<table class="dt"><thead><tr><th>File</th><th>By</th><th>Rows</th><th>When</th></tr></thead><tbody>
+          ${rows.map(r => `<tr>
+            <td><span class="mono">${esc(r.filename)}</span></td>
+            <td>${esc(r.uploader_email)}</td>
+            <td>${r.row_count || 0}</td>
+            <td class="mono">${new Date(r.created_at).toLocaleString()}</td>
+          </tr>`).join('')}
+        </tbody></table>`;
+      }
+      function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+
+    })();
+  </script>
+</body>
+</html>

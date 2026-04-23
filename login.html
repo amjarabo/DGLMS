@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Sign in — DGLMS Portal</title>
+  <link rel="stylesheet" href="portal.css">
+  <style>
+    body{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+    .login-wrap{width:100%;max-width:420px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:32px 28px;backdrop-filter:blur(6px);position:relative;z-index:1}
+    .login-brand{display:flex;align-items:center;gap:12px;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--border)}
+    .login-brand .brand-icon{width:44px;height:44px;font-size:13px}
+    .login-title{font-size:14px;font-weight:700}
+    .login-sub{font-size:10px;color:var(--cyan);letter-spacing:.08em;font-family:var(--mono)}
+    .login-heading{font-size:22px;font-weight:700;margin-bottom:6px;letter-spacing:-.02em}
+    .login-heading span{color:var(--cyan)}
+    .login-desc{font-size:12px;color:var(--muted);margin-bottom:22px;font-family:var(--mono);line-height:1.6}
+    .field{margin-bottom:14px}
+    .tabs{display:flex;gap:4px;background:rgba(136,153,187,.08);border-radius:8px;padding:4px;margin-bottom:18px}
+    .tab{flex:1;padding:8px 12px;text-align:center;font-size:11px;font-weight:700;font-family:var(--mono);letter-spacing:.08em;color:var(--muted);cursor:pointer;border-radius:5px;transition:all .15s;background:transparent;border:none}
+    .tab.active{background:var(--navy-mid);color:var(--cyan)}
+    body.light .tab.active{background:#fff;color:#0077a8}
+    .btn-submit{width:100%;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);letter-spacing:.04em;transition:all .15s;margin-top:6px}
+    .btn-submit:hover:not(:disabled){background:var(--blue-bright)}
+    .btn-submit:disabled{opacity:.6;cursor:not-allowed}
+    .login-footer{margin-top:20px;padding-top:16px;border-top:1px solid var(--border);font-size:10px;color:var(--muted);font-family:var(--mono);text-align:center;line-height:1.7}
+    .theme-mini{position:fixed;top:16px;right:16px;z-index:10}
+  </style>
+</head>
+<body>
+  <button id="themeToggle" class="theme-mini" aria-label="Toggle theme">
+    <span class="toggle-track"><span class="toggle-thumb"></span></span>
+    <span id="themeLabel">DARK</span>
+  </button>
+
+  <div class="login-wrap">
+    <div class="login-brand">
+      <div class="brand-icon">DOT</div>
+      <div>
+        <div class="login-title">DGLMS Portal</div>
+        <div class="login-sub">QA / SPRINT OPS</div>
+      </div>
+    </div>
+
+    <div class="login-heading">Sign <span>in</span></div>
+    <div class="login-desc">
+      Restricted to @dot.gov accounts.<br>
+      Accounts are provisioned by the portal admin.
+    </div>
+
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-mode="signin" type="button">SIGN IN</button>
+      <button class="tab" data-mode="reset" type="button">RESET PASSWORD</button>
+    </div>
+
+    <div id="alert-slot"></div>
+
+    <form id="signin-form">
+      <div class="field">
+        <label class="fl" for="email">Email</label>
+        <input class="fi" type="email" id="email" autocomplete="email" placeholder="firstname.lastname@dot.gov" required>
+      </div>
+      <div class="field" id="pw-field">
+        <label class="fl" for="password">Password</label>
+        <input class="fi" type="password" id="password" autocomplete="current-password" placeholder="••••••••" required minlength="6">
+      </div>
+      <button type="submit" class="btn-submit" id="submit-btn">SIGN IN</button>
+    </form>
+
+    <div class="login-footer">
+      Need an account? Contact your portal admin.<br>
+      First time signing in? Check your email for the invite link.
+    </div>
+  </div>
+
+  <!-- Supabase UMD from jsdelivr (supabase-js v2) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script src="portal.js"></script>
+  <script>
+    // Apply saved theme immediately (before redirect checks)
+    if (localStorage.getItem('dglms-theme') === 'light') document.body.classList.add('light');
+    document.getElementById('themeToggle').addEventListener('click', () => {
+      document.body.classList.toggle('light');
+      const mode = document.body.classList.contains('light') ? 'light' : 'dark';
+      localStorage.setItem('dglms-theme', mode);
+      document.getElementById('themeLabel').textContent = mode.toUpperCase();
+    });
+    document.getElementById('themeLabel').textContent = document.body.classList.contains('light') ? 'LIGHT' : 'DARK';
+
+    // If already signed in, skip login
+    (async () => {
+      const { data: { session } } = await window.sb.auth.getSession();
+      if (session) {
+        const params = new URLSearchParams(location.search);
+        const next = params.get('next') || 'index.html';
+        location.replace(next);
+      }
+    })();
+
+    // Show error from URL if domain check bounced
+    (function handleUrlErrors() {
+      const params = new URLSearchParams(location.search);
+      if (params.get('error') === 'domain') {
+        showAlert('err', 'Access restricted: only @dot.gov email addresses are permitted.');
+      }
+    })();
+
+    // Tabs: sign in vs reset
+    let mode = 'signin';
+    document.querySelectorAll('.tab').forEach(t => {
+      t.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+        t.classList.add('active');
+        mode = t.dataset.mode;
+        const pwField = document.getElementById('pw-field');
+        const submit = document.getElementById('submit-btn');
+        if (mode === 'reset') {
+          pwField.style.display = 'none';
+          document.getElementById('password').required = false;
+          submit.textContent = 'SEND RESET LINK';
+        } else {
+          pwField.style.display = '';
+          document.getElementById('password').required = true;
+          submit.textContent = 'SIGN IN';
+        }
+        clearAlerts();
+      });
+    });
+
+    function showAlert(kind, msg) {
+      document.getElementById('alert-slot').innerHTML = `<div class="al ${kind}">${msg}</div>`;
+    }
+    function clearAlerts() { document.getElementById('alert-slot').innerHTML = ''; }
+
+    document.getElementById('signin-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearAlerts();
+      const email = document.getElementById('email').value.trim().toLowerCase();
+      const password = document.getElementById('password').value;
+      const btn = document.getElementById('submit-btn');
+
+      if (!email.endsWith('@dot.gov')) {
+        showAlert('err', 'Only @dot.gov email addresses are permitted.');
+        return;
+      }
+
+      btn.disabled = true;
+      const origLabel = btn.textContent;
+      btn.textContent = 'WORKING...';
+
+      try {
+        if (mode === 'signin') {
+          const { data, error } = await window.sb.auth.signInWithPassword({ email, password });
+          if (error) throw error;
+          // Domain check on response (belt and suspenders)
+          if (!data.user.email.toLowerCase().endsWith('@dot.gov')) {
+            await window.sb.auth.signOut();
+            throw new Error('Access restricted to @dot.gov accounts.');
+          }
+          const params = new URLSearchParams(location.search);
+          const next = params.get('next') || 'index.html';
+          location.replace(next);
+        } else {
+          const { error } = await window.sb.auth.resetPasswordForEmail(email, {
+            redirectTo: location.origin + location.pathname.replace(/login\.html$/, '') + 'login.html'
+          });
+          if (error) throw error;
+          showAlert('ok', 'If that account exists, a reset link is on its way.');
+          btn.disabled = false;
+          btn.textContent = origLabel;
+        }
+      } catch (err) {
+        showAlert('err', err.message || 'Sign-in failed.');
+        btn.disabled = false;
+        btn.textContent = origLabel;
+      }
+    });
+  </script>
+</body>
+</html>

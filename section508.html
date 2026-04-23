@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Section 508 — DGLMS Portal</title>
+  <link rel="stylesheet" href="portal.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+  <aside id="sidebar"></aside>
+  <div id="main">
+    <header class="topbar"></header>
+    <main class="page" id="page-content">
+      <div class="sh">
+        <div>
+          <div class="st">Section <span>508</span></div>
+          <div class="sm">// Accessibility</div>
+        </div>
+        <div class="brow"></div>
+      </div>
+      <div class="card">
+        <div class="ch"><div class="ct">Section 508</div></div>
+        <div class="al info">
+          Section 508 compliance checklist, WCAG 2.1 AA conformance evidence, and assistive-tech verification.
+        </div>
+        <div class="sm" style="margin-top:14px">To add or edit this content, open <code>section.html</code> in GitHub and replace this section.</div>
+      </div>
+    
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+
+  <script src="portal.js"></script>
+
+  <script>
+    (async () => {
+      const session = await Portal.init({ title: 'Section 508', subtitle: 'Accessibility' });
+      if (!session) return;
+
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Smoke Tests — DGLMS Portal</title>
+  <link rel="stylesheet" href="portal.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+  <aside id="sidebar"></aside>
+  <div id="main">
+    <header class="topbar"></header>
+    <main class="page" id="page-content">
+      <div class="sh">
+        <div>
+          <div class="st">Smoke <span>Tests</span></div>
+          <div class="sm">// Quick gate — sprint 6</div>
+        </div>
+        <div class="brow"></div>
+      </div>
+      <div class="sg">
+        <div class="sc bl"><div class="sl2">TOTAL</div><div class="sv" id="sm-total">—</div><div class="ss">smoke cases</div></div>
+        <div class="sc gr"><div class="sl2">PASSED</div><div class="sv" id="sm-pass">—</div><div class="ss">last run</div></div>
+        <div class="sc re"><div class="sl2">FAILED</div><div class="sv" id="sm-fail">—</div><div class="ss">last run</div></div>
+        <div class="sc go"><div class="sl2">PUSHES</div><div class="sv" id="sm-pushes">—</div><div class="ss">today</div></div>
+      </div>
+      <div id="smokeUpload"></div>
+      <div class="card">
+        <div class="ch"><div class="ct">Recent pushes <span class="live-pill"><span class="dot"></span>LIVE</span></div></div>
+        <div id="smokeFeed" class="empty"><div class="empty-icon">◌</div>No pushes yet — drop a file above to share.</div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="portal.js"></script>
+  <script src="upload.js"></script>
+  <script>
+    (async () => {
+      const session = await Portal.init({ title: 'Smoke Tests', subtitle: 'Sprint 6' });
+      if (!session) return;
+
+      Upload.mount('#smokeUpload', { section: 'smoke' });
+      await refreshSmokeFeed();
+      Upload.subscribe('smoke', () => refreshSmokeFeed());
+
+      async function refreshSmokeFeed() {
+        const rows = await Upload.list('smoke', 20);
+        const feed = document.getElementById('smokeFeed');
+        document.getElementById('sm-total').textContent = rows.reduce((a,r)=>a+(r.row_count||0),0);
+        document.getElementById('sm-pushes').textContent = rows.filter(r => new Date(r.created_at) > new Date(Date.now()-86400000)).length;
+        document.getElementById('sm-pass').textContent = '—';
+        document.getElementById('sm-fail').textContent = '—';
+        if (!rows.length) { feed.className = 'empty'; feed.innerHTML = '<div class="empty-icon">◌</div>No pushes yet — drop a file above to share.'; return; }
+        feed.className = '';
+        feed.innerHTML = `<table class="dt"><thead><tr><th>File</th><th>By</th><th>Rows</th><th>When</th></tr></thead><tbody>
+          ${rows.map(r => `<tr>
+            <td><span class="mono">${escapeHtml(r.filename)}</span></td>
+            <td>${escapeHtml(r.uploader_email)}</td>
+            <td>${r.row_count || 0}</td>
+            <td class="mono">${new Date(r.created_at).toLocaleString()}</td>
+          </tr>`).join('')}
+        </tbody></table>`;
+      }
+      function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+
+    })();
+  </script>
+</body>
+</html>

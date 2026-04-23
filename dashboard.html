@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Sprint Dashboard — DGLMS Portal</title>
+  <link rel="stylesheet" href="portal.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+  <aside id="sidebar"></aside>
+  <div id="main">
+    <header class="topbar"></header>
+    <main class="page" id="page-content">
+      <div class="sh">
+        <div>
+          <div class="st">Sprint <span>Dashboard</span></div>
+          <div class="sm">// Live metrics across pushes</div>
+        </div>
+        <div class="brow"></div>
+      </div>
+      <div class="sg">
+        <div class="sc bl"><div class="sl2">ALL PUSHES</div><div class="sv" id="d-total">—</div><div class="ss">across sections</div></div>
+        <div class="sc gr"><div class="sl2">TOTAL ROWS</div><div class="sv" id="d-rows">—</div><div class="ss">parsed data</div></div>
+        <div class="sc go"><div class="sl2">ACTIVE TEAM</div><div class="sv" id="d-team">—</div><div class="ss">this sprint</div></div>
+        <div class="sc pu"><div class="sl2">LAST ACTIVITY</div><div class="sv" id="d-last" style="font-size:14px">—</div><div class="ss">most recent</div></div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="ch"><div class="ct">Pushes by section</div></div>
+          <div id="bySectionChart" style="min-height:220px"></div>
+        </div>
+        <div class="card">
+          <div class="ch"><div class="ct">Top contributors</div></div>
+          <div id="byUserChart" style="min-height:220px"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ch"><div class="ct">Activity feed <span class="live-pill"><span class="dot"></span>LIVE</span></div></div>
+        <div id="feed" class="empty"><div class="empty-icon">◈</div>No activity yet.</div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+
+  <script src="portal.js"></script>
+
+  <script>
+    (async () => {
+      const session = await Portal.init({ title: 'Sprint Dashboard', subtitle: 'Live metrics' });
+      if (!session) return;
+
+      await load();
+      // Subscribe to ALL sections
+      ['smoke','regression','testcases','checklist','dashboard'].forEach(s =>
+        Upload.subscribe(s, () => load())
+      );
+
+      async function load() {
+        const { data, error } = await window.sb.from('shared_workbooks').select('*').order('created_at',{ascending:false}).limit(100);
+        if (error) { console.error(error); return; }
+        const rows = data || [];
+        document.getElementById('d-total').textContent = rows.length;
+        document.getElementById('d-rows').textContent = rows.reduce((a,r)=>a+(r.row_count||0),0);
+        document.getElementById('d-team').textContent = new Set(rows.map(r=>r.uploader_email)).size;
+        document.getElementById('d-last').textContent = rows[0] ? new Date(rows[0].created_at).toLocaleString() : '—';
+        drawBars('bySectionChart', groupCount(rows,'section'));
+        drawBars('byUserChart', groupCount(rows,'uploader_email'));
+        renderFeed(rows.slice(0,25));
+      }
+      function groupCount(rows, key) {
+        const m = new Map();
+        rows.forEach(r => m.set(r[key], (m.get(r[key])||0)+1));
+        return [...m.entries()].sort((a,b)=>b[1]-a[1]).slice(0,8);
+      }
+      function drawBars(elId, data) {
+        const el = document.getElementById(elId);
+        if (!data.length) { el.innerHTML = '<div class="sm">No data yet.</div>'; return; }
+        const max = Math.max(...data.map(d=>d[1]));
+        el.innerHTML = data.map(([k,v]) => `
+          <div class="hbi">
+            <div class="hbh"><span class="hbl">${esc(k)}</span><span class="hbv">${v}</span></div>
+            <div class="pb"><div class="pf bl" style="width:${(v/max*100).toFixed(0)}%"></div></div>
+          </div>
+        `).join('');
+      }
+      function renderFeed(rows) {
+        const el = document.getElementById('feed');
+        if (!rows.length) return;
+        el.className='';
+        el.innerHTML = `<table class="dt"><thead><tr><th>Section</th><th>File</th><th>Uploader</th><th>Rows</th><th>When</th></tr></thead><tbody>
+          ${rows.map(r => `<tr>
+            <td><span class="b b-ip">${esc(r.section)}</span></td>
+            <td><span class="mono">${esc(r.filename)}</span></td>
+            <td>${esc(r.uploader_email)}</td>
+            <td>${r.row_count||0}</td>
+            <td class="mono">${new Date(r.created_at).toLocaleString()}</td>
+          </tr>`).join('')}
+        </tbody></table>`;
+      }
+      function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+
+    })();
+  </script>
+</body>
+</html>

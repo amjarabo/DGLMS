@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Compliance — DGLMS Portal</title>
+  <link rel="stylesheet" href="portal.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+  <aside id="sidebar"></aside>
+  <div id="main">
+    <header class="topbar"></header>
+    <main class="page" id="page-content">
+      <div class="sh">
+        <div>
+          <div class="st">Compliance</div>
+          <div class="sm">// Federal controls</div>
+        </div>
+        <div class="brow"></div>
+      </div>
+      <div class="card">
+        <div class="ch"><div class="ct">Compliance</div></div>
+        <div class="al info">
+          NIST 800-53 controls, FedRAMP posture, concurrence tracking, and audit documentation go here.
+        </div>
+        <div class="sm" style="margin-top:14px">To add or edit this content, open <code>compliance.html</code> in GitHub and replace this section.</div>
+      </div>
+    
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+
+  <script src="portal.js"></script>
+
+  <script>
+    (async () => {
+      const session = await Portal.init({ title: 'Compliance', subtitle: 'Federal controls' });
+      if (!session) return;
+
+    })();
+  </script>
+</body>
+</html>

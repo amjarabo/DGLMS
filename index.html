@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Portal Home — DGLMS Portal</title>
+  <link rel="stylesheet" href="portal.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+  <aside id="sidebar"></aside>
+  <div id="main">
+    <header class="topbar"></header>
+    <main class="page" id="page-content">
+      <div class="sh">
+        <div>
+          <div class="st">Portal <span>Home</span></div>
+          <div class="sm">// DGLMS QA / Sprint ops</div>
+        </div>
+        <div class="brow"></div>
+      </div>
+      <div class="sg">
+        <div class="sc bl"><div class="sl2">PUSHES</div><div class="sv" id="x-pushes">—</div><div class="ss">total</div></div>
+        <div class="sc gr"><div class="sl2">MY PUSHES</div><div class="sv" id="x-mine">—</div><div class="ss">by you</div></div>
+        <div class="sc go"><div class="sl2">TEAM</div><div class="sv" id="x-team">—</div><div class="ss">active uploaders</div></div>
+        <div class="sc pu"><div class="sl2">LAST LOGIN</div><div class="sv" id="x-last" style="font-size:14px">—</div><div class="ss">yours</div></div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="ch"><div class="ct">Jump to workstream</div></div>
+          <div class="g2">
+            <a href="smoke.html" class="nav-item" style="border:1px solid var(--border);border-radius:8px;padding:14px;border-left-width:2px"><span class="ico">✓</span><div><div style="font-weight:600;color:var(--white)">Smoke</div><div class="sm">Quick gate</div></div></a>
+            <a href="regression.html" class="nav-item" style="border:1px solid var(--border);border-radius:8px;padding:14px;border-left-width:2px"><span class="ico">↻</span><div><div style="font-weight:600;color:var(--white)">Regression</div><div class="sm">Full sweep</div></div></a>
+            <a href="testcases.html" class="nav-item" style="border:1px solid var(--border);border-radius:8px;padding:14px;border-left-width:2px"><span class="ico">▤</span><div><div style="font-weight:600;color:var(--white)">Test Cases</div><div class="sm">GRAN stories</div></div></a>
+            <a href="checklist.html" class="nav-item" style="border:1px solid var(--border);border-radius:8px;padding:14px;border-left-width:2px"><span class="ico">☐</span><div><div style="font-weight:600;color:var(--white)">Checklist</div><div class="sm">Pre-release</div></div></a>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ch"><div class="ct">Recent activity <span class="live-pill"><span class="dot"></span>LIVE</span></div></div>
+          <div id="idxFeed" class="empty"><div class="empty-icon">◈</div>No activity yet.</div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="portal.js"></script>
+  <script src="upload.js"></script>
+  <script>
+    (async () => {
+      const session = await Portal.init({ title: 'Portal Home', subtitle: 'Sprint ops' });
+      if (!session) return;
+
+      await load();
+      ['smoke','regression','testcases','checklist','dashboard'].forEach(s =>
+        Upload.subscribe(s, () => load())
+      );
+      const user = await Portal.currentUser();
+      const { data: mylast } = await window.sb.from('login_audit').select('login_at').eq('email',user.email).order('login_at',{ascending:false}).limit(2);
+      const prev = mylast?.[1];
+      document.getElementById('x-last').textContent = prev ? new Date(prev.login_at).toLocaleString() : 'first login';
+
+      async function load() {
+        const user = await Portal.currentUser();
+        const { data } = await window.sb.from('shared_workbooks').select('*').order('created_at',{ascending:false}).limit(25);
+        const rows = data || [];
+        document.getElementById('x-pushes').textContent = rows.length;
+        document.getElementById('x-mine').textContent = rows.filter(r=>r.uploader_email===user.email).length;
+        document.getElementById('x-team').textContent = new Set(rows.map(r=>r.uploader_email)).size;
+        const feed = document.getElementById('idxFeed');
+        if (!rows.length) return;
+        feed.className='';
+        feed.innerHTML = rows.slice(0,8).map(r => `
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+            <div><span class="b b-ip">${esc(r.section)}</span> <span class="mono" style="margin-left:6px">${esc(r.filename)}</span></div>
+            <div class="sm">${esc(r.uploader_email)} · ${new Date(r.created_at).toLocaleTimeString()}</div>
+          </div>
+        `).join('');
+      }
+      function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+
+    })();
+  </script>
+</body>
+</html>
