@@ -1853,13 +1853,12 @@
             <thead>
               <tr>
                 <th>Recipient Name</th>
-                <th>Email</th>
                 <th>Active</th>
                 <th>Notify On Severity</th>
               </tr>
             </thead>
             <tbody id="admin-recipients-tbody">
-              <tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted);font-style:italic;">Recipients load when database connects.</td></tr>
+              <tr><td colspan="3" style="text-align:center;padding:20px;color:var(--text-muted);font-style:italic;">Recipients load when database connects.</td></tr>
             </tbody>
           </table>
         </div>
@@ -2978,7 +2977,7 @@ function renderAdminView() {
   if (recipientsCnt) recipientsCnt.textContent = recipients.length;
   if (recipientsTbody) {
     if (recipients.length === 0) {
-      recipientsTbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted);font-style:italic;">No recipients configured.</td></tr>`;
+      recipientsTbody.innerHTML = `<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--text-muted);font-style:italic;">No recipients configured.</td></tr>`;
     } else {
       recipientsTbody.innerHTML = recipients.map(r => {
         const sevs = (r.severities || []).map(s => {
@@ -2987,7 +2986,6 @@ function renderAdminView() {
         }).join('');
         return `<tr>
           <td>${r.title || '—'}</td>
-          <td style="font-family:'DM Mono',monospace;font-size:12px;">${r.email}</td>
           <td>${r.active ? '<span style="color:#16a34a;font-weight:700;">✓ Yes</span>' : '<span style="color:#9ca3af;">No</span>'}</td>
           <td>${sevs || '<span style="color:var(--text-muted);font-style:italic;">all severities</span>'}</td>
         </tr>`;
