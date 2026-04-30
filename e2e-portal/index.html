@@ -1198,6 +1198,7 @@
      ISSUE DETAIL MODAL — full context for an existing issue
 ══════════════════════════════════════════════ -->
 <div id="issue-detail-modal" class="modal-backdrop" style="display:none;"></div>
+<div id="issue-edit-modal" class="modal-backdrop" style="display:none;"></div>
 
 <!-- ══════════════════════════════════════════════
      LOG ISSUE MODAL
@@ -1329,6 +1330,10 @@
     </div>
     <div class="topbar-right">
       <span id="sp-status-badge" class="sp-status-badge is-offline" title="Database sync status">🔴 Offline (local only)</span>
+      <button id="notif-bell" class="topbar-btn" onclick="toggleNotificationDropdown()" style="position:relative;display:none;" title="Issue updates">
+        🔔
+        <span id="notif-badge" style="display:none;position:absolute;top:0;right:0;background:#dc2626;color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:1px 5px;min-width:14px;text-align:center;line-height:1.4;">0</span>
+      </button>
       <span id="tester-chip" class="tester-chip" onclick="changeTesterEmail()" style="display:none;" title="Click to change">
         <span class="tester-chip-avatar" id="tester-chip-avatar">?</span>
         <span id="tester-chip-email">—</span>
@@ -1337,6 +1342,17 @@
       <button class="topbar-btn primary" onclick="showView('issue-tracker', document.querySelector('[onclick*=issue-tracker]'))">＋ Log Issue</button>
     </div>
   </header>
+
+  <!-- Notifications dropdown -->
+  <div id="notif-dropdown" style="display:none;position:fixed;top:60px;right:20px;z-index:900;width:380px;max-height:480px;overflow-y:auto;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,.12);">
+    <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+      <strong style="font-size:13.5px;">🔔 Issue Updates</strong>
+      <button onclick="markAllNotificationsRead()" style="background:none;border:none;color:var(--blue-700);font-size:11.5px;font-weight:600;cursor:pointer;">Mark all read</button>
+    </div>
+    <div id="notif-list" style="padding:8px 0;">
+      <div style="padding:24px;text-align:center;color:var(--text-muted);font-style:italic;font-size:13px;">No new updates</div>
+    </div>
+  </div>
 
   <!-- ═══════════════════════════════ -->
   <!-- VIEW: DASHBOARD -->
@@ -1372,7 +1388,22 @@
           <div class="stat-card-icon">🔄</div>
           <div class="stat-card-label">In Progress</div>
           <div class="stat-card-value" style="color:var(--amber);" id="dash-inprogress">0</div>
-          <div class="stat-card-sub">Tests partially completed</div>
+          <div class="stat-card-sub" id="dash-inprogress-sub">Tests partially completed</div>
+        </div>
+      </div>
+
+      <!-- Per-Environment Progress -->
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-header">
+          <div>
+            <div class="card-title">📍 Progress by Environment</div>
+            <div class="card-subtitle">Your completion rate per environment</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div id="dash-env-progress" style="display:flex;flex-direction:column;gap:14px;">
+            <!-- Populated by updateDashboardStats() -->
+          </div>
         </div>
       </div>
 
@@ -1942,6 +1973,32 @@
         <p>Master view of every tester's results across all environments and personas. Filter, sort, and export to CSV.</p>
       </div>
 
+      <!-- Users (auto-populated from app_users table) -->
+      <div class="card" style="margin-bottom:18px;">
+        <div class="card-header" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+          <div>
+            <div class="card-title">👥 Users <span id="admin-users-count" style="font-family:'DM Mono',monospace;color:var(--blue-700);">0</span></div>
+            <div class="card-subtitle">Everyone who has signed in to the portal. Last seen updates whenever they open the portal.</div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Display Name</th>
+                <th>Role</th>
+                <th>First Seen</th>
+                <th>Last Seen</th>
+              </tr>
+            </thead>
+            <tbody id="admin-users-tbody">
+              <tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-muted);font-style:italic;">Users load when database connects.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- Issue Notification Recipients (driven by E2E Issue Recipients list) -->
       <div class="card" style="margin-bottom:18px;">
         <div class="card-header" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
@@ -2221,6 +2278,7 @@ let SB_STATE = {
   isGuest: false,
   myUserId: null,
   resolvedRecipients: [],
+  resolvedUsers: [],
   resultsItemMap: {},  // local lookup: cardKey -> result row id
   resultsRows: [],     // all rows from team
   issuesRows: [],
@@ -2400,6 +2458,8 @@ async function sbBootstrap() {
 
       // Load all team data
       await sbReloadAll();
+      // Load views for notifications
+      await loadIssueViews();
 
       // Set up realtime subscriptions
       sbSubscribe();
@@ -2409,6 +2469,7 @@ async function sbBootstrap() {
       refreshTesterChip();
       renderIssuesView();
       updateOverallSummary();
+      refreshNotifications();
     } else {
       // Not signed in — show email gate (which now sends magic link)
       SB_STATE.online = false;
@@ -2450,6 +2511,21 @@ async function sbReloadAll() {
       severities: r.notify_on_severity || []
     }));
   } catch (e) { console.warn('recipients load failed:', e.message); }
+
+  // App users (everyone who's ever signed in) — only meaningful for admins
+  try {
+    const { data: users } = await client
+      .from('app_users')
+      .select('email, display_name, role, created_at, last_seen_at')
+      .order('last_seen_at', { ascending: false, nullsFirst: false });
+    SB_STATE.resolvedUsers = (users || []).map(u => ({
+      email: (u.email || '').toLowerCase(),
+      displayName: u.display_name || '',
+      role: u.role || 'user',
+      createdAt: u.created_at,
+      lastSeenAt: u.last_seen_at
+    }));
+  } catch (e) { console.warn('users load failed:', e.message); SB_STATE.resolvedUsers = []; }
 
   // Test results (all rows)
   try {
@@ -2532,10 +2608,16 @@ function hydrateIssuesFromSb(rows) {
     testerEmail: r.tester_email || '',
     loggedAt: r.logged_at,
     status: r.status || 'Open',
-    context: r.context || {}
+    context: r.context || {},
+    resolution: r.resolution || '',
+    resolvedAt: r.resolved_at,
+    resolvedBy: r.resolved_by || '',
+    lastUpdatedAt: r.last_updated_at,
+    lastUpdatedBy: r.last_updated_by || ''
   }));
   saveState(state);
   renderIssuesView();
+  if (typeof refreshNotifications === 'function') refreshNotifications();
 }
 
 function sbSubscribe() {
@@ -3292,6 +3374,47 @@ function submitIssue() {
 }
 
 function renderAdminView() {
+  // Users table
+  const usersTbody = document.getElementById('admin-users-tbody');
+  const usersCnt = document.getElementById('admin-users-count');
+  const users = SP_STATE.resolvedUsers || [];
+  if (usersCnt) usersCnt.textContent = users.length;
+  if (usersTbody) {
+    if (users.length === 0) {
+      usersTbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-muted);font-style:italic;">No users yet.</td></tr>`;
+    } else {
+      const fmtDate = ts => {
+        if (!ts) return '<span style="color:var(--text-muted);font-style:italic;">never</span>';
+        const d = new Date(ts);
+        const now = new Date();
+        const diffMin = Math.floor((now - d) / 60000);
+        let rel = '';
+        if (diffMin < 1) rel = 'just now';
+        else if (diffMin < 60) rel = `${diffMin}m ago`;
+        else if (diffMin < 1440) rel = `${Math.floor(diffMin / 60)}h ago`;
+        else if (diffMin < 10080) rel = `${Math.floor(diffMin / 1440)}d ago`;
+        else rel = d.toLocaleDateString();
+        return `<span title="${d.toLocaleString()}">${rel}</span>`;
+      };
+      const roleStyle = role => {
+        const colors = {
+          admin: { bg: '#fef3c7', color: '#92400e', border: '#fde68a' },
+          user: { bg: '#dbeafe', color: '#1e40af', border: '#bfdbfe' },
+          guest: { bg: '#f3f4f6', color: '#6b7280', border: '#d1d5db' }
+        };
+        const c = colors[role] || colors.user;
+        return `<span style="display:inline-block;background:${c.bg};color:${c.color};border:1px solid ${c.border};padding:1px 8px;border-radius:10px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">${role}</span>`;
+      };
+      usersTbody.innerHTML = users.map(u => `<tr>
+        <td style="font-family:'DM Mono',monospace;font-size:12px;">${u.email}</td>
+        <td>${u.displayName || '<span style="color:var(--text-muted);font-style:italic;">—</span>'}</td>
+        <td>${roleStyle(u.role)}</td>
+        <td style="font-size:11.5px;color:var(--text-muted);">${fmtDate(u.createdAt)}</td>
+        <td style="font-size:11.5px;">${fmtDate(u.lastSeenAt)}</td>
+      </tr>`).join('');
+    }
+  }
+
   // Recipients table
   const recipientsTbody = document.getElementById('admin-recipients-tbody');
   const recipientsCnt = document.getElementById('admin-recipients-count');
@@ -3465,11 +3588,30 @@ function openIssueDetail(issueId) {
   const i = issues.find(x => x.id === issueId);
   if (!i) { alert('Issue not found.'); return; }
 
+  const me = (getTesterEmail() || '').toLowerCase();
+  const isMine = (i.testerEmail || '').toLowerCase() === me;
+  const canEdit = SP_STATE.isAdmin || isMine;
+
   const sevColor = { Low: '#9ca3af', Medium: '#d97706', High: '#dc2626', Critical: '#7c2d12' }[i.severity] || '#9ca3af';
   const statusColor = { Open: '#dc2626', 'In Review': '#d97706', Fixed: '#16a34a', "Won't Fix": '#6b7280', Duplicate: '#6b7280' }[i.status] || '#6b7280';
   const ctx = i.context || {};
   const sec = ctx.sections || {};
   const ts = ctx.tester_state || {};
+
+  // Resolution block (visible if there's a resolution OR the user is admin/owner)
+  const resolutionHtml = (i.resolution || i.resolvedAt || i.status === 'Fixed' || i.status === "Won't Fix")
+    ? `<div style="margin-bottom:18px;padding:14px;background:#f0fdf4;border:2px solid #bbf7d0;border-radius:8px;">
+         <div style="font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#16a34a;margin-bottom:8px;">✅ Resolution</div>
+         ${i.resolution ? `<div style="font-size:13.5px;line-height:1.5;white-space:pre-wrap;margin-bottom:8px;">${escapeHTML(i.resolution)}</div>` : '<div style="color:var(--text-muted);font-style:italic;font-size:12.5px;">No resolution notes yet.</div>'}
+         ${i.resolvedBy ? `<div style="font-size:11.5px;color:var(--text-muted);">Resolved by <strong>${escapeHTML(i.resolvedBy)}</strong>${i.resolvedAt ? ` on ${new Date(i.resolvedAt).toLocaleString()}` : ''}</div>` : ''}
+       </div>`
+    : '';
+  // Last-updated banner
+  const updatedHtml = (i.lastUpdatedBy && i.lastUpdatedAt && i.lastUpdatedBy !== i.testerEmail)
+    ? `<div style="margin-bottom:14px;padding:8px 12px;background:#eff6ff;border-left:3px solid var(--blue-700);border-radius:4px;font-size:12px;color:#1e40af;">
+         🔔 Updated by <strong>${escapeHTML(i.lastUpdatedBy)}</strong> on ${new Date(i.lastUpdatedAt).toLocaleString()}
+       </div>`
+    : '';
 
   // Build sub-step list with check marks (handles nested children)
   let substepsHtml = '';
@@ -3503,7 +3645,7 @@ function openIssueDetail(issueId) {
     : '<span style="color:var(--text-muted);font-style:italic;">No screenshot</span>';
 
   const modalHtml = `
-    <div class="modal-card" style="max-width:840px;max-height:90vh;overflow-y:auto;">
+    <div class="modal" style="max-width:840px;max-height:90vh;overflow-y:auto;background:#fff;">
       <div class="modal-header" style="position:sticky;top:0;background:#fff;z-index:10;border-bottom:1px solid var(--border);">
         <div>
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);">Issue Detail</div>
@@ -3521,6 +3663,9 @@ function openIssueDetail(issueId) {
           <span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#fff;border:1.5px solid ${sevColor};color:${sevColor};font-size:11px;font-weight:700;">${i.severity}</span>
           <span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#fff;border:1.5px solid ${statusColor};color:${statusColor};font-size:11px;font-weight:700;">${i.status}</span>
         </div>
+
+        ${updatedHtml}
+        ${resolutionHtml}
 
         <!-- Tester State -->
         <div style="background:#f9fafb;border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:18px;">
@@ -3587,20 +3732,309 @@ function openIssueDetail(issueId) {
         </div>` : ''}
 
       </div>
-      <div class="modal-footer" style="position:sticky;bottom:0;background:#fff;border-top:1px solid var(--border);">
+      <div class="modal-footer" style="position:sticky;bottom:0;background:#fff;border-top:1px solid var(--border);display:flex;gap:8px;">
         <button class="topbar-btn" onclick="closeIssueDetail()">Close</button>
+        ${canEdit ? `<button class="topbar-btn primary" onclick="openEditIssue('${i.id}')" style="margin-left:auto;">✏️ Edit Issue</button>` : ''}
       </div>
     </div>`;
 
   const modalEl = document.getElementById('issue-detail-modal');
   modalEl.innerHTML = modalHtml;
   modalEl.style.display = 'flex';
+
+  // Mark this issue as viewed by the current user
+  markIssueViewed(i);
 }
 
 function closeIssueDetail() {
   const m = document.getElementById('issue-detail-modal');
   if (m) { m.style.display = 'none'; m.innerHTML = ''; }
 }
+
+// ════════════════════════════════════════════════
+// ISSUE EDIT MODAL — opens from detail view
+// ════════════════════════════════════════════════
+function openEditIssue(issueId) {
+  const issues = getState().issues || [];
+  const i = issues.find(x => x.id === issueId);
+  if (!i) { alert('Issue not found.'); return; }
+
+  const me = (getTesterEmail() || '').toLowerCase();
+  const isMine = (i.testerEmail || '').toLowerCase() === me;
+  const canEdit = SP_STATE.isAdmin || isMine;
+  if (!canEdit) { alert('You can only edit issues you logged.'); return; }
+
+  // Admin sees status + resolution editing; tester sees basic fields + status
+  const statuses = ['Open', 'In Review', 'Fixed', "Won't Fix", 'Duplicate'];
+  const severities = ['Low', 'Medium', 'High', 'Critical'];
+
+  const modalHtml = `
+    <div class="modal" style="max-width:680px;max-height:90vh;overflow-y:auto;background:#fff;">
+      <div class="modal-header" style="background:linear-gradient(135deg,#1d4ed8 0%,#1e40af 100%);color:#fff;position:sticky;top:0;z-index:10;">
+        <h2 style="margin:0;font-size:16px;">✏️ Edit Issue ${escapeHTML(i.id)}</h2>
+        <button class="modal-close" onclick="closeEditIssue()" style="color:#fff;">×</button>
+      </div>
+      <div class="modal-body" style="padding:20px;">
+        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+          <span class="badge badge-blue">TC-${escapeHTML(i.tc)}</span>
+          <span class="badge badge-gray">${escapeHTML(i.personaName)}</span>
+          <span class="badge badge-gray">${escapeHTML(i.envLabel)}</span>
+          <span style="font-size:11.5px;color:var(--text-muted);">Logged by ${escapeHTML(i.testerEmail)}</span>
+        </div>
+
+        <label style="display:block;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);margin-bottom:6px;">Title</label>
+        <input id="edit-issue-title" type="text" value="${escapeAttr(i.title)}" style="width:100%;font-size:14px;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;box-sizing:border-box;margin-bottom:12px;">
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+          <div>
+            <label style="display:block;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);margin-bottom:6px;">Severity</label>
+            <select id="edit-issue-severity" style="width:100%;font-size:13.5px;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;box-sizing:border-box;">
+              ${severities.map(s => `<option value="${s}" ${s === i.severity ? 'selected' : ''}>${s}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);margin-bottom:6px;">Status</label>
+            <select id="edit-issue-status" style="width:100%;font-size:13.5px;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;box-sizing:border-box;">
+              ${statuses.map(s => `<option value="${s}" ${s === i.status ? 'selected' : ''}>${s}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+
+        <label style="display:block;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);margin-bottom:6px;">What was observed</label>
+        <textarea id="edit-issue-behavior" rows="3" style="width:100%;font-size:13.5px;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;box-sizing:border-box;margin-bottom:12px;resize:vertical;">${escapeHTML(i.behavior || '')}</textarea>
+
+        <label style="display:block;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);margin-bottom:6px;">What was expected</label>
+        <textarea id="edit-issue-expected" rows="2" style="width:100%;font-size:13.5px;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;box-sizing:border-box;margin-bottom:12px;resize:vertical;">${escapeHTML(i.expected || '')}</textarea>
+
+        <label style="display:block;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);margin-bottom:6px;">Screenshot URL</label>
+        <input id="edit-issue-screenshot" type="text" value="${escapeAttr(i.screenshot || '')}" style="width:100%;font-size:13px;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Mono',monospace;box-sizing:border-box;margin-bottom:14px;">
+
+        <div style="margin-top:16px;padding:14px;background:#f0fdf4;border:2px solid #bbf7d0;border-radius:8px;">
+          <label style="display:block;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#16a34a;margin-bottom:6px;">✅ Resolution Notes</label>
+          <textarea id="edit-issue-resolution" rows="3" placeholder="What was done to fix this issue? Workaround? Reason for closing?" style="width:100%;font-size:13.5px;padding:10px 12px;border:1.5px solid #bbf7d0;border-radius:8px;font-family:inherit;box-sizing:border-box;resize:vertical;background:#fff;">${escapeHTML(i.resolution || '')}</textarea>
+          <div style="font-size:11.5px;color:#15803d;margin-top:6px;font-style:italic;">
+            Marking status as <strong>Fixed</strong> or <strong>Won't Fix</strong> will record you as the resolver.
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="position:sticky;bottom:0;background:#fff;border-top:1px solid var(--border);display:flex;gap:8px;">
+        <button class="topbar-btn" onclick="closeEditIssue()">Cancel</button>
+        <button class="topbar-btn primary" onclick="saveEditedIssue('${i.id}')" style="margin-left:auto;">💾 Save Changes</button>
+      </div>
+    </div>`;
+
+  const editEl = document.getElementById('issue-edit-modal');
+  editEl.innerHTML = modalHtml;
+  editEl.style.display = 'flex';
+}
+
+function closeEditIssue() {
+  const m = document.getElementById('issue-edit-modal');
+  if (m) { m.style.display = 'none'; m.innerHTML = ''; }
+}
+
+async function saveEditedIssue(issueId) {
+  const issues = getState().issues || [];
+  const i = issues.find(x => x.id === issueId);
+  if (!i) return;
+
+  const newTitle = document.getElementById('edit-issue-title').value.trim();
+  const newSeverity = document.getElementById('edit-issue-severity').value;
+  const newStatus = document.getElementById('edit-issue-status').value;
+  const newBehavior = document.getElementById('edit-issue-behavior').value.trim();
+  const newExpected = document.getElementById('edit-issue-expected').value.trim();
+  const newScreenshot = document.getElementById('edit-issue-screenshot').value.trim();
+  const newResolution = document.getElementById('edit-issue-resolution').value.trim();
+
+  if (!newTitle) { alert('Title cannot be empty.'); return; }
+  if (!newBehavior) { alert('"What was observed" cannot be empty.'); return; }
+
+  const me = getTesterEmail();
+  const wasResolved = (newStatus === 'Fixed' || newStatus === "Won't Fix");
+  const becomingResolved = wasResolved && i.status !== newStatus;
+
+  // Update local copy
+  i.title = newTitle;
+  i.severity = newSeverity;
+  i.status = newStatus;
+  i.behavior = newBehavior;
+  i.expected = newExpected;
+  i.screenshot = newScreenshot;
+  i.resolution = newResolution;
+  i.lastUpdatedBy = me;
+  i.lastUpdatedAt = new Date().toISOString();
+  if (becomingResolved) {
+    i.resolvedAt = new Date().toISOString();
+    i.resolvedBy = me;
+  } else if (!wasResolved) {
+    // Re-opened — clear resolved fields
+    i.resolvedAt = null;
+    i.resolvedBy = null;
+  }
+
+  const state = getState();
+  state.issues = state.issues.map(x => x.id === issueId ? i : x);
+  saveState(state);
+
+  // Sync to Supabase (if online)
+  if (SP_STATE.online && SP_STATE.client && i.sbItemId) {
+    try {
+      const { error } = await SP_STATE.client.from('issues').update({
+        title: i.title,
+        severity: i.severity,
+        status: i.status,
+        behavior: i.behavior,
+        expected_behavior: i.expected || null,
+        screenshot_link: i.screenshot || null,
+        resolution: i.resolution || null,
+        resolved_at: i.resolvedAt,
+        resolved_by: i.resolvedBy,
+        last_updated_by: me
+      }).eq('id', i.sbItemId);
+      if (error) throw error;
+    } catch (e) {
+      console.error('Issue update failed:', e);
+      alert('Saved locally but could not sync to database: ' + e.message);
+    }
+  }
+
+  closeEditIssue();
+  renderIssuesView();
+  // Re-open the detail to show changes
+  setTimeout(() => openIssueDetail(issueId), 100);
+}
+
+// ════════════════════════════════════════════════
+// NOTIFICATIONS — track which issues each user has viewed
+// ════════════════════════════════════════════════
+async function markIssueViewed(issue) {
+  if (!SP_STATE.online || !SP_STATE.myUserId || !issue.sbItemId) return;
+  try {
+    await SP_STATE.client.from('issue_views').upsert({
+      user_id: SP_STATE.myUserId,
+      issue_id: issue.sbItemId,
+      last_seen_at: new Date().toISOString()
+    }, { onConflict: 'user_id,issue_id' });
+    // Update local map
+    SP_STATE.viewedIssues = SP_STATE.viewedIssues || {};
+    SP_STATE.viewedIssues[issue.sbItemId] = new Date().toISOString();
+    refreshNotifications();
+  } catch (e) { console.warn('mark viewed failed:', e.message); }
+}
+
+async function loadIssueViews() {
+  if (!SP_STATE.online || !SP_STATE.myUserId) return;
+  try {
+    const { data } = await SP_STATE.client.from('issue_views')
+      .select('issue_id, last_seen_at')
+      .eq('user_id', SP_STATE.myUserId);
+    SP_STATE.viewedIssues = {};
+    (data || []).forEach(v => { SP_STATE.viewedIssues[v.issue_id] = v.last_seen_at; });
+  } catch (e) { console.warn('load views failed:', e.message); SP_STATE.viewedIssues = {}; }
+}
+
+// Compute "issues that updated since I last saw them" — only ones I logged
+function computeNotifications() {
+  const me = (getTesterEmail() || '').toLowerCase();
+  if (!me) return [];
+  const issues = getState().issues || [];
+  const viewed = SP_STATE.viewedIssues || {};
+  const myIssues = issues.filter(i => (i.testerEmail || '').toLowerCase() === me);
+  return myIssues.filter(i => {
+    if (!i.lastUpdatedAt) return false;
+    if (!i.lastUpdatedBy || (i.lastUpdatedBy || '').toLowerCase() === me) return false;  // skip self-updates
+    const lastSeen = viewed[i.sbItemId];
+    if (!lastSeen) return true;
+    return new Date(i.lastUpdatedAt) > new Date(lastSeen);
+  });
+}
+
+function refreshNotifications() {
+  const notifs = computeNotifications();
+  const bell = document.getElementById('notif-bell');
+  const badge = document.getElementById('notif-badge');
+  const list = document.getElementById('notif-list');
+  if (bell) bell.style.display = SP_STATE.online ? 'inline-flex' : 'none';
+  if (badge) {
+    if (notifs.length > 0) {
+      badge.style.display = 'inline-block';
+      badge.textContent = notifs.length;
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+  if (list) {
+    if (notifs.length === 0) {
+      list.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-muted);font-style:italic;font-size:13px;">No new updates</div>';
+    } else {
+      list.innerHTML = notifs.map(i => {
+        const sevColor = { Low: '#9ca3af', Medium: '#d97706', High: '#dc2626', Critical: '#7c2d12' }[i.severity] || '#9ca3af';
+        const statusColor = { Open: '#dc2626', 'In Review': '#d97706', Fixed: '#16a34a', "Won't Fix": '#6b7280', Duplicate: '#6b7280' }[i.status] || '#6b7280';
+        return `<div onclick="openIssueDetail('${i.id}');closeNotificationDropdown();" style="padding:10px 16px;border-bottom:1px solid #f3f4f6;cursor:pointer;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='#fff'">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+            <strong style="font-size:12.5px;color:var(--blue-700);">${i.id}</strong>
+            <span style="font-size:11px;color:${statusColor};font-weight:700;">${i.status}</span>
+          </div>
+          <div style="font-size:13px;line-height:1.4;margin-bottom:3px;">${escapeHTML(i.title)}</div>
+          <div style="font-size:11px;color:var(--text-muted);">
+            Updated by ${escapeHTML(i.lastUpdatedBy || '?')} · ${i.lastUpdatedAt ? new Date(i.lastUpdatedAt).toLocaleString() : ''}
+          </div>
+        </div>`;
+      }).join('');
+    }
+  }
+  // Also paint a small badge on test cards that have updated issues
+  refreshTestCardUpdateBadges();
+}
+
+function refreshTestCardUpdateBadges() {
+  // Remove existing
+  document.querySelectorAll('.tc-update-badge').forEach(el => el.remove());
+  const notifs = computeNotifications();
+  if (notifs.length === 0) return;
+  // Group by env+persona+tc
+  notifs.forEach(i => {
+    const sel = `.view[data-env="${i.env}"] .persona-panel[data-persona="${i.persona}"] .step-card[data-tc="${CSS.escape(i.tc)}"]`;
+    document.querySelectorAll(sel).forEach(card => {
+      // Avoid duplicate
+      if (card.querySelector('.tc-update-badge')) return;
+      const badge = document.createElement('span');
+      badge.className = 'tc-update-badge';
+      badge.style.cssText = 'display:inline-block;background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;margin-left:6px;';
+      badge.textContent = '🔔 Updated';
+      badge.title = 'An issue on this test case was updated';
+      const tcEl = card.querySelector('.step-tc');
+      if (tcEl) tcEl.parentElement.insertBefore(badge, tcEl.nextSibling);
+    });
+  });
+}
+
+function toggleNotificationDropdown() {
+  const dd = document.getElementById('notif-dropdown');
+  if (!dd) return;
+  dd.style.display = (dd.style.display === 'none' || !dd.style.display) ? 'block' : 'none';
+}
+function closeNotificationDropdown() {
+  const dd = document.getElementById('notif-dropdown');
+  if (dd) dd.style.display = 'none';
+}
+async function markAllNotificationsRead() {
+  const notifs = computeNotifications();
+  for (const i of notifs) {
+    await markIssueViewed(i);
+  }
+  closeNotificationDropdown();
+  refreshNotifications();
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', e => {
+  const dd = document.getElementById('notif-dropdown');
+  const bell = document.getElementById('notif-bell');
+  if (!dd || dd.style.display === 'none') return;
+  if (dd.contains(e.target) || (bell && bell.contains(e.target))) return;
+  dd.style.display = 'none';
+});
 
 function escapeHTML(s) {
   if (s == null) return '';
@@ -3621,6 +4055,39 @@ function buildSubstepList(instructionsHtml) {
   // Helper: detect embedded list in plain text (legacy fallback for older content)
   function splitEmbeddedList(text) {
     if (!text || text.length < 30) return null;
+
+    // Strategy 1: detect a quoted list "A, B, C, D" anywhere in the text
+    // The quoted block has 3+ commas, items are comma-separated within the quotes.
+    // Match either straight quotes, curly quotes, or guillemets.
+    const quotedMatch = text.match(/(["“«])([^"”»]{30,})(["”»])/);
+    if (quotedMatch) {
+      const before = text.slice(0, quotedMatch.index).trim();
+      const inside = quotedMatch[2].trim();
+      // Count commas inside
+      if ((inside.match(/,/g) || []).length >= 2) {
+        const headerText = before
+          .replace(/[\s,:.;]+$/, '') // strip trailing punctuation/colons
+          .trim();
+        const header = headerText ? headerText + ':' : 'Items:';
+        // Split by commas, paren-aware
+        const parts = [];
+        let depth = 0, start = 0;
+        for (let i = 0; i < inside.length; i++) {
+          const c = inside[i];
+          if (c === '(') depth++;
+          else if (c === ')') depth--;
+          else if (c === ',' && depth === 0) {
+            parts.push(inside.slice(start, i).trim());
+            start = i + 1;
+          }
+        }
+        parts.push(inside.slice(start).trim());
+        const items = parts.map(p => p.replace(/^["'"\s]+|["'"\s.]+$/g, '').trim()).filter(p => p.length > 1);
+        if (items.length >= 3) return { header, items };
+      }
+    }
+
+    // Strategy 2: colon-tail list (existing behavior)
     const lastColon = text.lastIndexOf(':');
     if (lastColon === -1 || lastColon === text.length - 1) return null;
     let header = text.slice(0, lastColon + 1).trim();
@@ -3966,48 +4433,69 @@ function updateDashboardStats() {
   const issuesCntEl = document.getElementById('dash-issues-count');
   const issuesSubEl = document.getElementById('dash-issues-sub');
   const inProgEl = document.getElementById('dash-inprogress');
+  const inProgSub = document.getElementById('dash-inprogress-sub');
 
   if (!totalCardsEl) return;
 
-  const allStepCards = document.querySelectorAll('.view[data-env] .step-card');
-  const totalCount = allStepCards.length;
-  totalCardsEl.textContent = totalCount;
+  // Env breakdowns
+  const envs = ['qa', 'uat', 'prod'];
+  const envCounts = { qa: 0, uat: 0, prod: 0 };
+  const envPassed = { qa: 0, uat: 0, prod: 0 };
+  const envInProg = { qa: 0, uat: 0, prod: 0 };
+  const envIssues = { qa: 0, uat: 0, prod: 0 };
 
-  // My passed (this user's own pass results across all envs)
+  // Count cards per env from DOM
+  envs.forEach(env => {
+    envCounts[env] = document.querySelectorAll(`.view[data-env="${env}"] .step-card`).length;
+  });
+  const totalCount = envCounts.qa + envCounts.uat + envCounts.prod;
+  totalCardsEl.textContent = totalCount;
+  if (totalSubEl) totalSubEl.innerHTML = `<span style="color:var(--blue-700);font-weight:600;">QA</span> ${envCounts.qa} · <span style="color:var(--blue-700);font-weight:600;">UAT</span> ${envCounts.uat} · <span style="color:var(--blue-700);font-weight:600;">Prod</span> ${envCounts.prod}`;
+
+  // My passed / in-progress per env
   let myPassed = 0, myInProg = 0;
   const state = getState();
   const myEmail = (getTesterEmail() || '').toLowerCase();
   Object.entries(state.cards || {}).forEach(([key, data]) => {
-    if (data.result === 'pass') myPassed++;
-    // "In Progress" = has at least one sub-step checked but not yet marked Pass
+    const env = key.split('-')[0];
+    if (data.result === 'pass') {
+      myPassed++;
+      if (envs.includes(env)) envPassed[env]++;
+    }
     if (Array.isArray(data.substeps) && data.substeps.some(Boolean) && data.result !== 'pass' && data.result !== 'fail') {
       myInProg++;
+      if (envs.includes(env)) envInProg[env]++;
     }
   });
   myPassedEl.textContent = myPassed;
   if (myEmail) {
-    myPassedSub.textContent = `Logged as ${myEmail}`;
+    myPassedSub.innerHTML = `<span style="color:#16a34a;font-weight:600;">QA</span> ${envPassed.qa} · <span style="color:#16a34a;font-weight:600;">UAT</span> ${envPassed.uat} · <span style="color:#16a34a;font-weight:600;">Prod</span> ${envPassed.prod}`;
   } else {
     myPassedSub.textContent = 'Sign in to track your progress';
   }
 
   inProgEl.textContent = myInProg;
+  if (inProgSub) {
+    inProgSub.innerHTML = `<span style="color:#d97706;font-weight:600;">QA</span> ${envInProg.qa} · <span style="color:#d97706;font-weight:600;">UAT</span> ${envInProg.uat} · <span style="color:#d97706;font-weight:600;">Prod</span> ${envInProg.prod}`;
+  }
 
-  // Issues logged (all issues, all testers if SP-synced)
+  // Issues logged per env
   const issues = state.issues || [];
+  issues.forEach(i => {
+    if (envs.includes(i.env)) envIssues[i.env]++;
+  });
   issuesCntEl.textContent = issues.length;
   const openCount = issues.filter(i => i.status === 'Open').length;
   if (issues.length === 0) {
     issuesSubEl.textContent = 'No issues yet';
   } else {
-    issuesSubEl.textContent = `${openCount} open · ${issues.length} total`;
+    issuesSubEl.innerHTML = `<span style="color:#dc2626;font-weight:600;">QA</span> ${envIssues.qa} · <span style="color:#dc2626;font-weight:600;">UAT</span> ${envIssues.uat} · <span style="color:#dc2626;font-weight:600;">Prod</span> ${envIssues.prod} <span style="color:var(--text-muted);">· ${openCount} open</span>`;
   }
 
   // Progress by Persona — uses my own results across all envs
   const personaProgressEl = document.getElementById('dash-persona-progress');
   if (personaProgressEl) {
     const personaOrder = ['nofo-dev', 'program-office', 'grant-office', 'oa-legal', 'oa-cfo', 'oa-leadership', 'reviewer', 'ost-pc', 'das'];
-    // Count cards in DOM by persona (across all envs - so any persona's total)
     const perPersona = {};
     personaOrder.forEach(p => perPersona[p] = { total: 0, passed: 0 });
     document.querySelectorAll('.view[data-env] .persona-panel').forEach(panel => {
@@ -4015,7 +4503,6 @@ function updateDashboardStats() {
       if (!persona || !perPersona[persona]) return;
       panel.querySelectorAll('.step-card').forEach(card => {
         perPersona[persona].total++;
-        // Check this card's saved state
         const env = panel.closest('[data-env]')?.dataset.env;
         const tc = card.dataset.tc;
         const key = `${env}-${persona}-${tc}`;
@@ -4031,6 +4518,40 @@ function updateDashboardStats() {
         <div class="pipeline-label">${PERSONA_NAMES[p] || p}</div>
         <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
         <div class="pipeline-count">${s.passed}/${s.total}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Per-Environment Progress card
+  const envProgressEl = document.getElementById('dash-env-progress');
+  if (envProgressEl) {
+    const envLabels = { qa: 'DOT QA', uat: 'DOT UAT', prod: 'Production' };
+    const envEmojis = { qa: '🧪', uat: '🔍', prod: '🚀' };
+    envProgressEl.innerHTML = envs.map(env => {
+      const total = envCounts[env];
+      const passed = envPassed[env];
+      const inProg = envInProg[env];
+      const issues = envIssues[env];
+      const pct = total ? Math.round((passed / total) * 100) : 0;
+      const passPct = total ? (passed / total) * 100 : 0;
+      const inProgPct = total ? (inProg / total) * 100 : 0;
+      return `<div style="display:flex;flex-direction:column;gap:6px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;">
+          <div style="font-weight:700;color:var(--text-primary);">
+            ${envEmojis[env]} ${envLabels[env]}
+          </div>
+          <div style="display:flex;gap:14px;font-family:'DM Mono',monospace;font-size:12px;">
+            <span style="color:#16a34a;"><strong>${passed}</strong> pass</span>
+            <span style="color:#d97706;"><strong>${inProg}</strong> in progress</span>
+            <span style="color:#dc2626;"><strong>${issues}</strong> issues</span>
+            <span style="color:var(--text-muted);">/${total}</span>
+            <span style="color:var(--blue-700);font-weight:700;min-width:38px;text-align:right;">${pct}%</span>
+          </div>
+        </div>
+        <div style="position:relative;height:10px;background:#f3f4f6;border-radius:5px;overflow:hidden;">
+          <div style="position:absolute;left:0;top:0;height:100%;width:${passPct}%;background:#16a34a;"></div>
+          <div style="position:absolute;left:${passPct}%;top:0;height:100%;width:${inProgPct}%;background:#d97706;opacity:.8;"></div>
+        </div>
       </div>`;
     }).join('');
   }
