@@ -1098,6 +1098,11 @@
 </div>
 
 <!-- ══════════════════════════════════════════════
+     ISSUE DETAIL MODAL — full context for an existing issue
+══════════════════════════════════════════════ -->
+<div id="issue-detail-modal" class="modal-backdrop" style="display:none;"></div>
+
+<!-- ══════════════════════════════════════════════
      LOG ISSUE MODAL
 ══════════════════════════════════════════════ -->
 <div id="log-issue-modal" class="modal-backdrop" style="display:none;">
@@ -1934,7 +1939,7 @@
       <div class="card">
         <div class="card-header">
           <div class="card-title">Issue Log <span id="issues-count" style="font-family:'DM Mono',monospace;color:var(--blue-700);">0</span></div>
-          <div class="card-subtitle">Auto-numbered ISS-XXX. Newest first.</div>
+          <div class="card-subtitle">Auto-numbered ISS-XXX. Newest first. <strong>Click any row to view full details</strong> including the test case state at time of logging.</div>
         </div>
         <div class="table-wrap">
           <table>
@@ -2354,7 +2359,8 @@ function hydrateIssuesFromSb(rows) {
     screenshot: r.screenshot_link || '',
     testerEmail: r.tester_email || '',
     loggedAt: r.logged_at,
-    status: r.status || 'Open'
+    status: r.status || 'Open',
+    context: r.context || {}
   }));
   saveState(state);
   renderIssuesView();
@@ -2430,7 +2436,8 @@ async function sbSyncIssue(issue) {
     screenshot_link: issue.screenshot || null,
     severity: issue.severity,
     status: issue.status || 'Open',
-    logged_at: issue.loggedAt
+    logged_at: issue.loggedAt,
+    context: issue.context || {}
   };
   try {
     const { data, error } = await SB_STATE.client
@@ -2919,6 +2926,69 @@ document.addEventListener('paste', e => {
     }
   }
 });
+// Capture full state of a test card at the moment an issue is logged.
+// Returns a JSON-friendly object with everything an admin needs to reproduce.
+function captureCardContext(card) {
+  if (!card) return {};
+
+  // Test case meta (rendered into the card markup)
+  const tcId = card.dataset.tc || '';
+  const titleEl = card.querySelector('.step-title');
+  const tcLabelEl = card.querySelector('.step-tc');
+  const badges = Array.from(card.querySelectorAll('.step-badges .badge')).map(b => b.textContent.trim());
+
+  // Test case definition sections (HTML blobs from generated portal content)
+  const sections = {};
+  card.querySelectorAll('.step-section').forEach(sec => {
+    const labelEl = sec.querySelector('.step-section-label');
+    if (!labelEl) return;
+    // Strip control buttons from label text
+    const labelText = labelEl.childNodes.length
+      ? Array.from(labelEl.childNodes).filter(n => n.nodeType === 3 || (n.nodeType === 1 && !n.matches('button'))).map(n => n.textContent || '').join(' ').trim()
+      : labelEl.textContent.trim();
+
+    if (sec.querySelector('.substep-list')) {
+      // Sub-steps section — capture each substep + its checked state
+      const substeps = Array.from(sec.querySelectorAll('.substep-row')).map(row => ({
+        num: row.querySelector('.substep-num')?.textContent.trim() || '',
+        text: row.querySelector('.substep-text')?.textContent.trim() || '',
+        checked: !!row.querySelector('.substep-checkbox')?.checked
+      }));
+      sections.testing_instructions = { label: labelText, substeps: substeps };
+    } else if (sec.querySelector('.expected-box')) {
+      sections.expected_results = { label: labelText, html: sec.querySelector('.expected-box').innerHTML.trim() };
+    } else if (sec.querySelector('.negative-box')) {
+      sections.negative_scenario = { label: labelText, html: sec.querySelector('.negative-box').innerHTML.trim() };
+    } else if (sec.querySelector('.prerequisites-box')) {
+      sections.prerequisites = { label: labelText, html: sec.querySelector('.prerequisites-box').innerHTML.trim() };
+    }
+  });
+
+  // Tester's current state
+  const resultBtn = card.querySelector('.result-btn.selected');
+  const resultType = resultBtn ? (resultBtn.classList.contains('pass') ? 'Pass' : resultBtn.classList.contains('fail') ? 'Fail' : 'Inconclusive') : 'Pending';
+  const signedOff = card.classList.contains('is-signed-off');
+
+  return {
+    captured_at: new Date().toISOString(),
+    tc_id: tcId,
+    tc_label: tcLabelEl?.textContent.trim() || `TC-${tcId}`,
+    title: titleEl?.textContent.trim() || '',
+    badges: badges,
+    sections: sections,
+    tester_state: {
+      result: resultType,
+      tester_name: card.querySelector('.tester-name-input')?.value || '',
+      test_date: card.querySelector('.test-date-input')?.value || '',
+      evidence_link: card.querySelector('.evidence-input')?.value || '',
+      comments: card.querySelector('.comments-input')?.value || '',
+      signed_off: signedOff,
+      substep_count: card.querySelectorAll('.substep-checkbox').length,
+      substep_checked_count: Array.from(card.querySelectorAll('.substep-checkbox')).filter(c => c.checked).length
+    }
+  };
+}
+
 function submitIssue() {
   const title = document.getElementById('issue-title-input').value.trim();
   const behavior = document.getElementById('issue-behavior').value.trim();
@@ -2952,7 +3022,8 @@ function submitIssue() {
     screenshot: document.getElementById('issue-screenshot').value.trim(),
     testerEmail: getTesterEmail(),
     loggedAt: new Date().toISOString(),
-    status: 'Open'
+    status: 'Open',
+    context: captureCardContext(card)
   };
   state.issues.push(issue);
   saveState(state);
@@ -3088,22 +3159,6 @@ function renderIssuesView() {
   const tbody = document.getElementById('issues-tbody');
   const dashTbody = document.getElementById('dashboard-issue-tbody');
 
-  const renderRow = i => {
-    const sevColor = { Low: '#9ca3af', Medium: '#d97706', High: '#dc2626', Critical: '#7c2d12' }[i.severity] || '#9ca3af';
-    const statusColor = { Open: '#dc2626', 'In Review': '#d97706', Fixed: '#16a34a', "Won't Fix": '#6b7280', Duplicate: '#6b7280' }[i.status] || '#6b7280';
-    return `<tr>
-      <td><strong>${i.id}</strong></td>
-      <td>${i.title}</td>
-      <td><span class="badge badge-blue">TC-${i.tc}</span></td>
-      <td>${i.personaName}</td>
-      <td><span class="badge badge-gray">${i.envLabel}</span></td>
-      <td><span style="color:${sevColor};font-weight:700;">${i.severity}</span></td>
-      <td><span style="color:${statusColor};font-weight:700;">${i.status}</span></td>
-      <td style="font-size:11.5px;">${i.testerEmail || '—'}</td>
-      ${tbody && i._fullRow ? `<td style="font-size:11.5px;color:var(--text-muted);">${new Date(i.loggedAt).toLocaleString()}</td>` : ''}
-    </tr>`;
-  };
-
   if (tbody) {
     if (issues.length === 0) {
       tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--text-muted);font-style:italic;">No issues logged yet. Use the 🐛 Log Issue button on any test case to file one.</td></tr>`;
@@ -3111,8 +3166,8 @@ function renderIssuesView() {
       tbody.innerHTML = issues.map(i => {
         const sevColor = { Low: '#9ca3af', Medium: '#d97706', High: '#dc2626', Critical: '#7c2d12' }[i.severity] || '#9ca3af';
         const statusColor = { Open: '#dc2626', 'In Review': '#d97706', Fixed: '#16a34a', "Won't Fix": '#6b7280', Duplicate: '#6b7280' }[i.status] || '#6b7280';
-        return `<tr>
-          <td><strong>${i.id}</strong></td>
+        return `<tr style="cursor:pointer;" onclick="openIssueDetail('${i.id}')" title="Click to view full details">
+          <td><strong style="color:var(--blue-700);">${i.id}</strong></td>
           <td>${i.title}</td>
           <td><span class="badge badge-blue">TC-${i.tc}</span></td>
           <td>${i.personaName}</td>
@@ -3133,8 +3188,8 @@ function renderIssuesView() {
       dashTbody.innerHTML = issues.slice(0, 5).map(i => {
         const sevColor = { Low: '#9ca3af', Medium: '#d97706', High: '#dc2626', Critical: '#7c2d12' }[i.severity] || '#9ca3af';
         const statusColor = { Open: '#dc2626', 'In Review': '#d97706', Fixed: '#16a34a', "Won't Fix": '#6b7280', Duplicate: '#6b7280' }[i.status] || '#6b7280';
-        return `<tr>
-          <td><strong>${i.id}</strong></td>
+        return `<tr style="cursor:pointer;" onclick="openIssueDetail('${i.id}')" title="Click to view full details">
+          <td><strong style="color:var(--blue-700);">${i.id}</strong></td>
           <td>${i.title}</td>
           <td><span class="badge badge-blue">TC-${i.tc}</span></td>
           <td>${i.personaName}</td>
@@ -3150,6 +3205,143 @@ function renderIssuesView() {
   const cnt = document.getElementById('issues-count');
   if (cnt) cnt.textContent = issues.length;
 }
+
+// ════════════════════════════════════════════════
+// ISSUE DETAIL MODAL — full context view
+// ════════════════════════════════════════════════
+function openIssueDetail(issueId) {
+  const issues = getState().issues || [];
+  const i = issues.find(x => x.id === issueId);
+  if (!i) { alert('Issue not found.'); return; }
+
+  const sevColor = { Low: '#9ca3af', Medium: '#d97706', High: '#dc2626', Critical: '#7c2d12' }[i.severity] || '#9ca3af';
+  const statusColor = { Open: '#dc2626', 'In Review': '#d97706', Fixed: '#16a34a', "Won't Fix": '#6b7280', Duplicate: '#6b7280' }[i.status] || '#6b7280';
+  const ctx = i.context || {};
+  const sec = ctx.sections || {};
+  const ts = ctx.tester_state || {};
+
+  // Build sub-step list with check marks
+  let substepsHtml = '';
+  if (sec.testing_instructions && sec.testing_instructions.substeps) {
+    substepsHtml = '<ol style="margin:0;padding-left:0;list-style:none;">' +
+      sec.testing_instructions.substeps.map(s => `
+        <li style="display:flex;gap:10px;align-items:flex-start;padding:6px 0;border-bottom:1px solid #f3f4f6;">
+          <span style="display:inline-block;width:20px;text-align:center;font-weight:700;color:${s.checked ? '#16a34a' : '#9ca3af'};">${s.checked ? '✓' : '☐'}</span>
+          <span style="font-family:'DM Mono',monospace;color:var(--text-muted);font-size:12px;min-width:20px;">${s.num}.</span>
+          <span style="flex:1;${s.checked ? '' : 'color:var(--text-secondary);'}">${escapeHTML(s.text)}</span>
+        </li>`).join('') +
+      '</ol>';
+  }
+
+  const screenshotHtml = i.screenshot
+    ? `<a href="${escapeAttr(i.screenshot)}" target="_blank" rel="noopener" style="display:inline-block;padding:6px 12px;background:#1d4ed8;color:#fff;border-radius:6px;text-decoration:none;font-weight:600;font-size:12px;">📎 View Screenshot</a>`
+    : '<span style="color:var(--text-muted);font-style:italic;">No screenshot</span>';
+
+  const modalHtml = `
+    <div class="modal-card" style="max-width:840px;max-height:90vh;overflow-y:auto;">
+      <div class="modal-header" style="position:sticky;top:0;background:#fff;z-index:10;border-bottom:1px solid var(--border);">
+        <div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);">Issue Detail</div>
+          <h2 style="margin:4px 0 0 0;font-size:18px;color:var(--blue-700);">${i.id} — ${escapeHTML(i.title)}</h2>
+        </div>
+        <button class="modal-close" onclick="closeIssueDetail()">×</button>
+      </div>
+      <div class="modal-body" style="padding:20px;">
+
+        <!-- Summary chips -->
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;">
+          <span class="badge badge-blue">TC-${escapeHTML(i.tc)}</span>
+          <span class="badge badge-gray">${escapeHTML(i.personaName)}</span>
+          <span class="badge badge-gray">${escapeHTML(i.envLabel)}</span>
+          <span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#fff;border:1.5px solid ${sevColor};color:${sevColor};font-size:11px;font-weight:700;">${i.severity}</span>
+          <span style="display:inline-block;padding:3px 10px;border-radius:12px;background:#fff;border:1.5px solid ${statusColor};color:${statusColor};font-size:11px;font-weight:700;">${i.status}</span>
+        </div>
+
+        <!-- Tester State -->
+        <div style="background:#f9fafb;border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:18px;">
+          <div style="font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);margin-bottom:8px;">🧪 Tester State at Time of Issue</div>
+          <table style="width:100%;font-size:13px;border-collapse:collapse;">
+            <tr><td style="padding:4px 8px;width:160px;font-weight:600;">Tester</td><td>${escapeHTML(i.testerEmail)}</td></tr>
+            <tr><td style="padding:4px 8px;font-weight:600;">Tester Name</td><td>${escapeHTML(ts.tester_name || '—')}</td></tr>
+            <tr><td style="padding:4px 8px;font-weight:600;">Test Date</td><td>${escapeHTML(ts.test_date || '—')}</td></tr>
+            <tr><td style="padding:4px 8px;font-weight:600;">Result</td><td><strong style="color:${ts.result === 'Pass' ? '#16a34a' : ts.result === 'Fail' ? '#dc2626' : '#9ca3af'};">${escapeHTML(ts.result || 'Pending')}</strong></td></tr>
+            <tr><td style="padding:4px 8px;font-weight:600;">Sub-steps Checked</td><td>${ts.substep_checked_count || 0} / ${ts.substep_count || 0}</td></tr>
+            <tr><td style="padding:4px 8px;font-weight:600;">Signed Off</td><td>${ts.signed_off ? '<span style="color:#16a34a;">✓ Yes</span>' : '<span style="color:#9ca3af;">No</span>'}</td></tr>
+            <tr><td style="padding:4px 8px;font-weight:600;">Logged At</td><td>${new Date(i.loggedAt).toLocaleString()}</td></tr>
+            ${ts.evidence_link ? `<tr><td style="padding:4px 8px;font-weight:600;">Evidence Link</td><td><a href="${escapeAttr(ts.evidence_link)}" target="_blank" rel="noopener">${escapeHTML(ts.evidence_link)}</a></td></tr>` : ''}
+            ${ts.comments ? `<tr><td style="padding:4px 8px;font-weight:600;vertical-align:top;">Comments</td><td style="white-space:pre-wrap;">${escapeHTML(ts.comments)}</td></tr>` : ''}
+          </table>
+        </div>
+
+        <!-- What was observed -->
+        <div style="margin-bottom:18px;">
+          <div style="font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#dc2626;margin-bottom:6px;">🐛 What was observed (Actual Behavior)</div>
+          <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:12px;font-size:13.5px;line-height:1.5;white-space:pre-wrap;">${escapeHTML(i.behavior)}</div>
+        </div>
+
+        <!-- What was expected -->
+        ${i.expected ? `
+        <div style="margin-bottom:18px;">
+          <div style="font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#16a34a;margin-bottom:6px;">✅ What was expected</div>
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:12px;font-size:13.5px;line-height:1.5;white-space:pre-wrap;">${escapeHTML(i.expected)}</div>
+        </div>` : ''}
+
+        <!-- Screenshot -->
+        <div style="margin-bottom:18px;">
+          <div style="font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);margin-bottom:6px;">📎 Screenshot / Evidence</div>
+          ${screenshotHtml}
+        </div>
+
+        <hr style="border:none;border-top:1px solid var(--border);margin:24px 0;">
+
+        <!-- Test Case Definition -->
+        <div style="font-size:13px;font-weight:700;color:var(--blue-700);text-transform:uppercase;letter-spacing:.04em;margin-bottom:14px;">📋 Test Case Definition</div>
+
+        ${sec.prerequisites && sec.prerequisites.html ? `
+        <div style="margin-bottom:16px;">
+          <div style="font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);margin-bottom:6px;">📌 Prerequisites</div>
+          <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:12px;font-size:13px;line-height:1.5;">${sec.prerequisites.html}</div>
+        </div>` : ''}
+
+        ${substepsHtml ? `
+        <div style="margin-bottom:16px;">
+          <div style="font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);margin-bottom:6px;">🧪 Testing Instructions <span style="font-weight:400;color:var(--text-muted);">(✓ = checked, ☐ = not checked)</span></div>
+          <div style="background:#f9fafb;border:1px solid var(--border);border-radius:6px;padding:12px;">${substepsHtml}</div>
+        </div>` : ''}
+
+        ${sec.expected_results && sec.expected_results.html ? `
+        <div style="margin-bottom:16px;">
+          <div style="font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#16a34a;margin-bottom:6px;">✅ Expected Results</div>
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:12px;font-size:13px;line-height:1.5;">${sec.expected_results.html}</div>
+        </div>` : ''}
+
+        ${sec.negative_scenario && sec.negative_scenario.html ? `
+        <div style="margin-bottom:16px;">
+          <div style="font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#dc2626;margin-bottom:6px;">⚠️ Negative Scenario</div>
+          <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:12px;font-size:13px;line-height:1.5;">${sec.negative_scenario.html}</div>
+        </div>` : ''}
+
+      </div>
+      <div class="modal-footer" style="position:sticky;bottom:0;background:#fff;border-top:1px solid var(--border);">
+        <button class="topbar-btn" onclick="closeIssueDetail()">Close</button>
+      </div>
+    </div>`;
+
+  const modalEl = document.getElementById('issue-detail-modal');
+  modalEl.innerHTML = modalHtml;
+  modalEl.style.display = 'flex';
+}
+
+function closeIssueDetail() {
+  const m = document.getElementById('issue-detail-modal');
+  if (m) { m.style.display = 'none'; m.innerHTML = ''; }
+}
+
+function escapeHTML(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function escapeAttr(s) { return escapeHTML(s); }
 
 // ════════════════════════════════════════════════
 // SUB-STEP EXTRACTION FROM INSTRUCTIONS HTML
@@ -4277,6 +4469,16 @@ window.addEventListener('DOMContentLoaded', () => {
     revealAdminNav();
     renderIssuesView();
     updateOverallSummary();
+    // Deep link: #issue/ISS-001 opens that issue's detail modal
+    const handleHash = () => {
+      const m = (location.hash || '').match(/^#issue\/(ISS-\d+)$/i);
+      if (m) {
+        // Slight delay so the issues are loaded
+        setTimeout(() => openIssueDetail(m[1].toUpperCase()), 200);
+      }
+    };
+    handleHash();
+    window.addEventListener('hashchange', handleHash);
   });
 });
 </script>
