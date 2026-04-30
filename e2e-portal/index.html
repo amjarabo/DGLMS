@@ -1146,22 +1146,49 @@
       <h2 style="margin:0;font-size:18px;">🔐 Welcome to GrantLens DGLMS E2E Testing</h2>
     </div>
     <div class="modal-body">
-      <p style="margin:0 0 14px 0;font-size:13.5px;color:var(--text-secondary);">
-        Enter your DOT email address. We'll send you a magic link to sign in — no password required.
+      <!-- Auth method tabs -->
+      <div style="display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid var(--border);">
+        <button id="auth-tab-password" type="button" onclick="switchAuthMode('password')"
+                style="flex:1;padding:10px 12px;background:transparent;border:none;border-bottom:3px solid var(--blue-700);color:var(--blue-700);font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;margin-bottom:-2px;">
+          🔑 Password
+        </button>
+        <button id="auth-tab-magic" type="button" onclick="switchAuthMode('magic')"
+                style="flex:1;padding:10px 12px;background:transparent;border:none;border-bottom:3px solid transparent;color:var(--text-muted);font-weight:600;font-size:13px;cursor:pointer;font-family:inherit;margin-bottom:-2px;">
+          📧 Magic Link
+        </button>
+      </div>
+
+      <p id="auth-mode-description" style="margin:0 0 14px 0;font-size:13px;color:var(--text-secondary);">
+        Sign in with your DOT email and password.
       </p>
+
       <label style="display:block;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);margin-bottom:6px;">
-        Your DOT Email Address *
+        DOT Email Address *
       </label>
       <input id="email-gate-input" type="email" placeholder="firstname.lastname@dot.gov" autocomplete="email"
              style="width:100%;font-size:14px;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;box-sizing:border-box;">
+
+      <div id="password-fields" style="margin-top:12px;">
+        <label style="display:block;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);margin-bottom:6px;">
+          Password *
+        </label>
+        <input id="password-gate-input" type="password" placeholder="Your password" autocomplete="current-password"
+               style="width:100%;font-size:14px;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;box-sizing:border-box;">
+        <div style="margin-top:8px;text-align:right;">
+          <a href="#" onclick="event.preventDefault();sendPasswordReset();" style="font-size:11.5px;color:var(--blue-700);text-decoration:none;font-weight:600;">
+            Forgot password?
+          </a>
+        </div>
+      </div>
+
       <div id="email-gate-error" style="display:none;color:#dc2626;font-size:12px;margin-top:6px;font-weight:600;"></div>
-      <div style="margin-top:14px;padding:10px 12px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;font-size:11.5px;color:#0c4a6e;">
-        ℹ️ Allowed domains: <strong>@dot.gov</strong> and DOT contractor variations. Click the link in your email to access the portal.
+      <div id="email-gate-info" style="margin-top:14px;padding:10px 12px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;font-size:11.5px;color:#0c4a6e;">
+        ℹ️ Allowed domains: <strong>@dot.gov</strong> and DOT contractor variations.
       </div>
     </div>
     <div class="modal-footer">
-      <button class="topbar-btn primary" onclick="confirmEmailGate()" style="width:100%;justify-content:center;font-size:14px;padding:10px;">
-        📧 Send Magic Link
+      <button id="auth-submit-btn" class="topbar-btn primary" onclick="confirmEmailGate()" style="width:100%;justify-content:center;font-size:14px;padding:10px;">
+        🔑 Sign In
       </button>
     </div>
   </div>
@@ -2241,6 +2268,81 @@ async function sendMagicLink(email) {
   return data;
 }
 
+async function signInWithPassword(email, password) {
+  if (!isEmailAllowed(email)) {
+    throw new Error('This email is not on the DOT allowlist. Use your @dot.gov address.');
+  }
+  const { data, error } = await SB_STATE.client.auth.signInWithPassword({
+    email: email,
+    password: password
+  });
+  if (error) throw error;
+  return data;
+}
+
+async function sendPasswordReset() {
+  const email = (document.getElementById('email-gate-input')?.value || '').trim().toLowerCase();
+  const errorEl = document.getElementById('email-gate-error');
+  if (!email || !email.includes('@')) {
+    errorEl.textContent = 'Enter your email above first, then click "Forgot password".';
+    errorEl.style.display = 'block';
+    return;
+  }
+  if (!isEmailAllowed(email)) {
+    errorEl.textContent = 'This email is not on the DOT allowlist.';
+    errorEl.style.display = 'block';
+    return;
+  }
+  try {
+    if (!SB_STATE.client) await initSupabase();
+    const { error } = await SB_STATE.client.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + window.location.pathname
+    });
+    if (error) throw error;
+    errorEl.style.color = '#16a34a';
+    errorEl.textContent = '✓ Password reset link sent. Check your inbox.';
+    errorEl.style.display = 'block';
+  } catch (e) {
+    errorEl.style.color = '#dc2626';
+    errorEl.textContent = e.message || 'Could not send reset link.';
+    errorEl.style.display = 'block';
+  }
+}
+
+let _authMode = 'password';
+function switchAuthMode(mode) {
+  _authMode = mode;
+  const passwordTab = document.getElementById('auth-tab-password');
+  const magicTab = document.getElementById('auth-tab-magic');
+  const passwordFields = document.getElementById('password-fields');
+  const desc = document.getElementById('auth-mode-description');
+  const submitBtn = document.getElementById('auth-submit-btn');
+  const errorEl = document.getElementById('email-gate-error');
+  if (errorEl) { errorEl.style.display = 'none'; errorEl.style.color = '#dc2626'; }
+
+  if (mode === 'password') {
+    passwordTab.style.borderBottomColor = 'var(--blue-700)';
+    passwordTab.style.color = 'var(--blue-700)';
+    passwordTab.style.fontWeight = '700';
+    magicTab.style.borderBottomColor = 'transparent';
+    magicTab.style.color = 'var(--text-muted)';
+    magicTab.style.fontWeight = '600';
+    passwordFields.style.display = 'block';
+    desc.textContent = 'Sign in with your DOT email and password.';
+    submitBtn.innerHTML = '🔑 Sign In';
+  } else {
+    magicTab.style.borderBottomColor = 'var(--blue-700)';
+    magicTab.style.color = 'var(--blue-700)';
+    magicTab.style.fontWeight = '700';
+    passwordTab.style.borderBottomColor = 'transparent';
+    passwordTab.style.color = 'var(--text-muted)';
+    passwordTab.style.fontWeight = '600';
+    passwordFields.style.display = 'none';
+    desc.textContent = "We'll send a one-time link to your inbox. No password needed.";
+    submitBtn.innerHTML = '📧 Send Magic Link';
+  }
+}
+
 async function signOut() {
   await SB_STATE.client.auth.signOut();
   // Clear local state and reload
@@ -2612,9 +2714,11 @@ function showEmailGate() {
 }
 async function confirmEmailGate() {
   const input = document.getElementById('email-gate-input');
+  const passwordInput = document.getElementById('password-gate-input');
   const errorEl = document.getElementById('email-gate-error');
-  const submitBtn = document.querySelector('#email-gate .topbar-btn.primary');
+  const submitBtn = document.getElementById('auth-submit-btn');
   const email = (input.value || '').trim().toLowerCase();
+  errorEl.style.color = '#dc2626';
 
   if (!email || !email.includes('@') || email.length < 5) {
     errorEl.textContent = 'Please enter a valid email address.';
@@ -2628,12 +2732,34 @@ async function confirmEmailGate() {
   }
 
   errorEl.style.display = 'none';
-  if (submitBtn) { submitBtn.textContent = 'Sending magic link...'; submitBtn.disabled = true; }
 
+  if (_authMode === 'password') {
+    const password = passwordInput.value || '';
+    if (!password) {
+      errorEl.textContent = 'Please enter your password.';
+      errorEl.style.display = 'block';
+      return;
+    }
+    if (submitBtn) { submitBtn.textContent = 'Signing in...'; submitBtn.disabled = true; }
+    try {
+      if (!SB_STATE.client) await initSupabase();
+      await signInWithPassword(email, password);
+      // Auth state change listener will reload the page
+      // Fallback: explicitly reload after a moment in case the listener didn't fire
+      setTimeout(() => location.reload(), 800);
+    } catch (e) {
+      errorEl.textContent = e.message?.includes('Invalid') ? 'Wrong email or password.' : (e.message || 'Sign-in failed.');
+      errorEl.style.display = 'block';
+      if (submitBtn) { submitBtn.innerHTML = '🔑 Sign In'; submitBtn.disabled = false; }
+    }
+    return;
+  }
+
+  // Magic link flow
+  if (submitBtn) { submitBtn.textContent = 'Sending magic link...'; submitBtn.disabled = true; }
   try {
     if (!SB_STATE.client) await initSupabase();
     await sendMagicLink(email);
-    // Show success state inside the modal
     const modalBody = document.querySelector('#email-gate .modal-body');
     if (modalBody) {
       modalBody.innerHTML = `
@@ -2656,7 +2782,7 @@ async function confirmEmailGate() {
   } catch (e) {
     errorEl.textContent = e.message || 'Could not send magic link. Try again.';
     errorEl.style.display = 'block';
-    if (submitBtn) { submitBtn.textContent = 'Enter Portal →'; submitBtn.disabled = false; }
+    if (submitBtn) { submitBtn.innerHTML = '📧 Send Magic Link'; submitBtn.disabled = false; }
   }
 }
 function changeTesterEmail() {
@@ -4646,6 +4772,8 @@ window.addEventListener('DOMContentLoaded', () => {
   // Submit email on Enter key in modal
   const ei = document.getElementById('email-gate-input');
   if (ei) ei.addEventListener('keydown', e => { if (e.key === 'Enter') confirmEmailGate(); });
+  const pi = document.getElementById('password-gate-input');
+  if (pi) pi.addEventListener('keydown', e => { if (e.key === 'Enter') confirmEmailGate(); });
   // Supabase bootstrap (async — populates teamwide data, reveals admin nav, sets connected status)
   spBootstrap().then(() => {
     revealAdminNav();
