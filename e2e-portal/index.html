@@ -954,7 +954,7 @@
   }
   .topbar-btn.primary:hover { background: #1e40af; }
 
-  /* ── SHAREPOINT STATUS BADGE ── */
+  /* ── DATABASE CONNECTION STATUS BADGE ── */
   .sp-status-badge {
     display: inline-flex; align-items: center; gap: 4px;
     padding: 4px 10px;
@@ -1226,7 +1226,7 @@
       <div class="topbar-breadcrumb" id="topbar-breadcrumb">DGLMS · Grant Lens Portal</div>
     </div>
     <div class="topbar-right">
-      <span id="sp-status-badge" class="sp-status-badge is-offline" title="SharePoint sync status">🔴 Offline (local only)</span>
+      <span id="sp-status-badge" class="sp-status-badge is-offline" title="Database sync status">🔴 Offline (local only)</span>
       <span id="tester-chip" class="tester-chip" onclick="changeTesterEmail()" style="display:none;" title="Click to change">
         <span class="tester-chip-avatar" id="tester-chip-avatar">?</span>
         <span id="tester-chip-email">—</span>
@@ -1428,7 +1428,7 @@
 
         <!-- Environment Overview -->
         <div class="env-overview">
-          <div class="env-overview-title">📊 {ENV_LABEL} Summary</div>
+          <div class="env-overview-title">📊 DOT QA Summary</div>
           <div class="env-stats">
             <div class="env-stat"><div class="env-stat-label">Total Tests</div><div class="env-stat-value" data-stat="total">0</div></div>
             <div class="env-stat is-passed"><div class="env-stat-label">Passed</div><div class="env-stat-value" data-stat="passed">0</div></div>
@@ -1566,7 +1566,7 @@
 
         <!-- Environment Overview -->
         <div class="env-overview">
-          <div class="env-overview-title">📊 {ENV_LABEL} Summary</div>
+          <div class="env-overview-title">📊 DOT UAT Summary</div>
           <div class="env-stats">
             <div class="env-stat"><div class="env-stat-label">Total Tests</div><div class="env-stat-value" data-stat="total">0</div></div>
             <div class="env-stat is-passed"><div class="env-stat-label">Passed</div><div class="env-stat-value" data-stat="passed">0</div></div>
@@ -1704,7 +1704,7 @@
 
         <!-- Environment Overview -->
         <div class="env-overview">
-          <div class="env-overview-title">📊 {ENV_LABEL} Summary</div>
+          <div class="env-overview-title">📊 Production Summary</div>
           <div class="env-stats">
             <div class="env-stat"><div class="env-stat-label">Total Tests</div><div class="env-stat-value" data-stat="total">0</div></div>
             <div class="env-stat is-passed"><div class="env-stat-label">Passed</div><div class="env-stat-value" data-stat="passed">0</div></div>
@@ -1837,7 +1837,7 @@
     <div id="view-admin-view" class="view">
       <div class="page-header" style="border-left:6px solid #d97706;padding-left:14px;">
         <h1>👑 Admin View — All Testers</h1>
-        <p>Master view of every tester's results across all environments and personas. Filter, sort, and export to CSV. Only emails in the hardcoded fallback list or the <strong>E2E Admins</strong> SharePoint list see this tab.</p>
+        <p>Master view of every tester's results across all environments and personas. Filter, sort, and export to CSV.</p>
       </div>
 
       <!-- Issue Notification Recipients (driven by E2E Issue Recipients list) -->
@@ -1845,13 +1845,8 @@
         <div class="card-header" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
           <div>
             <div class="card-title">📧 Issue Notification Recipients <span id="admin-recipients-count" style="font-family:'DM Mono',monospace;color:var(--blue-700);">0</span></div>
-            <div class="card-subtitle">When a tester logs an issue, these people get an automatic email. Manage in the <strong>E2E Issue Recipients</strong> SharePoint list.</div>
+            <div class="card-subtitle">When a tester logs an issue, these people get an automatic email.</div>
           </div>
-          <a class="card-action" target="_blank" rel="noopener"
-             href="https://usdot.sharepoint.com/teams/GrantsSystemsSteeringCommitteeGSSC-DevelopmentandIntegration/Lists/E2E%20Issue%20Recipients/AllItems.aspx"
-             style="margin-left:auto;padding:6px 12px;border:1.5px solid var(--blue-700);border-radius:6px;color:var(--blue-700);text-decoration:none;font-size:12px;font-weight:700;">
-            Manage in SharePoint →
-          </a>
         </div>
         <div class="table-wrap">
           <table>
@@ -1864,7 +1859,7 @@
               </tr>
             </thead>
             <tbody id="admin-recipients-tbody">
-              <tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted);font-style:italic;">Recipients load when SharePoint connects.</td></tr>
+              <tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted);font-style:italic;">Recipients load when database connects.</td></tr>
             </tbody>
           </table>
         </div>
@@ -1981,7 +1976,7 @@
           <ul>
             <li>🔗 <a href="#">GrantLens Portal — UAT Environment</a></li>
             <li>💬 <a href="#">Real-Time Support Chat (SUAT Team · Microsoft Teams)</a></li>
-            <li>📁 <a href="#">Mock Data & Test Files (SharePoint)</a></li>
+            <li>📁 <a href="#">Mock Data & Test Files</a></li>
           </ul>
         </div>
         <div class="info-tile">
@@ -2627,12 +2622,12 @@ function persistCard(card) {
     evidence: card.querySelector('.evidence-input')?.value || '',
     comments: card.querySelector('.comments-input')?.value || '',
     substeps: Array.from(card.querySelectorAll('.substep-checkbox')).map(c => c.checked),
-    resultAt: result !== 'pending' && (!prior.resultAt || prior.result !== result) ? new Date().toISOString() : prior.resultAt || null,
+    resultAt: result === 'pending' ? null : (result !== 'pending' && (!prior.resultAt || prior.result !== result) ? new Date().toISOString() : prior.resultAt || null),
     signedOffAt: card.classList.contains('is-signed-off') && !prior.signedOffAt ? new Date().toISOString() : (card.classList.contains('is-signed-off') ? prior.signedOffAt : null)
   };
   state.cards[key] = data;
   saveState(state);
-  // Sync to SharePoint
+  // Sync to Supabase
   spSyncCard(key, data);
 }
 function restoreCard(card) {
@@ -2727,9 +2722,24 @@ function uncheckAllSubsteps(btn) {
 function setResult(btn, type) {
   const card = btn.closest('.step-card');
   const group = btn.closest('.result-select');
+  const wasSelected = btn.classList.contains('selected');
+  // Clear all sibling selections
   group.querySelectorAll('.result-btn').forEach(b => b.classList.remove('selected'));
-  btn.classList.add('selected');
   const badge = card.querySelector('.step-status-badge');
+
+  if (wasSelected) {
+    // Toggling off — clear result, badge, and timestamp
+    if (badge) {
+      badge.classList.remove('is-pass', 'is-fail', 'is-inconclusive');
+      badge.classList.add('is-hidden');
+      badge.textContent = '';
+    }
+    persistCardWithResult(card, 'pending');
+    recomputeEnvSummary(card);
+    return;
+  }
+
+  btn.classList.add('selected');
   if (badge) {
     badge.classList.remove('is-pass', 'is-fail', 'is-inconclusive', 'is-hidden');
     if (type === 'pass') { badge.classList.add('is-pass'); badge.textContent = '✓ PASSED'; }
@@ -2750,6 +2760,13 @@ function setResult(btn, type) {
   if (testerInput && !testerInput.value) testerInput.value = getTesterEmail();
   persistCard(card);
   recomputeEnvSummary(card);
+}
+
+// Helper for forcing a result value during undo
+function persistCardWithResult(card, forcedResult) {
+  // Clear the selected button class so persistCard reads 'pending'
+  card.querySelectorAll('.result-btn').forEach(b => b.classList.remove('selected'));
+  persistCard(card);
 }
 
 function toggleSignoff(checkbox) {
@@ -2858,7 +2875,7 @@ async function handleScreenshotFile(file) {
   };
   reader.readAsDataURL(file);
 
-  // Upload to SharePoint if online
+  // Upload to Supabase Storage if online
   if (SP_STATE.online) {
     try {
       const ts = new Date().toISOString().replace(/[:.]/g, '-');
@@ -2940,7 +2957,7 @@ function submitIssue() {
   };
   state.issues.push(issue);
   saveState(state);
-  // Sync to SharePoint
+  // Sync to Supabase
   spSyncIssue(issue);
   // Reference the new issue # in the card's Comments field
   const commentsEl = card.querySelector('.comments-input');
@@ -2961,7 +2978,7 @@ function renderAdminView() {
   if (recipientsCnt) recipientsCnt.textContent = recipients.length;
   if (recipientsTbody) {
     if (recipients.length === 0) {
-      recipientsTbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted);font-style:italic;">No recipients configured. Add rows to the <strong>E2E Issue Recipients</strong> SharePoint list to enable email notifications.</td></tr>`;
+      recipientsTbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted);font-style:italic;">No recipients configured.</td></tr>`;
     } else {
       recipientsTbody.innerHTML = recipients.map(r => {
         const sevs = (r.severities || []).map(s => {
@@ -3008,7 +3025,7 @@ function renderAdminView() {
   if (cnt) cnt.textContent = rows.length;
 
   if (rows.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--text-muted);font-style:italic;">No results match the current filters.${SP_STATE.online ? '' : ' (SharePoint offline — data shown is local only.)'}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--text-muted);font-style:italic;">No results match the current filters.${SP_STATE.online ? '' : ' (Database offline — data shown is local only.)'}</td></tr>`;
     return;
   }
 
@@ -3236,10 +3253,11 @@ function makeSteps(containerId, steps) {
               <button class="result-btn fail" onclick="setResult(this,'fail')">✗ Fail</button>
               <button class="result-btn inconclusive" onclick="setResult(this,'inconclusive')">~ Inconclusive</button>
             </div>
+            <div style="font-size:10.5px;color:var(--text-muted);margin-top:3px;font-style:italic;">Click the same button again to undo and reset the result.</div>
             <div class="step-meta-fields">
               <div class="env-field"><label>Tester Name (auto-filled from your email)</label><input class="tester-name-input" type="text" placeholder="firstname.lastname@dot.gov" onblur="onCardFieldChange(this)"></div>
               <div class="env-field"><label>Test Date (auto-stamped on Pass)</label><input class="test-date-input" type="date" onblur="onCardFieldChange(this)"></div>
-              <div class="env-field full"><label>Evidence Link (screenshot URL or SharePoint path)</label><input class="evidence-input" type="text" placeholder="https://..." onblur="onCardFieldChange(this)"></div>
+              <div class="env-field full"><label>Evidence Link (screenshot URL or upload path)</label><input class="evidence-input" type="text" placeholder="https://..." onblur="onCardFieldChange(this)"></div>
               <div class="env-field full"><label>Comments / Defect Notes (Issue # auto-added when you log one)</label><textarea class="comments-input" rows="2" placeholder="Notes, observations, or defect references..." onblur="onCardFieldChange(this)"></textarea></div>
             </div>
             <label class="signoff-row">
@@ -3994,7 +4012,7 @@ window.addEventListener('DOMContentLoaded', () => {
       makeSteps('steps-' + env + '-' + persona, data);
     });
   });
-  // If portal is hosted ON SharePoint, pick up tester email from session BEFORE showing gate
+  // If portal is hosted on a SaaS that exposes session info, pick it up BEFORE showing gate
   if (window._spPageContextInfo && window._spPageContextInfo.userEmail && !getTesterEmail()) {
     const s = getState();
     s.testerEmail = window._spPageContextInfo.userEmail.toLowerCase();
@@ -4017,7 +4035,7 @@ window.addEventListener('DOMContentLoaded', () => {
   // Submit email on Enter key in modal
   const ei = document.getElementById('email-gate-input');
   if (ei) ei.addEventListener('keydown', e => { if (e.key === 'Enter') confirmEmailGate(); });
-  // SharePoint bootstrap (async — populates teamwide data, reveals admin nav, sets connected status)
+  // Supabase bootstrap (async — populates teamwide data, reveals admin nav, sets connected status)
   spBootstrap().then(() => {
     revealAdminNav();
     renderIssuesView();
