@@ -44,6 +44,87 @@
     --shadow-md: 0 4px 24px rgba(0,0,0,.1);
   }
 
+  /* ── DARK THEME ── */
+  html[data-theme="dark"] {
+    --body-bg: #0b1220;
+    --card-bg: #131c2e;
+    --text-primary: #e5e7eb;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --border: #243049;
+    --sidebar-bg: #050d1f;
+    --sidebar-hover: #102246;
+    --sidebar-active: #1d4ed8;
+    --blue-50:  #0f1d3d;
+    --blue-100: #11244a;
+    --blue-300: #1e3a8a;
+    --green-light: #064e3b;
+    --amber-light: #4a3308;
+    --red-light: #4a1414;
+    --purple-light: #2e1b5b;
+    --shadow: 0 1px 3px rgba(0,0,0,.4), 0 4px 16px rgba(0,0,0,.35);
+    --shadow-md: 0 4px 24px rgba(0,0,0,.5);
+    color-scheme: dark;
+  }
+  /* Translate hardcoded light backgrounds in inline styles to dark equivalents */
+  html[data-theme="dark"] [style*="background:#fff"],
+  html[data-theme="dark"] [style*="background: #fff"],
+  html[data-theme="dark"] [style*="background:#ffffff"],
+  html[data-theme="dark"] [style*="background: #ffffff"] { background: var(--card-bg) !important; }
+  html[data-theme="dark"] [style*="background:#f9fafb"],
+  html[data-theme="dark"] [style*="background: #f9fafb"],
+  html[data-theme="dark"] [style*="background:#f3f4f6"],
+  html[data-theme="dark"] [style*="background: #f3f4f6"] { background: #1a2440 !important; }
+  html[data-theme="dark"] [style*="background:#f0fdf4"],
+  html[data-theme="dark"] [style*="background: #f0fdf4"] { background: #0f2a1d !important; }
+  html[data-theme="dark"] [style*="background:#fef2f2"],
+  html[data-theme="dark"] [style*="background: #fef2f2"] { background: #2a1414 !important; }
+  html[data-theme="dark"] [style*="background:#fffbeb"],
+  html[data-theme="dark"] [style*="background: #fffbeb"] { background: #2a2308 !important; }
+  html[data-theme="dark"] [style*="background:#f0f9ff"],
+  html[data-theme="dark"] [style*="background: #f0f9ff"] { background: #0c1f3a !important; }
+  html[data-theme="dark"] [style*="background:#eff6ff"],
+  html[data-theme="dark"] [style*="background: #eff6ff"] { background: #112042 !important; }
+  html[data-theme="dark"] [style*="background:#fdf4ff"],
+  html[data-theme="dark"] [style*="background: #fdf4ff"] { background: #25153a !important; }
+  /* Modal backdrop sticky headers/footers using inline #fff */
+  html[data-theme="dark"] .modal { background: var(--card-bg) !important; color: var(--text-primary); }
+  html[data-theme="dark"] .modal-header { color: var(--text-primary); }
+  html[data-theme="dark"] .modal-body { color: var(--text-primary); }
+  html[data-theme="dark"] .expected-box,
+  html[data-theme="dark"] .negative-box,
+  html[data-theme="dark"] .prerequisites-box,
+  html[data-theme="dark"] .fields-box { color: var(--text-primary) !important; }
+  html[data-theme="dark"] table td { color: var(--text-primary); }
+  html[data-theme="dark"] input, html[data-theme="dark"] textarea, html[data-theme="dark"] select {
+    background: #1a2440; color: var(--text-primary); border-color: var(--border);
+  }
+  html[data-theme="dark"] input::placeholder, html[data-theme="dark"] textarea::placeholder { color: var(--text-muted); }
+  html[data-theme="dark"] hr { border-color: var(--border) !important; }
+
+  /* ── FLOATING DARK MODE TOGGLE ── */
+  #theme-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--text-primary);
+    box-shadow: var(--shadow-md);
+    cursor: pointer;
+    z-index: 9999;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform .15s ease, background .2s ease;
+  }
+  #theme-toggle:hover { transform: scale(1.08); }
+  #theme-toggle:active { transform: scale(.95); }
+
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
@@ -3379,12 +3460,14 @@ function captureCardContext(card) {
         }
       });
       sections.testing_instructions = { label: labelText, substeps: substeps };
-    } else if (sec.querySelector('.expected-box')) {
-      sections.expected_results = { label: labelText, html: sec.querySelector('.expected-box').innerHTML.trim() };
-    } else if (sec.querySelector('.negative-box')) {
-      sections.negative_scenario = { label: labelText, html: sec.querySelector('.negative-box').innerHTML.trim() };
     } else if (sec.querySelector('.prerequisites-box')) {
       sections.prerequisites = { label: labelText, html: sec.querySelector('.prerequisites-box').innerHTML.trim() };
+    } else if (sec.querySelector('.fields-box')) {
+      sections.fields = { label: labelText, html: sec.querySelector('.fields-box').innerHTML.trim() };
+    } else if (sec.querySelector('.negative-box')) {
+      sections.negative_scenario = { label: labelText, html: sec.querySelector('.negative-box').innerHTML.trim() };
+    } else if (sec.querySelector('.expected-box')) {
+      sections.expected_results = { label: labelText, html: sec.querySelector('.expected-box').innerHTML.trim() };
     }
   });
 
@@ -3906,6 +3989,12 @@ function openIssueDetail(issueId) {
         <div style="margin-bottom:16px;">
           <div style="font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);margin-bottom:6px;">📌 Prerequisites</div>
           <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:12px;font-size:13px;line-height:1.5;">${sec.prerequisites.html}</div>
+        </div>` : ''}
+
+        ${sec.fields && sec.fields.html ? `
+        <div style="margin-bottom:16px;">
+          <div style="font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);margin-bottom:6px;">🧾 Field & Picklist Details</div>
+          <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;padding:12px;font-size:13px;line-height:1.5;">${sec.fields.html}</div>
         </div>` : ''}
 
         ${substepsHtml ? `
@@ -4567,8 +4656,8 @@ function makeSteps(containerId, steps) {
   steps.forEach((s, i) => {
     const subs = buildSubstepList(s.instructions);
     const negHtml = s.negative ? `<div class="step-section"><div class="step-section-label">⚠️ Negative Scenario (What to Watch For)</div><div class="negative-box">${s.negative}</div></div>` : '';
-    const prereqHtml = s.prerequisites ? `<div class="step-section"><div class="step-section-label">📌 Prerequisites</div><div class="expected-box" style="background:#fffbeb;border-color:#fde68a;color:#92400e;">${s.prerequisites}</div></div>` : '';
-    const fieldHtml = s.fields ? `<div class="step-section"><div class="step-section-label">🧾 Field & Picklist Details</div><div class="expected-box" style="background:#f0f9ff;border-color:#bae6fd;color:#0c4a6e;">${s.fields}</div></div>` : '';
+    const prereqHtml = s.prerequisites ? `<div class="step-section"><div class="step-section-label">📌 Prerequisites</div><div class="expected-box prerequisites-box" style="background:#fffbeb;border-color:#fde68a;color:#92400e;">${s.prerequisites}</div></div>` : '';
+    const fieldHtml = s.fields ? `<div class="step-section"><div class="step-section-label">🧾 Field & Picklist Details</div><div class="expected-box fields-box" style="background:#f0f9ff;border-color:#bae6fd;color:#0c4a6e;">${s.fields}</div></div>` : '';
 
     const subStepsSection = subs.count > 0 ? `
       <div class="step-section">
@@ -5619,6 +5708,51 @@ window.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('hashchange', handleHash);
   });
 });
+
+// ════════════════════════════════════════════════
+// DARK MODE TOGGLE — persisted to localStorage
+// ════════════════════════════════════════════════
+(function () {
+  const STORAGE_KEY = 'e2e-portal-theme';
+  // Apply saved theme as early as possible to avoid a flash
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+  } catch (e) { /* localStorage may be blocked */ }
+
+  function syncIcon(btn) {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    btn.textContent = isDark ? '☀️' : '🌙';
+    btn.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+    btn.title = isDark ? 'Switch to light mode' : 'Switch to dark mode';
+  }
+
+  function mountToggle() {
+    if (document.getElementById('theme-toggle')) return;
+    const btn = document.createElement('button');
+    btn.id = 'theme-toggle';
+    btn.type = 'button';
+    btn.addEventListener('click', () => {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      if (isDark) {
+        document.documentElement.removeAttribute('data-theme');
+        try { localStorage.setItem(STORAGE_KEY, 'light'); } catch (e) {}
+      } else {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        try { localStorage.setItem(STORAGE_KEY, 'dark'); } catch (e) {}
+      }
+      syncIcon(btn);
+    });
+    document.body.appendChild(btn);
+    syncIcon(btn);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', mountToggle);
+  } else {
+    mountToggle();
+  }
+})();
 </script>
 </body>
 </html>
