@@ -540,6 +540,67 @@
     color: var(--text-muted);
     margin-bottom: 8px;
   }
+
+  /* ── ASSIGNMENTS SECTION (collapsible, near top of card) ── */
+  .assignments-section {
+    margin-top: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card-bg);
+    overflow: hidden;
+  }
+  .assignments-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 14px;
+    cursor: pointer;
+    user-select: none;
+    background: var(--blue-50);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+  .assignments-header:hover { background: var(--blue-100); }
+  .assignments-header .chev { margin-left: auto; transition: transform .2s ease; }
+  .assignments-section.open .assignments-header .chev { transform: rotate(180deg); }
+  .assignments-summary {
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: none;
+    letter-spacing: 0;
+    margin-left: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 50%;
+  }
+  .assignments-body {
+    display: none;
+    padding: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+  }
+  .assignments-section.open .assignments-body { display: grid; }
+  .assignment-field label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .assignment-field select {
+    width: 100%;
+    padding: 7px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--card-bg);
+    color: var(--text-primary);
+    font-size: 13px;
+    font-family: inherit;
+  }
+  .assignment-field select:focus { outline: none; border-color: var(--blue-500); }
   .step-instructions ol, .step-instructions ul {
     padding-left: 18px;
     display: flex; flex-direction: column; gap: 4px;
@@ -2425,6 +2486,44 @@ const PERSONA_NAMES = {
 };
 
 // ════════════════════════════════════════════════
+// 👥 PEOPLE DIRECTORY — used in test case assignment picklists
+// ════════════════════════════════════════════════
+// Add entries as { name: 'Display Name', email: 'email@dot.gov' }.
+// The picklists show `name`; the `email` is stored in Supabase as the stable id.
+// Leave this empty to start; populate as you confirm names per test case.
+const PEOPLE_DIRECTORY = [
+  // { name: 'Ana Jarabo', email: 'ana.jarabo.ctr@dot.gov' },
+];
+
+const ASSIGNMENT_ROLES = [
+  { key: 'developer', label: '🛠️ Developer' },
+  { key: 'pm',        label: '📋 PM' },
+  { key: 'tester1',   label: '🧪 Tester 1' },
+  { key: 'tester2',   label: '🧪 Tester 2' },
+  { key: 'tester3',   label: '🧪 Tester 3' }
+];
+
+function getPersonByEmail(email) {
+  if (!email) return null;
+  const e = email.toLowerCase();
+  return PEOPLE_DIRECTORY.find(p => (p.email || '').toLowerCase() === e) || null;
+}
+
+function buildAssignmentOptions(selectedEmail) {
+  const sel = (selectedEmail || '').toLowerCase();
+  let html = '<option value="">— Unassigned —</option>';
+  PEOPLE_DIRECTORY.forEach(p => {
+    const isSel = (p.email || '').toLowerCase() === sel ? ' selected' : '';
+    html += `<option value="${escapeAttr(p.email)}"${isSel}>${escapeHTML(p.name)}</option>`;
+  });
+  // If a stored email is not in the directory (orphan), show it so it isn't lost
+  if (sel && !PEOPLE_DIRECTORY.some(p => (p.email || '').toLowerCase() === sel)) {
+    html += `<option value="${escapeAttr(selectedEmail)}" selected>${escapeHTML(selectedEmail)} (not in directory)</option>`;
+  }
+  return html;
+}
+
+// ════════════════════════════════════════════════
 // 🔧 SUPABASE CONFIGURATION
 // ════════════════════════════════════════════════
 const SUPABASE_URL = 'https://jkwqcjvfuocxkxjcoqfx.supabase.co';
@@ -2716,6 +2815,9 @@ async function sbReloadAll() {
       .limit(5000);
     hydrateIssuesFromSb(issues || []);
   } catch (e) { console.warn('issues load failed:', e.message); }
+
+  // Test case assignments
+  await spLoadAssignments();
 }
 
 function hydrateResultsFromSb(rows) {
@@ -3094,6 +3196,8 @@ function restoreCard(card) {
     // Auto-fill tester name with the email even if no prior state
     const ti = card.querySelector('.tester-name-input');
     if (ti && !ti.value) ti.value = getTesterEmail();
+    // Still restore assignments — they're shared, not per-tester
+    restoreCardAssignments(card);
     return;
   }
   // Restore result
@@ -3131,6 +3235,8 @@ function restoreCard(card) {
     });
     updateSubstepProgress(card);
   }
+  // Restore assignments (independent of per-tester result data)
+  restoreCardAssignments(card);
 }
 
 // ════════════════════════════════════════════════
@@ -3288,6 +3394,145 @@ function recomputeEnvSummary(card) {
 function onCardFieldChange(el) {
   const card = el.closest('.step-card');
   if (card) persistCard(card);
+}
+
+// ════════════════════════════════════════════════
+// 👥 TEST CASE ASSIGNMENTS — per test case (shared across testers/envs)
+// ════════════════════════════════════════════════
+function toggleAssignments(headerEl) {
+  const sec = headerEl.closest('.assignments-section');
+  if (sec) sec.classList.toggle('open');
+}
+
+function getCardTcId(card) {
+  return card?.dataset?.tc || null;
+}
+
+// Read assignments from the DOM of a given card
+function readAssignmentsFromCard(card) {
+  const out = {};
+  card.querySelectorAll('.assignment-select').forEach(sel => {
+    const role = sel.dataset.role;
+    const email = sel.value || '';
+    const person = getPersonByEmail(email);
+    out[role] = { email: email, name: person ? person.name : (email || '') };
+  });
+  return out;
+}
+
+// Apply a stored assignments object to all cards that share this test case
+function applyAssignmentsToCards(tcId, assignments) {
+  if (!tcId || !assignments) return;
+  document.querySelectorAll(`.step-card[data-tc="${tcId}"]`).forEach(card => {
+    card.querySelectorAll('.assignment-select').forEach(sel => {
+      const role = sel.dataset.role;
+      const stored = assignments[role];
+      const email = stored?.email || '';
+      // Rebuild options so an orphan email still appears
+      sel.innerHTML = buildAssignmentOptions(email);
+      updateAssignmentsSummary(card);
+    });
+  });
+}
+
+function updateAssignmentsSummary(card) {
+  const sec = card.querySelector('.assignments-section');
+  if (!sec) return;
+  const summaryEl = sec.querySelector('.assignments-summary');
+  const filled = [];
+  card.querySelectorAll('.assignment-select').forEach(sel => {
+    if (sel.value) {
+      const person = getPersonByEmail(sel.value);
+      filled.push(person ? person.name : sel.value);
+    }
+  });
+  if (summaryEl) {
+    summaryEl.textContent = filled.length === 0
+      ? '— Unassigned —'
+      : filled.length <= 2 ? filled.join(', ') : `${filled.slice(0, 2).join(', ')} +${filled.length - 2}`;
+  }
+}
+
+function onAssignmentChange(selectEl) {
+  const card = selectEl.closest('.step-card');
+  if (!card) return;
+  const tcId = getCardTcId(card);
+  const assignments = readAssignmentsFromCard(card);
+
+  // Save to local state (under top-level assignments map keyed by tc)
+  const state = getState();
+  state.assignments = state.assignments || {};
+  state.assignments[tcId] = assignments;
+  saveState(state);
+
+  // Apply to all sibling cards with the same tc (across env/persona)
+  applyAssignmentsToCards(tcId, assignments);
+
+  // Sync to Supabase
+  spSyncAssignments(tcId, assignments);
+}
+
+async function spSyncAssignments(tcId, assignments) {
+  if (!SB_STATE || !SB_STATE.online || SB_STATE.isGuest) return;
+  if (!tcId) return;
+  const row = {
+    test_case_id: tcId,
+    developer_email: assignments.developer?.email || null,
+    pm_email:        assignments.pm?.email || null,
+    tester1_email:   assignments.tester1?.email || null,
+    tester2_email:   assignments.tester2?.email || null,
+    tester3_email:   assignments.tester3?.email || null,
+    developer_name:  assignments.developer?.name || null,
+    pm_name:         assignments.pm?.name || null,
+    tester1_name:    assignments.tester1?.name || null,
+    tester2_name:    assignments.tester2?.name || null,
+    tester3_name:    assignments.tester3?.name || null,
+    updated_by:      SB_STATE.myUserId || null
+  };
+  try {
+    const { error } = await SB_STATE.client
+      .from('test_case_assignments')
+      .upsert(row, { onConflict: 'test_case_id' });
+    if (error) throw error;
+  } catch (e) {
+    console.warn('Assignments sync failed:', e.message);
+  }
+}
+
+async function spLoadAssignments() {
+  if (!SB_STATE || !SB_STATE.online) return;
+  try {
+    const { data, error } = await SB_STATE.client
+      .from('test_case_assignments')
+      .select('*');
+    if (error) throw error;
+    const state = getState();
+    state.assignments = state.assignments || {};
+    (data || []).forEach(row => {
+      const a = {
+        developer: { email: row.developer_email || '', name: row.developer_name || '' },
+        pm:        { email: row.pm_email || '',        name: row.pm_name || '' },
+        tester1:   { email: row.tester1_email || '',   name: row.tester1_name || '' },
+        tester2:   { email: row.tester2_email || '',   name: row.tester2_name || '' },
+        tester3:   { email: row.tester3_email || '',   name: row.tester3_name || '' }
+      };
+      state.assignments[row.test_case_id] = a;
+      applyAssignmentsToCards(row.test_case_id, a);
+    });
+    saveState(state);
+  } catch (e) {
+    console.warn('Assignments load failed:', e.message);
+  }
+}
+
+// Restore assignments from local state into a freshly-rendered card
+function restoreCardAssignments(card) {
+  const tcId = getCardTcId(card);
+  if (!tcId) return;
+  const state = getState();
+  const a = state.assignments?.[tcId];
+  if (a) applyAssignmentsToCards(tcId, a);
+  else updateAssignmentsSummary(card);
 }
 
 // ════════════════════════════════════════════════
@@ -3476,6 +3721,9 @@ function captureCardContext(card) {
   const resultType = resultBtn ? (resultBtn.classList.contains('pass') ? 'Pass' : resultBtn.classList.contains('fail') ? 'Fail' : 'Inconclusive') : 'Pending';
   const signedOff = card.classList.contains('is-signed-off');
 
+  // Test case assignments (snapshot at time of issue)
+  const assignments = readAssignmentsFromCard(card);
+
   return {
     captured_at: new Date().toISOString(),
     tc_id: tcId,
@@ -3483,6 +3731,7 @@ function captureCardContext(card) {
     title: titleEl?.textContent.trim() || '',
     badges: badges,
     sections: sections,
+    assignments: assignments,
     tester_state: {
       result: resultType,
       tester_name: card.querySelector('.tester-name-input')?.value || '',
@@ -3743,9 +3992,11 @@ function renderIssuesView() {
       tbody.innerHTML = filtered.map(i => {
         const sevColor = { Low: '#9ca3af', Medium: '#d97706', High: '#dc2626', Critical: '#7c2d12' }[i.severity] || '#9ca3af';
         const statusColor = { Open: '#dc2626', 'In Review': '#d97706', Fixed: '#16a34a', "Won't Fix": '#6b7280', Duplicate: '#6b7280' }[i.status] || '#6b7280';
+        const devName = (i.context?.assignments?.developer?.name) || ((getState().assignments || {})[i.tc]?.developer?.name) || '';
+        const devLine = devName ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">🛠️ ${escapeHTML(devName)}</div>` : '';
         return `<tr style="cursor:pointer;" onclick="openIssueDetail('${i.id}')" title="Click to view full details">
           <td><strong style="color:var(--blue-700);">${i.id}</strong></td>
-          <td>${i.title}</td>
+          <td>${i.title}${devLine}</td>
           <td><span class="badge badge-blue">TC-${i.tc}</span></td>
           <td>${i.personaName}</td>
           <td><span class="badge badge-gray">${i.envLabel}</span></td>
@@ -3861,6 +4112,28 @@ function openIssueDetail(issueId) {
   const ctx = i.context || {};
   const sec = ctx.sections || {};
   const ts = ctx.tester_state || {};
+  const asn = ctx.assignments || {};
+
+  // People assignments block — show whatever was captured (fallback to current shared state)
+  const liveAssignments = (getState().assignments || {})[i.tc] || {};
+  const mergedAsn = {};
+  ASSIGNMENT_ROLES.forEach(r => {
+    const fromCtx = asn[r.key];
+    const fromLive = liveAssignments[r.key];
+    mergedAsn[r.key] = fromCtx && (fromCtx.email || fromCtx.name) ? fromCtx : (fromLive || { email: '', name: '' });
+  });
+  const anyAssigned = Object.values(mergedAsn).some(p => p && (p.email || p.name));
+  const peopleHtml = anyAssigned ? `
+    <div style="background:#f9fafb;border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:18px;">
+      <div style="font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);margin-bottom:8px;">👥 People (from test case)</div>
+      <table style="width:100%;font-size:13px;border-collapse:collapse;">
+        ${ASSIGNMENT_ROLES.map(r => {
+          const p = mergedAsn[r.key];
+          const display = p && (p.name || p.email) ? escapeHTML(p.name || p.email) : '<span style="color:var(--text-muted);font-style:italic;">— Unassigned —</span>';
+          return `<tr><td style="padding:4px 8px;width:160px;font-weight:600;">${r.label}</td><td>${display}</td></tr>`;
+        }).join('')}
+      </table>
+    </div>` : '';
 
   // Resolution block (visible if there's a resolution OR the user is admin/owner)
   const resolutionHtml = (i.resolution || i.resolvedAt || i.status === 'Fixed' || i.status === "Won't Fix")
@@ -3960,6 +4233,8 @@ function openIssueDetail(issueId) {
             ${ts.comments ? `<tr><td style="padding:4px 8px;font-weight:600;vertical-align:top;">Comments</td><td style="white-space:pre-wrap;">${escapeHTML(ts.comments)}</td></tr>` : ''}
           </table>
         </div>
+
+        ${peopleHtml}
 
         <!-- What was observed -->
         <div style="margin-bottom:18px;">
@@ -4695,6 +4970,22 @@ function makeSteps(containerId, steps) {
           <span class="step-chevron">▼</span>
         </div>
         <div class="step-body">
+          <div class="assignments-section" data-tc="${s.tc}">
+            <div class="assignments-header" onclick="toggleAssignments(this)">
+              <span>👥 Assignments</span>
+              <span class="assignments-summary"></span>
+              <span class="chev">▼</span>
+            </div>
+            <div class="assignments-body">
+              ${ASSIGNMENT_ROLES.map(r => `
+                <div class="assignment-field">
+                  <label>${r.label}</label>
+                  <select class="assignment-select" data-role="${r.key}" onchange="onAssignmentChange(this)">
+                    ${buildAssignmentOptions('')}
+                  </select>
+                </div>`).join('')}
+            </div>
+          </div>
           ${prereqHtml}
           ${subStepsSection}
           ${fieldHtml}
