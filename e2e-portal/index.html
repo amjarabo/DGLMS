@@ -46,20 +46,20 @@
 
   /* ── DARK THEME ── matches reference design (DGLMS Portal v3) ── */
   [data-theme="dark"] {
-    --body-bg: #0a0f1e;
-    --card-bg: #0f1729;
-    --text-primary: #e6edf7;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
-    --border: #1e2a44;
-    --border-strong: #2c3a55;
-    --blue-50:  #0f1e3d;
-    --blue-100: #142a55;
-    --shadow: 0 1px 3px rgba(0,0,0,.5), 0 4px 16px rgba(0,0,0,.35);
-    --shadow-md: 0 4px 24px rgba(0,0,0,.55);
-    --sidebar-bg: #060b18;
-    --sidebar-hover: #142a55;
-    --sidebar-active: #1d4ed8;
+    --body-bg: #0f172a;
+    --card-bg: #1e293b;
+    --text-primary: #f1f5f9;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --border: #334155;
+    --border-strong: #475569;
+    --blue-50:  #1e3a8a;
+    --blue-100: #1e40af;
+    --shadow: 0 1px 3px rgba(0,0,0,.4), 0 4px 16px rgba(0,0,0,.25);
+    --shadow-md: 0 4px 24px rgba(0,0,0,.45);
+    --sidebar-bg: #0f1729;
+    --sidebar-hover: #1e3563;
+    --sidebar-active: #2563eb;
     --accent-cyan: #38bdf8;
     --accent-green: #4ade80;
     --accent-amber: #fbbf24;
@@ -206,7 +206,9 @@
   [data-theme="dark"] [style*="background:#f0f9ff"],
   [data-theme="dark"] [style*="background: #f0f9ff"] { background: rgba(56, 189, 248, .1) !important; }
   [data-theme="dark"] [style*="background:#f3f4f6"],
-  [data-theme="dark"] [style*="background: #f3f4f6"] { background: #0a1224 !important; }
+  [data-theme="dark"] [style*="background: #f3f4f6"] { background: #0f1f3a !important; }
+  [data-theme="dark"] [style*="background:#f8fafc"],
+  [data-theme="dark"] [style*="background: #f8fafc"] { background: #0f1f3a !important; }
   [data-theme="dark"] [style*="background:#dbeafe"],
   [data-theme="dark"] [style*="background: #dbeafe"] { background: rgba(56, 189, 248, .12) !important; }
   [data-theme="dark"] [style*="background:#bbf7d0"],
@@ -225,12 +227,19 @@
   [data-theme="dark"] [style*="color:#92400e"],
   [data-theme="dark"] [style*="color: #92400e"] { color: var(--accent-amber) !important; }
 
-  /* Env stats */
-  [data-theme="dark"] .env-stat { background: #0a1224 !important; color: var(--text-primary) !important; border-color: var(--border) !important; }
-  [data-theme="dark"] .env-stat.is-pass { background: rgba(74, 222, 128, .12) !important; border-color: rgba(74, 222, 128, .3) !important; color: var(--accent-green) !important; }
-  [data-theme="dark"] .env-stat.is-fail { background: rgba(248, 113, 113, .12) !important; border-color: rgba(248, 113, 113, .3) !important; color: var(--accent-red) !important; }
-  [data-theme="dark"] .env-stat.is-inconc { background: rgba(251, 191, 36, .12) !important; border-color: rgba(251, 191, 36, .3) !important; color: var(--accent-amber) !important; }
-  [data-theme="dark"] .progress-bar-wrap { background: #1e2a44 !important; }
+  /* Env stats — actual class names are is-passed, is-failed, is-inconc, is-signed */
+  [data-theme="dark"] .env-stat { background: #0f1f3a !important; color: var(--text-primary) !important; border-color: var(--border) !important; }
+  [data-theme="dark"] .env-stat-label { color: var(--text-muted) !important; }
+  [data-theme="dark"] .env-stat-value { color: var(--text-primary) !important; }
+  [data-theme="dark"] .env-stat.is-passed { background: rgba(74, 222, 128, .12) !important; border-color: rgba(74, 222, 128, .3) !important; }
+  [data-theme="dark"] .env-stat.is-passed .env-stat-value { color: var(--accent-green) !important; }
+  [data-theme="dark"] .env-stat.is-failed { background: rgba(248, 113, 113, .12) !important; border-color: rgba(248, 113, 113, .3) !important; }
+  [data-theme="dark"] .env-stat.is-failed .env-stat-value { color: var(--accent-red) !important; }
+  [data-theme="dark"] .env-stat.is-inconc { background: rgba(251, 191, 36, .12) !important; border-color: rgba(251, 191, 36, .3) !important; }
+  [data-theme="dark"] .env-stat.is-inconc .env-stat-value { color: var(--accent-amber) !important; }
+  [data-theme="dark"] .env-stat.is-signed { background: rgba(56, 189, 248, .12) !important; border-color: rgba(56, 189, 248, .3) !important; }
+  [data-theme="dark"] .env-stat.is-signed .env-stat-value { color: var(--accent-cyan) !important; }
+  [data-theme="dark"] .progress-bar-wrap { background: #1e293b !important; }
 
   /* Theme toggle button */
   .theme-toggle {
@@ -3963,7 +3972,7 @@ function renderIssuesView() {
       dashRecentEl.innerHTML = resolvedIssues.slice(0, 5).map(i => {
         const statusColor = i.status === 'Fixed' ? '#16a34a' : '#6b7280';
         const statusBg = i.status === 'Fixed' ? '#f0fdf4' : '#f3f4f6';
-        return `<div onclick="openIssueDetail('${i.id}')" style="cursor:pointer;display:flex;gap:10px;align-items:center;padding:8px 12px;background:${statusBg};border:1px solid var(--border);border-radius:6px;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='${statusBg}'" title="Click to view details">
+        return `<div onclick="openIssueDetail('${i.id}')" style="cursor:pointer;display:flex;gap:10px;align-items:center;padding:8px 12px;background:${statusBg};border:1px solid var(--border);border-radius:6px;" onmouseover="this.style.background=document.documentElement.getAttribute('data-theme')==='dark'?'#142a55':'#f9fafb'" onmouseout="this.style.background='${statusBg}'" title="Click to view details">
           <span style="font-family:'DM Mono',monospace;font-size:11.5px;color:var(--blue-700);font-weight:700;">${i.id}</span>
           <span style="flex:1;font-size:13px;color:var(--text-primary);">${escapeHTML(i.title)}</span>
           <span class="badge badge-gray" style="font-size:10.5px;">${i.envLabel}</span>
@@ -4515,7 +4524,7 @@ function refreshNotifications() {
       list.innerHTML = notifs.map(i => {
         const sevColor = { Low: '#9ca3af', Medium: '#d97706', High: '#dc2626', Critical: '#7c2d12' }[i.severity] || '#9ca3af';
         const statusColor = { Open: '#dc2626', 'In Review': '#d97706', Fixed: '#16a34a', "Won't Fix": '#6b7280', Duplicate: '#6b7280' }[i.status] || '#6b7280';
-        return `<div onclick="openIssueDetail('${i.id}');closeNotificationDropdown();" style="padding:10px 16px;border-bottom:1px solid #f3f4f6;cursor:pointer;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='#fff'">
+        return `<div onclick="openIssueDetail('${i.id}');closeNotificationDropdown();" style="padding:10px 16px;border-bottom:1px solid var(--border);cursor:pointer;" onmouseover="this.style.background=document.documentElement.getAttribute('data-theme')==='dark'?'#142a55':'#f9fafb'" onmouseout="this.style.background='transparent'">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
             <strong style="font-size:12.5px;color:var(--blue-700);">${i.id}</strong>
             <span style="font-size:11px;color:${statusColor};font-weight:700;">${i.status}</span>
