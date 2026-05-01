@@ -1337,8 +1337,39 @@
 </div>
 
 <!-- ══════════════════════════════════════════════
-     ISSUE DETAIL MODAL — full context for an existing issue
+     SET NEW PASSWORD MODAL — shown after user clicks reset email link
 ══════════════════════════════════════════════ -->
+<div id="set-password-gate" class="modal-backdrop" style="display:none;">
+  <div class="modal email-gate-modal">
+    <div class="modal-header" style="background:linear-gradient(135deg,#1d4ed8 0%,#1e40af 100%);color:#fff;">
+      <h2 style="margin:0;font-size:16px;">🔑 Set Your Password</h2>
+    </div>
+    <div class="modal-body">
+      <p style="margin-bottom:14px;color:var(--text-secondary);font-size:13.5px;">
+        You followed a password reset link. Choose a new password below to complete the reset.
+      </p>
+      <div style="margin-bottom:12px;">
+        <label style="display:block;font-size:11.5px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;">New Password *</label>
+        <input id="set-password-new" type="password" placeholder="At least 8 characters" autocomplete="new-password"
+               style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:inherit;">
+      </div>
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:11.5px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;">Confirm New Password *</label>
+        <input id="set-password-confirm" type="password" placeholder="Re-enter the same password" autocomplete="new-password"
+               style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:inherit;">
+      </div>
+      <div id="set-password-error" style="display:none;color:#dc2626;font-size:13px;margin-bottom:10px;font-weight:600;"></div>
+      <div style="background:#eff6ff;border:1px solid #bae6fd;border-radius:6px;padding:10px 12px;font-size:12px;color:#1e40af;">
+        ℹ️ Use at least 8 characters. After setting, you'll be signed out and asked to log in with the new password.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="topbar-btn primary" onclick="submitNewPassword()" style="width:100%;background:#1d4ed8;color:#fff;padding:10px;font-weight:600;">
+        🔑 Set Password
+      </button>
+    </div>
+  </div>
+</div>
 <div id="issue-detail-modal" class="modal-backdrop" style="display:none;"></div>
 <div id="issue-edit-modal" class="modal-backdrop" style="display:none;"></div>
 
@@ -2552,7 +2583,23 @@ let SB_STATE = {
   resultsItemMap: {},  // local lookup: cardKey -> result row id
   resultsRows: [],     // all rows from team
   issuesRows: [],
+  pendingRecovery: false, // set true if URL contains a Supabase recovery token
 };
+
+// Detect a password-recovery callback in the URL hash *before* anything else runs.
+// Supabase puts ?type=recovery (or #type=recovery) on the redirect URL it appends
+// the access token to. If we see it, we suppress the normal app bootstrap and
+// show the "Set New Password" form instead — otherwise the user lands in the
+// dashboard already signed in and never gets prompted to choose a password.
+(function detectRecoveryEarly() {
+  try {
+    const hash = window.location.hash || '';
+    const search = window.location.search || '';
+    if (hash.includes('type=recovery') || search.includes('type=recovery')) {
+      SB_STATE.pendingRecovery = true;
+    }
+  } catch (e) { /* ignore */ }
+})();
 
 // ════════════════════════════════════════════════
 // SUPABASE CLIENT — initialize from CDN
@@ -2689,6 +2736,21 @@ async function sbBootstrap() {
     // Check if there's an active session (after magic-link redirect or previous session)
     const { data: { session } } = await client.auth.getSession();
 
+    // ── PASSWORD RECOVERY FLOW ──
+    // If the URL indicates a recovery callback, do NOT bootstrap the app.
+    // Show the "Set New Password" modal instead. Supabase has already established
+    // a temporary recovery session by this point, which we'll use to call updateUser().
+    if (SB_STATE.pendingRecovery) {
+      SB_STATE.online = !!session;
+      setSpStatusBadge('signin-needed');
+      showSetPasswordModal();
+      // Still attach the listener for completeness, then exit early
+      client.auth.onAuthStateChange((event) => {
+        if (event === 'SIGNED_OUT') location.reload();
+      });
+      return;
+    }
+
     if (session && session.user) {
       // User is signed in
       const userEmail = (session.user.email || '').toLowerCase();
@@ -2749,7 +2811,16 @@ async function sbBootstrap() {
 
     // Listen for auth state changes (e.g. magic link redirect arrives)
     client.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        // User clicked the recovery email link — show password set modal
+        SB_STATE.pendingRecovery = true;
+        showSetPasswordModal();
+        return;
+      }
       if (event === 'SIGNED_IN' && session) {
+        // Suppress the auto-reload while a recovery flow is active, so the
+        // user actually sees the "Set New Password" modal.
+        if (SB_STATE.pendingRecovery) return;
         // Reload to re-bootstrap with the new session
         location.reload();
       }
@@ -3067,6 +3138,65 @@ function refreshTesterChip() {
 function showEmailGate() {
   document.getElementById('email-gate').style.display = 'flex';
   setTimeout(() => document.getElementById('email-gate-input').focus(), 100);
+}
+
+// ── PASSWORD RECOVERY MODAL HANDLERS ──
+function showSetPasswordModal() {
+  // Hide the email gate if it happens to be open
+  const emailGate = document.getElementById('email-gate');
+  if (emailGate) emailGate.style.display = 'none';
+  const modal = document.getElementById('set-password-gate');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  setTimeout(() => document.getElementById('set-password-new')?.focus(), 100);
+  // Allow Enter key to submit
+  ['set-password-new', 'set-password-confirm'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && !el.dataset.boundEnter) {
+      el.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitNewPassword(); });
+      el.dataset.boundEnter = '1';
+    }
+  });
+}
+
+async function submitNewPassword() {
+  const errorEl = document.getElementById('set-password-error');
+  const newEl = document.getElementById('set-password-new');
+  const confirmEl = document.getElementById('set-password-confirm');
+  const newPw = (newEl?.value || '');
+  const confirmPw = (confirmEl?.value || '');
+  errorEl.style.display = 'none';
+  errorEl.textContent = '';
+
+  if (newPw.length < 8) {
+    errorEl.textContent = 'Password must be at least 8 characters.';
+    errorEl.style.display = 'block';
+    return;
+  }
+  if (newPw !== confirmPw) {
+    errorEl.textContent = 'Passwords do not match.';
+    errorEl.style.display = 'block';
+    return;
+  }
+  if (!SB_STATE.client) {
+    errorEl.textContent = 'Auth client not ready. Please refresh and try again.';
+    errorEl.style.display = 'block';
+    return;
+  }
+
+  try {
+    const { error } = await SB_STATE.client.auth.updateUser({ password: newPw });
+    if (error) throw error;
+    // Success — clear hash, sign out, and reload so user logs in fresh with new password
+    SB_STATE.pendingRecovery = false;
+    try { history.replaceState(null, '', window.location.pathname); } catch (e) {}
+    alert('✓ Password updated successfully. You will now be signed out — please log in with your new password.');
+    await SB_STATE.client.auth.signOut();
+    location.reload();
+  } catch (e) {
+    errorEl.textContent = e.message || 'Could not update password. Please try the reset link again.';
+    errorEl.style.display = 'block';
+  }
 }
 async function confirmEmailGate() {
   const input = document.getElementById('email-gate-input');
