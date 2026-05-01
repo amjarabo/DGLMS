@@ -1301,6 +1301,9 @@
     <button class="nav-item" onclick="showView('issue-tracker', this)">
       <span class="nav-icon">🐛</span> Issue Tracker
     </button>
+    <button class="nav-item" onclick="showView('resolved-issues', this)">
+      <span class="nav-icon">✅</span> Resolved Issues
+    </button>
     <button class="nav-item" onclick="showView('resources', this)">
       <span class="nav-icon">📁</span> Resources & Links
     </button>
@@ -1403,6 +1406,22 @@
         <div class="card-body">
           <div id="dash-env-progress" style="display:flex;flex-direction:column;gap:14px;">
             <!-- Populated by updateDashboardStats() -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Recently Resolved -->
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-header" style="display:flex;align-items:center;gap:14px;">
+          <div>
+            <div class="card-title">✅ Recently Resolved <span id="dash-resolved-count" style="font-family:'DM Mono',monospace;color:#16a34a;">0</span></div>
+            <div class="card-subtitle">Latest 5 issues marked Fixed or Won't Fix</div>
+          </div>
+          <button class="topbar-btn" onclick="showView('resolved-issues', document.querySelector('[onclick*=resolved-issues]'))" style="margin-left:auto;font-size:12px;">View all →</button>
+        </div>
+        <div class="card-body">
+          <div id="dash-recently-resolved" style="display:flex;flex-direction:column;gap:8px;">
+            <div style="padding:20px;text-align:center;color:var(--text-muted);font-style:italic;font-size:13px;">No resolved issues yet.</div>
           </div>
         </div>
       </div>
@@ -2091,9 +2110,16 @@
       </div>
 
       <div class="card">
-        <div class="card-header">
-          <div class="card-title">Issue Log <span id="issues-count" style="font-family:'DM Mono',monospace;color:var(--blue-700);">0</span></div>
-          <div class="card-subtitle">Auto-numbered ISS-XXX. Newest first. <strong>Click any row to view full details</strong> including the test case state at time of logging.</div>
+        <div class="card-header" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+          <div>
+            <div class="card-title">Issue Log <span id="issues-count" style="font-family:'DM Mono',monospace;color:var(--blue-700);">0</span></div>
+            <div class="card-subtitle">Auto-numbered ISS-XXX. Newest first. <strong>Click any row to view full details</strong>.</div>
+          </div>
+          <div style="margin-left:auto;display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+            <button class="issue-filter-btn is-active" data-filter="open" onclick="setIssueFilter('open')" style="padding:6px 14px;font-size:12px;font-weight:600;border:none;background:var(--blue-700);color:#fff;cursor:pointer;font-family:inherit;">Open</button>
+            <button class="issue-filter-btn" data-filter="resolved" onclick="setIssueFilter('resolved')" style="padding:6px 14px;font-size:12px;font-weight:600;border:none;background:#fff;color:var(--text-secondary);cursor:pointer;font-family:inherit;">Resolved</button>
+            <button class="issue-filter-btn" data-filter="all" onclick="setIssueFilter('all')" style="padding:6px 14px;font-size:12px;font-weight:600;border:none;background:#fff;color:var(--text-secondary);cursor:pointer;font-family:inherit;">All</button>
+          </div>
         </div>
         <div class="table-wrap">
           <table>
@@ -2112,6 +2138,69 @@
             </thead>
             <tbody id="issues-tbody">
               <tr><td colspan="9" style="text-align:center;padding:30px;color:var(--text-muted);font-style:italic;">No issues logged yet. Use the 🐛 Log Issue button on any test case to file one.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════ -->
+    <!-- VIEW: RESOLVED ISSUES -->
+    <!-- ═══════════════════════════════ -->
+    <div id="view-resolved-issues" class="view">
+      <div class="page-header" style="border-left:6px solid #16a34a;padding-left:14px;">
+        <h1>✅ Resolved Issues</h1>
+        <p>All issues that have been marked <strong>Fixed</strong> or <strong>Won't Fix</strong>. Browse to see what's been resolved across all testers and environments.</p>
+      </div>
+
+      <div class="stats-grid" style="margin-bottom:20px;">
+        <div class="stat-card">
+          <div class="stat-card-icon">✅</div>
+          <div class="stat-card-label">Total Resolved</div>
+          <div class="stat-card-value" style="color:#16a34a;" id="resolved-total">0</div>
+          <div class="stat-card-sub" id="resolved-total-sub">Across all environments</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon">🔧</div>
+          <div class="stat-card-label">Fixed</div>
+          <div class="stat-card-value" style="color:#16a34a;" id="resolved-fixed">0</div>
+          <div class="stat-card-sub">Bug fixed and verified</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon">🚫</div>
+          <div class="stat-card-label">Won't Fix</div>
+          <div class="stat-card-value" style="color:#6b7280;" id="resolved-wontfix">0</div>
+          <div class="stat-card-sub">Decided not to fix</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon">📅</div>
+          <div class="stat-card-label">This Week</div>
+          <div class="stat-card-value" style="color:var(--blue-700);" id="resolved-this-week">0</div>
+          <div class="stat-card-sub">Resolved in past 7 days</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Resolution Log</div>
+          <div class="card-subtitle">Click any row to see full details, resolution notes, and screenshots.</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Issue #</th>
+                <th>Title</th>
+                <th>TC</th>
+                <th>Environment</th>
+                <th>Status</th>
+                <th>Resolved By</th>
+                <th>Resolved At</th>
+                <th>Resolution</th>
+              </tr>
+            </thead>
+            <tbody id="resolved-issues-tbody">
+              <tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-muted);font-style:italic;">No resolved issues yet.</td></tr>
             </tbody>
           </table>
         </div>
@@ -2201,6 +2290,7 @@ const viewTitles = {
   'e2e-prod': ['Production — E2E Tester Guide', 'Final production verification — by persona'],
   'admin-view': ['Admin View', 'All testers · all environments · master table'],
   'issue-tracker': ['Issue Tracker', 'Log and track defects'],
+  'resolved-issues': ['Resolved Issues', 'All issues marked Fixed or Won\'t Fix'],
   'resources': ['Resources & Links', 'Credentials, mock data, sign-off'],
 };
 
@@ -2605,6 +2695,7 @@ function hydrateIssuesFromSb(rows) {
     behavior: r.behavior || '',
     expected: r.expected_behavior || '',
     screenshot: r.screenshot_link || '',
+    screenshots: Array.isArray(r.screenshots) ? r.screenshots : [],
     testerEmail: r.tester_email || '',
     loggedAt: r.logged_at,
     status: r.status || 'Open',
@@ -3528,16 +3619,45 @@ function revealAdminNav() {
   }
 }
 
+let _issueFilter = 'open'; // 'open' | 'resolved' | 'all'
+
+function setIssueFilter(filter) {
+  _issueFilter = filter;
+  document.querySelectorAll('.issue-filter-btn').forEach(btn => {
+    const isActive = btn.dataset.filter === filter;
+    btn.classList.toggle('is-active', isActive);
+    btn.style.background = isActive ? 'var(--blue-700)' : '#fff';
+    btn.style.color = isActive ? '#fff' : 'var(--text-secondary)';
+  });
+  renderIssuesView();
+}
+
+function isResolvedStatus(status) {
+  return status === 'Fixed' || status === "Won't Fix";
+}
+
 function renderIssuesView() {
-  const issues = (getState().issues || []).slice().reverse();
+  const allIssues = (getState().issues || []).slice().reverse();
   const tbody = document.getElementById('issues-tbody');
   const dashTbody = document.getElementById('dashboard-issue-tbody');
+  const resolvedTbody = document.getElementById('resolved-issues-tbody');
+  const dashRecentEl = document.getElementById('dash-recently-resolved');
+
+  // Apply filter for the main Issue Tracker
+  let filtered = allIssues;
+  if (_issueFilter === 'open') filtered = allIssues.filter(i => !isResolvedStatus(i.status));
+  else if (_issueFilter === 'resolved') filtered = allIssues.filter(i => isResolvedStatus(i.status));
 
   if (tbody) {
-    if (issues.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--text-muted);font-style:italic;">No issues logged yet. Use the 🐛 Log Issue button on any test case to file one.</td></tr>`;
+    if (filtered.length === 0) {
+      const msg = _issueFilter === 'open'
+        ? 'No open issues. 🎉'
+        : _issueFilter === 'resolved'
+          ? 'No resolved issues yet.'
+          : 'No issues logged yet. Use the 🐛 Log Issue button on any test case to file one.';
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--text-muted);font-style:italic;">${msg}</td></tr>`;
     } else {
-      tbody.innerHTML = issues.map(i => {
+      tbody.innerHTML = filtered.map(i => {
         const sevColor = { Low: '#9ca3af', Medium: '#d97706', High: '#dc2626', Critical: '#7c2d12' }[i.severity] || '#9ca3af';
         const statusColor = { Open: '#dc2626', 'In Review': '#d97706', Fixed: '#16a34a', "Won't Fix": '#6b7280', Duplicate: '#6b7280' }[i.status] || '#6b7280';
         return `<tr style="cursor:pointer;" onclick="openIssueDetail('${i.id}')" title="Click to view full details">
@@ -3555,11 +3675,72 @@ function renderIssuesView() {
     }
   }
 
+  // Resolved Issues table
+  const resolvedIssues = allIssues.filter(i => isResolvedStatus(i.status))
+    .sort((a, b) => new Date(b.resolvedAt || b.lastUpdatedAt || 0) - new Date(a.resolvedAt || a.lastUpdatedAt || 0));
+  if (resolvedTbody) {
+    if (resolvedIssues.length === 0) {
+      resolvedTbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-muted);font-style:italic;">No resolved issues yet.</td></tr>`;
+    } else {
+      resolvedTbody.innerHTML = resolvedIssues.map(i => {
+        const statusColor = i.status === 'Fixed' ? '#16a34a' : '#6b7280';
+        const resolutionPreview = (i.resolution || '').slice(0, 80);
+        return `<tr style="cursor:pointer;" onclick="openIssueDetail('${i.id}')" title="Click to view full details">
+          <td><strong style="color:var(--blue-700);">${i.id}</strong></td>
+          <td>${i.title}</td>
+          <td><span class="badge badge-blue">TC-${i.tc}</span></td>
+          <td><span class="badge badge-gray">${i.envLabel}</span></td>
+          <td><span style="color:${statusColor};font-weight:700;">${i.status}</span></td>
+          <td style="font-size:11.5px;">${i.resolvedBy || i.lastUpdatedBy || '—'}</td>
+          <td style="font-size:11.5px;color:var(--text-muted);">${i.resolvedAt ? new Date(i.resolvedAt).toLocaleString() : (i.lastUpdatedAt ? new Date(i.lastUpdatedAt).toLocaleString() : '—')}</td>
+          <td style="font-size:11.5px;color:var(--text-secondary);">${escapeHTML(resolutionPreview)}${(i.resolution || '').length > 80 ? '…' : ''}</td>
+        </tr>`;
+      }).join('');
+    }
+    // Update resolved-tab stats
+    const fixedCount = resolvedIssues.filter(i => i.status === 'Fixed').length;
+    const wontfixCount = resolvedIssues.filter(i => i.status === "Won't Fix").length;
+    const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const thisWeek = resolvedIssues.filter(i => i.resolvedAt && new Date(i.resolvedAt).getTime() > oneWeekAgo).length;
+    const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    setText('resolved-total', resolvedIssues.length);
+    setText('resolved-fixed', fixedCount);
+    setText('resolved-wontfix', wontfixCount);
+    setText('resolved-this-week', thisWeek);
+    const subEl = document.getElementById('resolved-total-sub');
+    if (subEl) {
+      const envCounts = { qa: 0, uat: 0, prod: 0 };
+      resolvedIssues.forEach(i => { if (envCounts[i.env] !== undefined) envCounts[i.env]++; });
+      subEl.innerHTML = `<span style="color:#16a34a;font-weight:600;">QA</span> ${envCounts.qa} · <span style="color:#16a34a;font-weight:600;">UAT</span> ${envCounts.uat} · <span style="color:#16a34a;font-weight:600;">Prod</span> ${envCounts.prod}`;
+    }
+  }
+
+  // Dashboard "Recently Resolved" — show top 5
+  if (dashRecentEl) {
+    const dashCnt = document.getElementById('dash-resolved-count');
+    if (dashCnt) dashCnt.textContent = resolvedIssues.length;
+    if (resolvedIssues.length === 0) {
+      dashRecentEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-style:italic;font-size:13px;">No resolved issues yet.</div>';
+    } else {
+      dashRecentEl.innerHTML = resolvedIssues.slice(0, 5).map(i => {
+        const statusColor = i.status === 'Fixed' ? '#16a34a' : '#6b7280';
+        const statusBg = i.status === 'Fixed' ? '#f0fdf4' : '#f3f4f6';
+        return `<div onclick="openIssueDetail('${i.id}')" style="cursor:pointer;display:flex;gap:10px;align-items:center;padding:8px 12px;background:${statusBg};border:1px solid var(--border);border-radius:6px;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='${statusBg}'" title="Click to view details">
+          <span style="font-family:'DM Mono',monospace;font-size:11.5px;color:var(--blue-700);font-weight:700;">${i.id}</span>
+          <span style="flex:1;font-size:13px;color:var(--text-primary);">${escapeHTML(i.title)}</span>
+          <span class="badge badge-gray" style="font-size:10.5px;">${i.envLabel}</span>
+          <span style="font-size:11px;color:${statusColor};font-weight:700;">${i.status}</span>
+          <span style="font-size:11px;color:var(--text-muted);">${i.resolvedAt ? new Date(i.resolvedAt).toLocaleDateString() : ''}</span>
+        </div>`;
+      }).join('');
+    }
+  }
+
   if (dashTbody) {
-    if (issues.length === 0) {
+    if (allIssues.length === 0) {
       dashTbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text-muted);font-style:italic;">No issues logged yet.</td></tr>`;
     } else {
-      dashTbody.innerHTML = issues.slice(0, 5).map(i => {
+      dashTbody.innerHTML = allIssues.slice(0, 5).map(i => {
         const sevColor = { Low: '#9ca3af', Medium: '#d97706', High: '#dc2626', Critical: '#7c2d12' }[i.severity] || '#9ca3af';
         const statusColor = { Open: '#dc2626', 'In Review': '#d97706', Fixed: '#16a34a', "Won't Fix": '#6b7280', Duplicate: '#6b7280' }[i.status] || '#6b7280';
         return `<tr style="cursor:pointer;" onclick="openIssueDetail('${i.id}')" title="Click to view full details">
@@ -3577,7 +3758,7 @@ function renderIssuesView() {
   }
 
   const cnt = document.getElementById('issues-count');
-  if (cnt) cnt.textContent = issues.length;
+  if (cnt) cnt.textContent = filtered.length;
 }
 
 // ════════════════════════════════════════════════
@@ -3640,9 +3821,23 @@ function openIssueDetail(issueId) {
       '</ol>';
   }
 
-  const screenshotHtml = i.screenshot
-    ? `<a href="${escapeAttr(i.screenshot)}" target="_blank" rel="noopener" style="display:inline-block;padding:6px 12px;background:#1d4ed8;color:#fff;border-radius:6px;text-decoration:none;font-weight:600;font-size:12px;">📎 View Screenshot</a>`
-    : '<span style="color:var(--text-muted);font-style:italic;">No screenshot</span>';
+  // Build screenshot gallery — handles both new screenshots[] array and legacy single screenshot
+  const allScreenshots = Array.isArray(i.screenshots) && i.screenshots.length > 0
+    ? i.screenshots
+    : (i.screenshot ? [{ url: i.screenshot, label: 'Screenshot', uploaded_by: i.testerEmail, uploaded_at: i.loggedAt }] : []);
+  const screenshotHtml = allScreenshots.length === 0
+    ? '<span style="color:var(--text-muted);font-style:italic;">No screenshots</span>'
+    : '<div style="display:flex;flex-wrap:wrap;gap:10px;">' +
+        allScreenshots.map(s => `
+          <div style="display:flex;flex-direction:column;gap:4px;width:180px;">
+            <a href="${escapeAttr(s.url)}" target="_blank" rel="noopener">
+              <img src="${escapeAttr(s.url)}" alt="${escapeAttr(s.label || 'Screenshot')}" style="width:180px;height:120px;object-fit:cover;border:1px solid var(--border);border-radius:6px;cursor:pointer;">
+            </a>
+            <div style="font-size:12px;font-weight:600;color:var(--text-primary);">${escapeHTML(s.label || 'Screenshot')}</div>
+            <div style="font-size:10.5px;color:var(--text-muted);">${escapeHTML(s.uploaded_by || '')}${s.uploaded_at ? ' · ' + new Date(s.uploaded_at).toLocaleDateString() : ''}</div>
+          </div>
+        `).join('') +
+      '</div>';
 
   const modalHtml = `
     <div class="modal" style="max-width:840px;max-height:90vh;overflow-y:auto;background:#fff;">
@@ -3806,8 +4001,14 @@ function openEditIssue(issueId) {
         <label style="display:block;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);margin-bottom:6px;">What was expected</label>
         <textarea id="edit-issue-expected" rows="2" style="width:100%;font-size:13.5px;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;box-sizing:border-box;margin-bottom:12px;resize:vertical;">${escapeHTML(i.expected || '')}</textarea>
 
-        <label style="display:block;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);margin-bottom:6px;">Screenshot URL</label>
-        <input id="edit-issue-screenshot" type="text" value="${escapeAttr(i.screenshot || '')}" style="width:100%;font-size:13px;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Mono',monospace;box-sizing:border-box;margin-bottom:14px;">
+        <label style="display:block;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);margin-bottom:6px;">📷 Screenshots</label>
+        <div id="edit-screenshots-list" style="margin-bottom:8px;"></div>
+        <div class="screenshot-drop" id="edit-screenshot-drop" onclick="document.getElementById('edit-screenshot-file').click()" ondragover="event.preventDefault();this.classList.add('is-drag');" ondragleave="this.classList.remove('is-drag');" ondrop="handleEditScreenshotDrop(event)" style="margin-bottom:14px;border:2px dashed var(--border);border-radius:8px;padding:18px;text-align:center;cursor:pointer;color:var(--text-muted);font-size:12.5px;">
+          <div style="font-size:24px;margin-bottom:4px;">📎</div>
+          Drop, paste (Ctrl+V), or click to add a screenshot.
+          <div style="font-size:11px;margin-top:4px;color:var(--text-muted);">You'll be asked to label it (e.g. "Original bug", "After fix").</div>
+          <input type="file" id="edit-screenshot-file" accept="image/*" onchange="handleEditScreenshotFile(this.files[0])" style="display:none;">
+        </div>
 
         <div style="margin-top:16px;padding:14px;background:#f0fdf4;border:2px solid #bbf7d0;border-radius:8px;">
           <label style="display:block;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#16a34a;margin-bottom:6px;">✅ Resolution Notes</label>
@@ -3826,12 +4027,117 @@ function openEditIssue(issueId) {
   const editEl = document.getElementById('issue-edit-modal');
   editEl.innerHTML = modalHtml;
   editEl.style.display = 'flex';
+
+  // Load existing screenshots into a working array (separate from saved one until save)
+  _editingScreenshots = [];
+  if (Array.isArray(i.screenshots) && i.screenshots.length > 0) {
+    _editingScreenshots = i.screenshots.map(s => ({ ...s }));
+  } else if (i.screenshot) {
+    // Legacy single screenshot — promote it
+    _editingScreenshots = [{
+      url: i.screenshot,
+      label: 'Original',
+      uploaded_by: i.testerEmail,
+      uploaded_at: i.loggedAt || new Date().toISOString()
+    }];
+  }
+  renderEditScreenshotsList();
 }
 
 function closeEditIssue() {
   const m = document.getElementById('issue-edit-modal');
   if (m) { m.style.display = 'none'; m.innerHTML = ''; }
+  _editingScreenshots = [];
 }
+
+let _editingScreenshots = [];
+
+function renderEditScreenshotsList() {
+  const wrap = document.getElementById('edit-screenshots-list');
+  if (!wrap) return;
+  if (_editingScreenshots.length === 0) {
+    wrap.innerHTML = '<div style="font-size:12px;color:var(--text-muted);font-style:italic;padding:8px 0;">No screenshots yet.</div>';
+    return;
+  }
+  wrap.innerHTML = _editingScreenshots.map((s, idx) => `
+    <div style="display:flex;gap:10px;align-items:center;padding:8px;background:#f9fafb;border:1px solid var(--border);border-radius:6px;margin-bottom:6px;">
+      <a href="${escapeAttr(s.url)}" target="_blank" rel="noopener" style="flex-shrink:0;">
+        <img src="${escapeAttr(s.url)}" alt="screenshot" style="width:64px;height:64px;object-fit:cover;border-radius:4px;border:1px solid var(--border);">
+      </a>
+      <div style="flex:1;min-width:0;">
+        <input type="text" value="${escapeAttr(s.label || '')}" placeholder="Label (e.g. Original bug, After fix)" oninput="updateScreenshotLabel(${idx}, this.value)" style="width:100%;font-size:12.5px;padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-family:inherit;box-sizing:border-box;margin-bottom:3px;">
+        <div style="font-size:10.5px;color:var(--text-muted);">By ${escapeHTML(s.uploaded_by || '?')} · ${s.uploaded_at ? new Date(s.uploaded_at).toLocaleString() : ''}</div>
+      </div>
+      <button type="button" onclick="removeEditScreenshot(${idx})" title="Remove" style="flex-shrink:0;background:none;border:none;color:#dc2626;font-size:18px;cursor:pointer;padding:4px 8px;">×</button>
+    </div>
+  `).join('');
+}
+
+function updateScreenshotLabel(idx, value) {
+  if (_editingScreenshots[idx]) _editingScreenshots[idx].label = value;
+}
+
+function removeEditScreenshot(idx) {
+  if (!confirm('Remove this screenshot?')) return;
+  _editingScreenshots.splice(idx, 1);
+  renderEditScreenshotsList();
+}
+
+function handleEditScreenshotDrop(e) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('is-drag');
+  const file = e.dataTransfer?.files?.[0];
+  if (file) handleEditScreenshotFile(file);
+}
+
+async function handleEditScreenshotFile(file) {
+  if (!file || !file.type.startsWith('image/')) {
+    alert('Please pick an image file.');
+    return;
+  }
+  const drop = document.getElementById('edit-screenshot-drop');
+  const oldText = drop?.innerHTML;
+  if (drop) drop.innerHTML = '<div style="padding:14px;color:var(--blue-700);">Uploading...</div>';
+
+  try {
+    if (!SP_STATE.online) throw new Error('Not connected to database — cannot upload screenshot.');
+    const ts = new Date().toISOString().replace(/[:.]/g, '-');
+    const safe = file.name.replace(/[^\w.-]+/g, '_');
+    const filename = `${ts}_${safe}`;
+    const url = await spUploadScreenshot(file, filename);
+    const label = prompt('Label this screenshot (e.g. "Original bug", "After fix", "Browser console error"):', _editingScreenshots.length === 0 ? 'Original' : 'After fix');
+    _editingScreenshots.push({
+      url,
+      label: (label || 'Screenshot').trim(),
+      uploaded_by: getTesterEmail() || '',
+      uploaded_at: new Date().toISOString()
+    });
+    renderEditScreenshotsList();
+  } catch (e) {
+    alert('Upload failed: ' + e.message);
+  } finally {
+    if (drop && oldText) drop.innerHTML = oldText;
+    const fileInput = document.getElementById('edit-screenshot-file');
+    if (fileInput) fileInput.value = '';
+  }
+}
+
+// Allow paste-to-add screenshot when edit modal is open
+document.addEventListener('paste', e => {
+  const editModal = document.getElementById('issue-edit-modal');
+  if (!editModal || editModal.style.display === 'none') return;
+  const items = (e.clipboardData || {}).items || [];
+  for (const item of items) {
+    if (item.kind === 'file' && item.type.startsWith('image/')) {
+      const file = item.getAsFile();
+      if (file) {
+        handleEditScreenshotFile(file);
+        e.preventDefault();
+        return;
+      }
+    }
+  }
+});
 
 async function saveEditedIssue(issueId) {
   const issues = getState().issues || [];
@@ -3843,7 +4149,6 @@ async function saveEditedIssue(issueId) {
   const newStatus = document.getElementById('edit-issue-status').value;
   const newBehavior = document.getElementById('edit-issue-behavior').value.trim();
   const newExpected = document.getElementById('edit-issue-expected').value.trim();
-  const newScreenshot = document.getElementById('edit-issue-screenshot').value.trim();
   const newResolution = document.getElementById('edit-issue-resolution').value.trim();
 
   if (!newTitle) { alert('Title cannot be empty.'); return; }
@@ -3859,15 +4164,17 @@ async function saveEditedIssue(issueId) {
   i.status = newStatus;
   i.behavior = newBehavior;
   i.expected = newExpected;
-  i.screenshot = newScreenshot;
   i.resolution = newResolution;
+  // Save the multi-screenshot array (clone to detach from working state)
+  i.screenshots = _editingScreenshots.map(s => ({ ...s }));
+  // Keep legacy single-screenshot field synced to first item for backward compat
+  i.screenshot = i.screenshots.length > 0 ? i.screenshots[0].url : '';
   i.lastUpdatedBy = me;
   i.lastUpdatedAt = new Date().toISOString();
   if (becomingResolved) {
     i.resolvedAt = new Date().toISOString();
     i.resolvedBy = me;
   } else if (!wasResolved) {
-    // Re-opened — clear resolved fields
     i.resolvedAt = null;
     i.resolvedBy = null;
   }
@@ -3876,7 +4183,6 @@ async function saveEditedIssue(issueId) {
   state.issues = state.issues.map(x => x.id === issueId ? i : x);
   saveState(state);
 
-  // Sync to Supabase (if online)
   if (SP_STATE.online && SP_STATE.client && i.sbItemId) {
     try {
       const { error } = await SP_STATE.client.from('issues').update({
@@ -3886,6 +4192,7 @@ async function saveEditedIssue(issueId) {
         behavior: i.behavior,
         expected_behavior: i.expected || null,
         screenshot_link: i.screenshot || null,
+        screenshots: i.screenshots,
         resolution: i.resolution || null,
         resolved_at: i.resolvedAt,
         resolved_by: i.resolvedBy,
