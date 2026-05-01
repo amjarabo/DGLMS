@@ -45,85 +45,89 @@
   }
 
   /* ── DARK THEME ── */
-  html[data-theme="dark"] {
+  [data-theme="dark"] {
     --body-bg: #0b1220;
-    --card-bg: #131c2e;
-    --text-primary: #e5e7eb;
-    --text-secondary: #cbd5e1;
-    --text-muted: #94a3b8;
-    --border: #243049;
-    --sidebar-bg: #050d1f;
-    --sidebar-hover: #102246;
-    --sidebar-active: #1d4ed8;
-    --blue-50:  #0f1d3d;
-    --blue-100: #11244a;
-    --blue-300: #1e3a8a;
-    --green-light: #064e3b;
-    --amber-light: #4a3308;
-    --red-light: #4a1414;
-    --purple-light: #2e1b5b;
-    --shadow: 0 1px 3px rgba(0,0,0,.4), 0 4px 16px rgba(0,0,0,.35);
+    --card-bg: #111a2e;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --border: #1e293b;
+    --blue-50:  #0f1e3d;
+    --blue-100: #142a55;
+    --shadow: 0 1px 3px rgba(0,0,0,.4), 0 4px 16px rgba(0,0,0,.3);
     --shadow-md: 0 4px 24px rgba(0,0,0,.5);
-    color-scheme: dark;
+    --sidebar-bg: #060d1c;
+    --sidebar-hover: #142a55;
+    --sidebar-active: #1d4ed8;
   }
-  /* Translate hardcoded light backgrounds in inline styles to dark equivalents */
-  html[data-theme="dark"] [style*="background:#fff"],
-  html[data-theme="dark"] [style*="background: #fff"],
-  html[data-theme="dark"] [style*="background:#ffffff"],
-  html[data-theme="dark"] [style*="background: #ffffff"] { background: var(--card-bg) !important; }
-  html[data-theme="dark"] [style*="background:#f9fafb"],
-  html[data-theme="dark"] [style*="background: #f9fafb"],
-  html[data-theme="dark"] [style*="background:#f3f4f6"],
-  html[data-theme="dark"] [style*="background: #f3f4f6"] { background: #1a2440 !important; }
-  html[data-theme="dark"] [style*="background:#f0fdf4"],
-  html[data-theme="dark"] [style*="background: #f0fdf4"] { background: #0f2a1d !important; }
-  html[data-theme="dark"] [style*="background:#fef2f2"],
-  html[data-theme="dark"] [style*="background: #fef2f2"] { background: #2a1414 !important; }
-  html[data-theme="dark"] [style*="background:#fffbeb"],
-  html[data-theme="dark"] [style*="background: #fffbeb"] { background: #2a2308 !important; }
-  html[data-theme="dark"] [style*="background:#f0f9ff"],
-  html[data-theme="dark"] [style*="background: #f0f9ff"] { background: #0c1f3a !important; }
-  html[data-theme="dark"] [style*="background:#eff6ff"],
-  html[data-theme="dark"] [style*="background: #eff6ff"] { background: #112042 !important; }
-  html[data-theme="dark"] [style*="background:#fdf4ff"],
-  html[data-theme="dark"] [style*="background: #fdf4ff"] { background: #25153a !important; }
-  /* Modal backdrop sticky headers/footers using inline #fff */
-  html[data-theme="dark"] .modal { background: var(--card-bg) !important; color: var(--text-primary); }
-  html[data-theme="dark"] .modal-header { color: var(--text-primary); }
-  html[data-theme="dark"] .modal-body { color: var(--text-primary); }
-  html[data-theme="dark"] .expected-box,
-  html[data-theme="dark"] .negative-box,
-  html[data-theme="dark"] .prerequisites-box,
-  html[data-theme="dark"] .fields-box { color: var(--text-primary) !important; }
-  html[data-theme="dark"] table td { color: var(--text-primary); }
-  html[data-theme="dark"] input, html[data-theme="dark"] textarea, html[data-theme="dark"] select {
-    background: #1a2440; color: var(--text-primary); border-color: var(--border);
+  [data-theme="dark"] body { background: var(--body-bg); color: var(--text-primary); }
+  [data-theme="dark"] .topbar { background: var(--card-bg); border-bottom-color: var(--border); }
+  [data-theme="dark"] .card,
+  [data-theme="dark"] .stat-card,
+  [data-theme="dark"] .step-card,
+  [data-theme="dark"] .modal,
+  [data-theme="dark"] .modal-card { background: var(--card-bg); border-color: var(--border); color: var(--text-primary); }
+  [data-theme="dark"] table thead th { background: #0d1729; color: var(--text-secondary); border-color: var(--border); }
+  [data-theme="dark"] table tbody td { border-color: var(--border); color: var(--text-primary); }
+  [data-theme="dark"] table tbody tr:hover { background: rgba(29, 78, 216, .08); }
+  [data-theme="dark"] input[type="text"],
+  [data-theme="dark"] input[type="email"],
+  [data-theme="dark"] input[type="password"],
+  [data-theme="dark"] input[type="search"],
+  [data-theme="dark"] textarea,
+  [data-theme="dark"] select {
+    background: #0b1424 !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border) !important;
   }
-  html[data-theme="dark"] input::placeholder, html[data-theme="dark"] textarea::placeholder { color: var(--text-muted); }
-  html[data-theme="dark"] hr { border-color: var(--border) !important; }
+  [data-theme="dark"] .topbar-btn { background: var(--card-bg); border-color: var(--border); color: var(--text-secondary); }
+  [data-theme="dark"] .topbar-btn:hover { background: #142a55; color: #fff; }
+  [data-theme="dark"] .topbar-btn.primary { background: var(--blue-600); color: #fff; }
+  [data-theme="dark"] .substep-row { background: #0b1424; border-color: var(--border); }
+  [data-theme="dark"] .substep-row:hover { background: #142a55; }
+  [data-theme="dark"] .substep-row.done { background: #04231a; border-color: #064e3b; color: #6ee7b7; }
+  [data-theme="dark"] .substep-row.is-parent { background: #0d1729; }
+  [data-theme="dark"] .substep-row.is-parent.done { background: #04231a; }
+  [data-theme="dark"] .substep-children { background: #08111f; border-color: var(--border); }
+  [data-theme="dark"] .substep-row.substep-child:hover { background: #142a55; }
+  [data-theme="dark"] .substep-row.substep-child.done { background: rgba(16, 185, 129, .1); color: #6ee7b7; }
+  [data-theme="dark"] .badge-blue { background: var(--blue-100); color: #93c5fd; }
+  [data-theme="dark"] .badge-gray { background: #1e293b; color: var(--text-secondary); }
+  [data-theme="dark"] .modal-backdrop { background: rgba(0,0,0,.7); }
+  [data-theme="dark"] .modal-header { background: #0d1729 !important; border-bottom-color: var(--border) !important; color: var(--text-primary) !important; }
+  [data-theme="dark"] .modal-footer { background: var(--card-bg) !important; border-top-color: var(--border) !important; }
+  [data-theme="dark"] .screenshot-drop { background: #0b1424; border-color: var(--border); color: var(--text-secondary); }
+  [data-theme="dark"] .screenshot-drop.is-drag { background: #142a55; border-color: var(--blue-400); }
+  [data-theme="dark"] .nav-item:hover { background: var(--sidebar-hover); }
+  [data-theme="dark" ] code, [data-theme="dark"] kbd, [data-theme="dark"] pre {
+    background: #0b1424; color: #93c5fd; border-color: var(--border);
+  }
+  [data-theme="dark"] .sp-status-badge.is-online { background: #04231a; color: #6ee7b7; }
+  [data-theme="dark"] .sp-status-badge.is-offline { background: #2c0a0a; color: #fca5a5; }
+  [data-theme="dark"] .tester-chip { background: #0d1729; }
+  [data-theme="dark"] .tester-chip:hover { background: #142a55; }
+  [data-theme="dark"] .stat-card-icon,
+  [data-theme="dark"] #notif-dropdown { background: var(--card-bg); border-color: var(--border); color: var(--text-primary); }
+  [data-theme="dark"] #notif-dropdown > div { border-color: var(--border) !important; }
+  [data-theme="dark"] #notif-list > div:hover { background: #142a55 !important; }
 
-  /* ── FLOATING DARK MODE TOGGLE ── */
-  #theme-toggle {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
+  /* Theme toggle button */
+  .theme-toggle {
+    background: transparent;
     border: 1px solid var(--border);
-    background: var(--card-bg);
-    color: var(--text-primary);
-    box-shadow: var(--shadow-md);
+    border-radius: 8px;
+    width: 36px;
+    height: 36px;
     cursor: pointer;
-    z-index: 9999;
-    font-size: 18px;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: transform .15s ease, background .2s ease;
+    font-size: 16px;
+    color: var(--text-secondary);
+    transition: background .15s, color .15s;
   }
-  #theme-toggle:hover { transform: scale(1.08); }
-  #theme-toggle:active { transform: scale(.95); }
+  .theme-toggle:hover { background: var(--blue-50); color: var(--blue-700); }
+  [data-theme="dark"] .theme-toggle:hover { background: #142a55; color: #93c5fd; }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -540,67 +544,6 @@
     color: var(--text-muted);
     margin-bottom: 8px;
   }
-
-  /* ── ASSIGNMENTS SECTION (collapsible, near top of card) ── */
-  .assignments-section {
-    margin-top: 12px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--card-bg);
-    overflow: hidden;
-  }
-  .assignments-header {
-    display: flex; align-items: center; gap: 8px;
-    padding: 10px 14px;
-    cursor: pointer;
-    user-select: none;
-    background: var(--blue-50);
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: .04em;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-  }
-  .assignments-header:hover { background: var(--blue-100); }
-  .assignments-header .chev { margin-left: auto; transition: transform .2s ease; }
-  .assignments-section.open .assignments-header .chev { transform: rotate(180deg); }
-  .assignments-summary {
-    font-size: 11.5px;
-    font-weight: 500;
-    color: var(--text-muted);
-    text-transform: none;
-    letter-spacing: 0;
-    margin-left: 8px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 50%;
-  }
-  .assignments-body {
-    display: none;
-    padding: 14px;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 12px;
-  }
-  .assignments-section.open .assignments-body { display: grid; }
-  .assignment-field label {
-    display: block;
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-muted);
-    margin-bottom: 4px;
-  }
-  .assignment-field select {
-    width: 100%;
-    padding: 7px 8px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    background: var(--card-bg);
-    color: var(--text-primary);
-    font-size: 13px;
-    font-family: inherit;
-  }
-  .assignment-field select:focus { outline: none; border-color: var(--blue-500); }
   .step-instructions ol, .step-instructions ul {
     padding-left: 18px;
     display: flex; flex-direction: column; gap: 4px;
@@ -1337,39 +1280,8 @@
 </div>
 
 <!-- ══════════════════════════════════════════════
-     SET NEW PASSWORD MODAL — shown after user clicks reset email link
+     ISSUE DETAIL MODAL — full context for an existing issue
 ══════════════════════════════════════════════ -->
-<div id="set-password-gate" class="modal-backdrop" style="display:none;">
-  <div class="modal email-gate-modal">
-    <div class="modal-header" style="background:linear-gradient(135deg,#1d4ed8 0%,#1e40af 100%);color:#fff;">
-      <h2 style="margin:0;font-size:16px;">🔑 Set Your Password</h2>
-    </div>
-    <div class="modal-body">
-      <p style="margin-bottom:14px;color:var(--text-secondary);font-size:13.5px;">
-        You followed a password reset link. Choose a new password below to complete the reset.
-      </p>
-      <div style="margin-bottom:12px;">
-        <label style="display:block;font-size:11.5px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;">New Password *</label>
-        <input id="set-password-new" type="password" placeholder="At least 8 characters" autocomplete="new-password"
-               style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:inherit;">
-      </div>
-      <div style="margin-bottom:14px;">
-        <label style="display:block;font-size:11.5px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;">Confirm New Password *</label>
-        <input id="set-password-confirm" type="password" placeholder="Re-enter the same password" autocomplete="new-password"
-               style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:inherit;">
-      </div>
-      <div id="set-password-error" style="display:none;color:#dc2626;font-size:13px;margin-bottom:10px;font-weight:600;"></div>
-      <div style="background:#eff6ff;border:1px solid #bae6fd;border-radius:6px;padding:10px 12px;font-size:12px;color:#1e40af;">
-        ℹ️ Use at least 8 characters. After setting, you'll be signed out and asked to log in with the new password.
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="topbar-btn primary" onclick="submitNewPassword()" style="width:100%;background:#1d4ed8;color:#fff;padding:10px;font-weight:600;">
-        🔑 Set Password
-      </button>
-    </div>
-  </div>
-</div>
 <div id="issue-detail-modal" class="modal-backdrop" style="display:none;"></div>
 <div id="issue-edit-modal" class="modal-backdrop" style="display:none;"></div>
 
@@ -1506,6 +1418,7 @@
     </div>
     <div class="topbar-right">
       <span id="sp-status-badge" class="sp-status-badge is-offline" title="Database sync status">🔴 Offline (local only)</span>
+      <button id="theme-toggle" class="theme-toggle" onclick="toggleTheme()" title="Switch theme" aria-label="Toggle dark mode">🌙</button>
       <button id="notif-bell" class="topbar-btn" onclick="toggleNotificationDropdown()" style="position:relative;display:none;" title="Issue updates">
         🔔
         <span id="notif-badge" style="display:none;position:absolute;top:0;right:0;background:#dc2626;color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:1px 5px;min-width:14px;text-align:center;line-height:1.4;">0</span>
@@ -2283,43 +2196,15 @@
       </div>
 
       <div class="card">
-        <div class="card-header" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <div class="card-header" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
           <div>
             <div class="card-title">Issue Log <span id="issues-count" style="font-family:'DM Mono',monospace;color:var(--blue-700);">0</span></div>
             <div class="card-subtitle">Auto-numbered ISS-XXX. Newest first. <strong>Click any row to view full details</strong>.</div>
           </div>
-          <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-            <select id="issue-filter-env" onchange="renderIssuesView()" style="font-family:inherit;font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;">
-              <option value="">All envs</option>
-              <option value="qa">DTC QA</option>
-              <option value="uat">DTC UAT</option>
-              <option value="prod">Production</option>
-            </select>
-            <select id="issue-filter-persona" onchange="renderIssuesView()" style="font-family:inherit;font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;">
-              <option value="">All personas</option>
-              <option value="nofo-dev">NOFO Dev</option>
-              <option value="program-office">Program Office</option>
-              <option value="grant-office">Grant Office</option>
-              <option value="oa-legal">OA Legal</option>
-              <option value="oa-cfo">OA CFO</option>
-              <option value="oa-leadership">OA Leadership</option>
-              <option value="reviewer">Reviewer</option>
-              <option value="ost-pc">OST-PC</option>
-              <option value="das">DAS</option>
-            </select>
-            <select id="issue-filter-severity" onchange="renderIssuesView()" style="font-family:inherit;font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;">
-              <option value="">Any severity</option>
-              <option value="Critical">Critical</option>
-              <option value="High">High</option>
-              <option value="Medium">Medium</option>
-              <option value="Low">Low</option>
-            </select>
-            <input id="issue-filter-tester" type="text" placeholder="Filter by tester..." oninput="renderIssuesView()" style="font-family:inherit;font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;">
-            <div style="display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;">
-              <button class="issue-filter-btn is-active" data-filter="open" onclick="setIssueFilter('open')" style="padding:6px 14px;font-size:12px;font-weight:600;border:none;background:var(--blue-700);color:#fff;cursor:pointer;font-family:inherit;">Open</button>
-              <button class="issue-filter-btn" data-filter="resolved" onclick="setIssueFilter('resolved')" style="padding:6px 14px;font-size:12px;font-weight:600;border:none;background:#fff;color:var(--text-secondary);cursor:pointer;font-family:inherit;">Resolved</button>
-              <button class="issue-filter-btn" data-filter="all" onclick="setIssueFilter('all')" style="padding:6px 14px;font-size:12px;font-weight:600;border:none;background:#fff;color:var(--text-secondary);cursor:pointer;font-family:inherit;">All</button>
-            </div>
+          <div style="margin-left:auto;display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+            <button class="issue-filter-btn is-active" data-filter="open" onclick="setIssueFilter('open')" style="padding:6px 14px;font-size:12px;font-weight:600;border:none;background:var(--blue-700);color:#fff;cursor:pointer;font-family:inherit;">Open</button>
+            <button class="issue-filter-btn" data-filter="resolved" onclick="setIssueFilter('resolved')" style="padding:6px 14px;font-size:12px;font-weight:600;border:none;background:#fff;color:var(--text-secondary);cursor:pointer;font-family:inherit;">Resolved</button>
+            <button class="issue-filter-btn" data-filter="all" onclick="setIssueFilter('all')" style="padding:6px 14px;font-size:12px;font-weight:600;border:none;background:#fff;color:var(--text-secondary);cursor:pointer;font-family:inherit;">All</button>
           </div>
         </div>
         <div class="table-wrap">
@@ -2545,44 +2430,6 @@ const PERSONA_NAMES = {
 };
 
 // ════════════════════════════════════════════════
-// 👥 PEOPLE DIRECTORY — used in test case assignment picklists
-// ════════════════════════════════════════════════
-// Add entries as { name: 'Display Name', email: 'email@dot.gov' }.
-// The picklists show `name`; the `email` is stored in Supabase as the stable id.
-// Leave this empty to start; populate as you confirm names per test case.
-const PEOPLE_DIRECTORY = [
-  // { name: 'Ana Jarabo', email: 'ana.jarabo.ctr@dot.gov' },
-];
-
-const ASSIGNMENT_ROLES = [
-  { key: 'developer', label: '🛠️ Developer' },
-  { key: 'pm',        label: '📋 PM' },
-  { key: 'tester1',   label: '🧪 Tester 1' },
-  { key: 'tester2',   label: '🧪 Tester 2' },
-  { key: 'tester3',   label: '🧪 Tester 3' }
-];
-
-function getPersonByEmail(email) {
-  if (!email) return null;
-  const e = email.toLowerCase();
-  return PEOPLE_DIRECTORY.find(p => (p.email || '').toLowerCase() === e) || null;
-}
-
-function buildAssignmentOptions(selectedEmail) {
-  const sel = (selectedEmail || '').toLowerCase();
-  let html = '<option value="">— Unassigned —</option>';
-  PEOPLE_DIRECTORY.forEach(p => {
-    const isSel = (p.email || '').toLowerCase() === sel ? ' selected' : '';
-    html += `<option value="${escapeAttr(p.email)}"${isSel}>${escapeHTML(p.name)}</option>`;
-  });
-  // If a stored email is not in the directory (orphan), show it so it isn't lost
-  if (sel && !PEOPLE_DIRECTORY.some(p => (p.email || '').toLowerCase() === sel)) {
-    html += `<option value="${escapeAttr(selectedEmail)}" selected>${escapeHTML(selectedEmail)} (not in directory)</option>`;
-  }
-  return html;
-}
-
-// ════════════════════════════════════════════════
 // 🔧 SUPABASE CONFIGURATION
 // ════════════════════════════════════════════════
 const SUPABASE_URL = 'https://jkwqcjvfuocxkxjcoqfx.supabase.co';
@@ -2611,23 +2458,7 @@ let SB_STATE = {
   resultsItemMap: {},  // local lookup: cardKey -> result row id
   resultsRows: [],     // all rows from team
   issuesRows: [],
-  pendingRecovery: false, // set true if URL contains a Supabase recovery token
 };
-
-// Detect a password-recovery callback in the URL hash *before* anything else runs.
-// Supabase puts ?type=recovery (or #type=recovery) on the redirect URL it appends
-// the access token to. If we see it, we suppress the normal app bootstrap and
-// show the "Set New Password" form instead — otherwise the user lands in the
-// dashboard already signed in and never gets prompted to choose a password.
-(function detectRecoveryEarly() {
-  try {
-    const hash = window.location.hash || '';
-    const search = window.location.search || '';
-    if (hash.includes('type=recovery') || search.includes('type=recovery')) {
-      SB_STATE.pendingRecovery = true;
-    }
-  } catch (e) { /* ignore */ }
-})();
 
 // ════════════════════════════════════════════════
 // SUPABASE CLIENT — initialize from CDN
@@ -2764,21 +2595,6 @@ async function sbBootstrap() {
     // Check if there's an active session (after magic-link redirect or previous session)
     const { data: { session } } = await client.auth.getSession();
 
-    // ── PASSWORD RECOVERY FLOW ──
-    // If the URL indicates a recovery callback, do NOT bootstrap the app.
-    // Show the "Set New Password" modal instead. Supabase has already established
-    // a temporary recovery session by this point, which we'll use to call updateUser().
-    if (SB_STATE.pendingRecovery) {
-      SB_STATE.online = !!session;
-      setSpStatusBadge('signin-needed');
-      showSetPasswordModal();
-      // Still attach the listener for completeness, then exit early
-      client.auth.onAuthStateChange((event) => {
-        if (event === 'SIGNED_OUT') location.reload();
-      });
-      return;
-    }
-
     if (session && session.user) {
       // User is signed in
       const userEmail = (session.user.email || '').toLowerCase();
@@ -2839,16 +2655,7 @@ async function sbBootstrap() {
 
     // Listen for auth state changes (e.g. magic link redirect arrives)
     client.auth.onAuthStateChange((event, session) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        // User clicked the recovery email link — show password set modal
-        SB_STATE.pendingRecovery = true;
-        showSetPasswordModal();
-        return;
-      }
       if (event === 'SIGNED_IN' && session) {
-        // Suppress the auto-reload while a recovery flow is active, so the
-        // user actually sees the "Set New Password" modal.
-        if (SB_STATE.pendingRecovery) return;
         // Reload to re-bootstrap with the new session
         location.reload();
       }
@@ -2914,9 +2721,6 @@ async function sbReloadAll() {
       .limit(5000);
     hydrateIssuesFromSb(issues || []);
   } catch (e) { console.warn('issues load failed:', e.message); }
-
-  // Test case assignments
-  await spLoadAssignments();
 }
 
 function hydrateResultsFromSb(rows) {
@@ -3129,6 +2933,36 @@ const spUploadScreenshot = sbUploadScreenshot;
 // TESTER IDENTITY — captured on first visit, stored in localStorage
 // ════════════════════════════════════════════════
 const STORAGE_KEY = 'dglms_e2e_v1';
+const THEME_KEY = 'dglms_e2e_theme';
+
+// ════════════════════════════════════════════════
+// THEME — light/dark mode with localStorage + system preference
+// ════════════════════════════════════════════════
+function getSavedTheme() {
+  try {
+    const saved = localStorage.getItem(THEME_KEY);
+    if (saved === 'light' || saved === 'dark') return saved;
+  } catch (e) {}
+  // Auto-detect system preference
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
+  return 'light';
+}
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  const btn = document.getElementById('theme-toggle');
+  if (btn) {
+    btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+    btn.title = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+  }
+}
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'light';
+  const next = current === 'dark' ? 'light' : 'dark';
+  try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+  applyTheme(next);
+}
+// Apply saved theme immediately (before page render to avoid flash)
+applyTheme(getSavedTheme());
 
 function getState() {
   try {
@@ -3166,65 +3000,6 @@ function refreshTesterChip() {
 function showEmailGate() {
   document.getElementById('email-gate').style.display = 'flex';
   setTimeout(() => document.getElementById('email-gate-input').focus(), 100);
-}
-
-// ── PASSWORD RECOVERY MODAL HANDLERS ──
-function showSetPasswordModal() {
-  // Hide the email gate if it happens to be open
-  const emailGate = document.getElementById('email-gate');
-  if (emailGate) emailGate.style.display = 'none';
-  const modal = document.getElementById('set-password-gate');
-  if (!modal) return;
-  modal.style.display = 'flex';
-  setTimeout(() => document.getElementById('set-password-new')?.focus(), 100);
-  // Allow Enter key to submit
-  ['set-password-new', 'set-password-confirm'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el && !el.dataset.boundEnter) {
-      el.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitNewPassword(); });
-      el.dataset.boundEnter = '1';
-    }
-  });
-}
-
-async function submitNewPassword() {
-  const errorEl = document.getElementById('set-password-error');
-  const newEl = document.getElementById('set-password-new');
-  const confirmEl = document.getElementById('set-password-confirm');
-  const newPw = (newEl?.value || '');
-  const confirmPw = (confirmEl?.value || '');
-  errorEl.style.display = 'none';
-  errorEl.textContent = '';
-
-  if (newPw.length < 8) {
-    errorEl.textContent = 'Password must be at least 8 characters.';
-    errorEl.style.display = 'block';
-    return;
-  }
-  if (newPw !== confirmPw) {
-    errorEl.textContent = 'Passwords do not match.';
-    errorEl.style.display = 'block';
-    return;
-  }
-  if (!SB_STATE.client) {
-    errorEl.textContent = 'Auth client not ready. Please refresh and try again.';
-    errorEl.style.display = 'block';
-    return;
-  }
-
-  try {
-    const { error } = await SB_STATE.client.auth.updateUser({ password: newPw });
-    if (error) throw error;
-    // Success — clear hash, sign out, and reload so user logs in fresh with new password
-    SB_STATE.pendingRecovery = false;
-    try { history.replaceState(null, '', window.location.pathname); } catch (e) {}
-    alert('✓ Password updated successfully. You will now be signed out — please log in with your new password.');
-    await SB_STATE.client.auth.signOut();
-    location.reload();
-  } catch (e) {
-    errorEl.textContent = e.message || 'Could not update password. Please try the reset link again.';
-    errorEl.style.display = 'block';
-  }
 }
 async function confirmEmailGate() {
   const input = document.getElementById('email-gate-input');
@@ -3354,8 +3129,6 @@ function restoreCard(card) {
     // Auto-fill tester name with the email even if no prior state
     const ti = card.querySelector('.tester-name-input');
     if (ti && !ti.value) ti.value = getTesterEmail();
-    // Still restore assignments — they're shared, not per-tester
-    restoreCardAssignments(card);
     return;
   }
   // Restore result
@@ -3393,8 +3166,6 @@ function restoreCard(card) {
     });
     updateSubstepProgress(card);
   }
-  // Restore assignments (independent of per-tester result data)
-  restoreCardAssignments(card);
 }
 
 // ════════════════════════════════════════════════
@@ -3552,145 +3323,6 @@ function recomputeEnvSummary(card) {
 function onCardFieldChange(el) {
   const card = el.closest('.step-card');
   if (card) persistCard(card);
-}
-
-// ════════════════════════════════════════════════
-// 👥 TEST CASE ASSIGNMENTS — per test case (shared across testers/envs)
-// ════════════════════════════════════════════════
-function toggleAssignments(headerEl) {
-  const sec = headerEl.closest('.assignments-section');
-  if (sec) sec.classList.toggle('open');
-}
-
-function getCardTcId(card) {
-  return card?.dataset?.tc || null;
-}
-
-// Read assignments from the DOM of a given card
-function readAssignmentsFromCard(card) {
-  const out = {};
-  card.querySelectorAll('.assignment-select').forEach(sel => {
-    const role = sel.dataset.role;
-    const email = sel.value || '';
-    const person = getPersonByEmail(email);
-    out[role] = { email: email, name: person ? person.name : (email || '') };
-  });
-  return out;
-}
-
-// Apply a stored assignments object to all cards that share this test case
-function applyAssignmentsToCards(tcId, assignments) {
-  if (!tcId || !assignments) return;
-  document.querySelectorAll(`.step-card[data-tc="${tcId}"]`).forEach(card => {
-    card.querySelectorAll('.assignment-select').forEach(sel => {
-      const role = sel.dataset.role;
-      const stored = assignments[role];
-      const email = stored?.email || '';
-      // Rebuild options so an orphan email still appears
-      sel.innerHTML = buildAssignmentOptions(email);
-      updateAssignmentsSummary(card);
-    });
-  });
-}
-
-function updateAssignmentsSummary(card) {
-  const sec = card.querySelector('.assignments-section');
-  if (!sec) return;
-  const summaryEl = sec.querySelector('.assignments-summary');
-  const filled = [];
-  card.querySelectorAll('.assignment-select').forEach(sel => {
-    if (sel.value) {
-      const person = getPersonByEmail(sel.value);
-      filled.push(person ? person.name : sel.value);
-    }
-  });
-  if (summaryEl) {
-    summaryEl.textContent = filled.length === 0
-      ? '— Unassigned —'
-      : filled.length <= 2 ? filled.join(', ') : `${filled.slice(0, 2).join(', ')} +${filled.length - 2}`;
-  }
-}
-
-function onAssignmentChange(selectEl) {
-  const card = selectEl.closest('.step-card');
-  if (!card) return;
-  const tcId = getCardTcId(card);
-  const assignments = readAssignmentsFromCard(card);
-
-  // Save to local state (under top-level assignments map keyed by tc)
-  const state = getState();
-  state.assignments = state.assignments || {};
-  state.assignments[tcId] = assignments;
-  saveState(state);
-
-  // Apply to all sibling cards with the same tc (across env/persona)
-  applyAssignmentsToCards(tcId, assignments);
-
-  // Sync to Supabase
-  spSyncAssignments(tcId, assignments);
-}
-
-async function spSyncAssignments(tcId, assignments) {
-  if (!SB_STATE || !SB_STATE.online || SB_STATE.isGuest) return;
-  if (!tcId) return;
-  const row = {
-    test_case_id: tcId,
-    developer_email: assignments.developer?.email || null,
-    pm_email:        assignments.pm?.email || null,
-    tester1_email:   assignments.tester1?.email || null,
-    tester2_email:   assignments.tester2?.email || null,
-    tester3_email:   assignments.tester3?.email || null,
-    developer_name:  assignments.developer?.name || null,
-    pm_name:         assignments.pm?.name || null,
-    tester1_name:    assignments.tester1?.name || null,
-    tester2_name:    assignments.tester2?.name || null,
-    tester3_name:    assignments.tester3?.name || null,
-    updated_by:      SB_STATE.myUserId || null
-  };
-  try {
-    const { error } = await SB_STATE.client
-      .from('test_case_assignments')
-      .upsert(row, { onConflict: 'test_case_id' });
-    if (error) throw error;
-  } catch (e) {
-    console.warn('Assignments sync failed:', e.message);
-  }
-}
-
-async function spLoadAssignments() {
-  if (!SB_STATE || !SB_STATE.online) return;
-  try {
-    const { data, error } = await SB_STATE.client
-      .from('test_case_assignments')
-      .select('*');
-    if (error) throw error;
-    const state = getState();
-    state.assignments = state.assignments || {};
-    (data || []).forEach(row => {
-      const a = {
-        developer: { email: row.developer_email || '', name: row.developer_name || '' },
-        pm:        { email: row.pm_email || '',        name: row.pm_name || '' },
-        tester1:   { email: row.tester1_email || '',   name: row.tester1_name || '' },
-        tester2:   { email: row.tester2_email || '',   name: row.tester2_name || '' },
-        tester3:   { email: row.tester3_email || '',   name: row.tester3_name || '' }
-      };
-      state.assignments[row.test_case_id] = a;
-      applyAssignmentsToCards(row.test_case_id, a);
-    });
-    saveState(state);
-  } catch (e) {
-    console.warn('Assignments load failed:', e.message);
-  }
-}
-
-// Restore assignments from local state into a freshly-rendered card
-function restoreCardAssignments(card) {
-  const tcId = getCardTcId(card);
-  if (!tcId) return;
-  const state = getState();
-  const a = state.assignments?.[tcId];
-  if (a) applyAssignmentsToCards(tcId, a);
-  else updateAssignmentsSummary(card);
 }
 
 // ════════════════════════════════════════════════
@@ -3863,14 +3495,12 @@ function captureCardContext(card) {
         }
       });
       sections.testing_instructions = { label: labelText, substeps: substeps };
-    } else if (sec.querySelector('.prerequisites-box')) {
-      sections.prerequisites = { label: labelText, html: sec.querySelector('.prerequisites-box').innerHTML.trim() };
-    } else if (sec.querySelector('.fields-box')) {
-      sections.fields = { label: labelText, html: sec.querySelector('.fields-box').innerHTML.trim() };
-    } else if (sec.querySelector('.negative-box')) {
-      sections.negative_scenario = { label: labelText, html: sec.querySelector('.negative-box').innerHTML.trim() };
     } else if (sec.querySelector('.expected-box')) {
       sections.expected_results = { label: labelText, html: sec.querySelector('.expected-box').innerHTML.trim() };
+    } else if (sec.querySelector('.negative-box')) {
+      sections.negative_scenario = { label: labelText, html: sec.querySelector('.negative-box').innerHTML.trim() };
+    } else if (sec.querySelector('.prerequisites-box')) {
+      sections.prerequisites = { label: labelText, html: sec.querySelector('.prerequisites-box').innerHTML.trim() };
     }
   });
 
@@ -3879,9 +3509,6 @@ function captureCardContext(card) {
   const resultType = resultBtn ? (resultBtn.classList.contains('pass') ? 'Pass' : resultBtn.classList.contains('fail') ? 'Fail' : 'Inconclusive') : 'Pending';
   const signedOff = card.classList.contains('is-signed-off');
 
-  // Test case assignments (snapshot at time of issue)
-  const assignments = readAssignmentsFromCard(card);
-
   return {
     captured_at: new Date().toISOString(),
     tc_id: tcId,
@@ -3889,7 +3516,6 @@ function captureCardContext(card) {
     title: titleEl?.textContent.trim() || '',
     badges: badges,
     sections: sections,
-    assignments: assignments,
     tester_state: {
       result: resultType,
       tester_name: card.querySelector('.tester-name-input')?.value || '',
@@ -4133,41 +3759,26 @@ function renderIssuesView() {
   const resolvedTbody = document.getElementById('resolved-issues-tbody');
   const dashRecentEl = document.getElementById('dash-recently-resolved');
 
-  // Read additional filters (only present on the Issue Tracker view)
-  const fEnv      = (document.getElementById('issue-filter-env')?.value      || '').toLowerCase();
-  const fPersona  = (document.getElementById('issue-filter-persona')?.value  || '').toLowerCase();
-  const fSeverity = (document.getElementById('issue-filter-severity')?.value || '');
-  const fTester   = (document.getElementById('issue-filter-tester')?.value   || '').trim().toLowerCase();
-
   // Apply filter for the main Issue Tracker
   let filtered = allIssues;
-  if (_issueFilter === 'open') filtered = filtered.filter(i => !isResolvedStatus(i.status));
-  else if (_issueFilter === 'resolved') filtered = filtered.filter(i => isResolvedStatus(i.status));
-  if (fEnv)      filtered = filtered.filter(i => (i.env      || '').toLowerCase() === fEnv);
-  if (fPersona)  filtered = filtered.filter(i => (i.persona  || '').toLowerCase() === fPersona);
-  if (fSeverity) filtered = filtered.filter(i => (i.severity || '') === fSeverity);
-  if (fTester)   filtered = filtered.filter(i => (i.testerEmail || '').toLowerCase().includes(fTester));
+  if (_issueFilter === 'open') filtered = allIssues.filter(i => !isResolvedStatus(i.status));
+  else if (_issueFilter === 'resolved') filtered = allIssues.filter(i => isResolvedStatus(i.status));
 
   if (tbody) {
     if (filtered.length === 0) {
-      const anyExtraFilter = !!(fEnv || fPersona || fSeverity || fTester);
-      const msg = anyExtraFilter
-        ? 'No issues match the current filters.'
-        : _issueFilter === 'open'
-          ? 'No open issues. 🎉'
-          : _issueFilter === 'resolved'
-            ? 'No resolved issues yet.'
-            : 'No issues logged yet. Use the 🐛 Log Issue button on any test case to file one.';
+      const msg = _issueFilter === 'open'
+        ? 'No open issues. 🎉'
+        : _issueFilter === 'resolved'
+          ? 'No resolved issues yet.'
+          : 'No issues logged yet. Use the 🐛 Log Issue button on any test case to file one.';
       tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--text-muted);font-style:italic;">${msg}</td></tr>`;
     } else {
       tbody.innerHTML = filtered.map(i => {
         const sevColor = { Low: '#9ca3af', Medium: '#d97706', High: '#dc2626', Critical: '#7c2d12' }[i.severity] || '#9ca3af';
         const statusColor = { Open: '#dc2626', 'In Review': '#d97706', Fixed: '#16a34a', "Won't Fix": '#6b7280', Duplicate: '#6b7280' }[i.status] || '#6b7280';
-        const devName = (i.context?.assignments?.developer?.name) || ((getState().assignments || {})[i.tc]?.developer?.name) || '';
-        const devLine = devName ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">🛠️ ${escapeHTML(devName)}</div>` : '';
         return `<tr style="cursor:pointer;" onclick="openIssueDetail('${i.id}')" title="Click to view full details">
           <td><strong style="color:var(--blue-700);">${i.id}</strong></td>
-          <td>${i.title}${devLine}</td>
+          <td>${i.title}</td>
           <td><span class="badge badge-blue">TC-${i.tc}</span></td>
           <td>${i.personaName}</td>
           <td><span class="badge badge-gray">${i.envLabel}</span></td>
@@ -4283,28 +3894,6 @@ function openIssueDetail(issueId) {
   const ctx = i.context || {};
   const sec = ctx.sections || {};
   const ts = ctx.tester_state || {};
-  const asn = ctx.assignments || {};
-
-  // People assignments block — show whatever was captured (fallback to current shared state)
-  const liveAssignments = (getState().assignments || {})[i.tc] || {};
-  const mergedAsn = {};
-  ASSIGNMENT_ROLES.forEach(r => {
-    const fromCtx = asn[r.key];
-    const fromLive = liveAssignments[r.key];
-    mergedAsn[r.key] = fromCtx && (fromCtx.email || fromCtx.name) ? fromCtx : (fromLive || { email: '', name: '' });
-  });
-  const anyAssigned = Object.values(mergedAsn).some(p => p && (p.email || p.name));
-  const peopleHtml = anyAssigned ? `
-    <div style="background:#f9fafb;border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:18px;">
-      <div style="font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);margin-bottom:8px;">👥 People (from test case)</div>
-      <table style="width:100%;font-size:13px;border-collapse:collapse;">
-        ${ASSIGNMENT_ROLES.map(r => {
-          const p = mergedAsn[r.key];
-          const display = p && (p.name || p.email) ? escapeHTML(p.name || p.email) : '<span style="color:var(--text-muted);font-style:italic;">— Unassigned —</span>';
-          return `<tr><td style="padding:4px 8px;width:160px;font-weight:600;">${r.label}</td><td>${display}</td></tr>`;
-        }).join('')}
-      </table>
-    </div>` : '';
 
   // Resolution block (visible if there's a resolution OR the user is admin/owner)
   const resolutionHtml = (i.resolution || i.resolvedAt || i.status === 'Fixed' || i.status === "Won't Fix")
@@ -4405,8 +3994,6 @@ function openIssueDetail(issueId) {
           </table>
         </div>
 
-        ${peopleHtml}
-
         <!-- What was observed -->
         <div style="margin-bottom:18px;">
           <div style="font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#dc2626;margin-bottom:6px;">🐛 What was observed (Actual Behavior)</div>
@@ -4435,12 +4022,6 @@ function openIssueDetail(issueId) {
         <div style="margin-bottom:16px;">
           <div style="font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);margin-bottom:6px;">📌 Prerequisites</div>
           <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:12px;font-size:13px;line-height:1.5;">${sec.prerequisites.html}</div>
-        </div>` : ''}
-
-        ${sec.fields && sec.fields.html ? `
-        <div style="margin-bottom:16px;">
-          <div style="font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);margin-bottom:6px;">🧾 Field & Picklist Details</div>
-          <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;padding:12px;font-size:13px;line-height:1.5;">${sec.fields.html}</div>
         </div>` : ''}
 
         ${substepsHtml ? `
@@ -5102,8 +4683,8 @@ function makeSteps(containerId, steps) {
   steps.forEach((s, i) => {
     const subs = buildSubstepList(s.instructions);
     const negHtml = s.negative ? `<div class="step-section"><div class="step-section-label">⚠️ Negative Scenario (What to Watch For)</div><div class="negative-box">${s.negative}</div></div>` : '';
-    const prereqHtml = s.prerequisites ? `<div class="step-section"><div class="step-section-label">📌 Prerequisites</div><div class="expected-box prerequisites-box" style="background:#fffbeb;border-color:#fde68a;color:#92400e;">${s.prerequisites}</div></div>` : '';
-    const fieldHtml = s.fields ? `<div class="step-section"><div class="step-section-label">🧾 Field & Picklist Details</div><div class="expected-box fields-box" style="background:#f0f9ff;border-color:#bae6fd;color:#0c4a6e;">${s.fields}</div></div>` : '';
+    const prereqHtml = s.prerequisites ? `<div class="step-section"><div class="step-section-label">📌 Prerequisites</div><div class="expected-box" style="background:#fffbeb;border-color:#fde68a;color:#92400e;">${s.prerequisites}</div></div>` : '';
+    const fieldHtml = s.fields ? `<div class="step-section"><div class="step-section-label">🧾 Field & Picklist Details</div><div class="expected-box" style="background:#f0f9ff;border-color:#bae6fd;color:#0c4a6e;">${s.fields}</div></div>` : '';
 
     const subStepsSection = subs.count > 0 ? `
       <div class="step-section">
@@ -5141,22 +4722,6 @@ function makeSteps(containerId, steps) {
           <span class="step-chevron">▼</span>
         </div>
         <div class="step-body">
-          <div class="assignments-section" data-tc="${s.tc}">
-            <div class="assignments-header" onclick="toggleAssignments(this)">
-              <span>👥 Assignments</span>
-              <span class="assignments-summary"></span>
-              <span class="chev">▼</span>
-            </div>
-            <div class="assignments-body">
-              ${ASSIGNMENT_ROLES.map(r => `
-                <div class="assignment-field">
-                  <label>${r.label}</label>
-                  <select class="assignment-select" data-role="${r.key}" onchange="onAssignmentChange(this)">
-                    ${buildAssignmentOptions('')}
-                  </select>
-                </div>`).join('')}
-            </div>
-          </div>
           ${prereqHtml}
           ${subStepsSection}
           ${fieldHtml}
@@ -6170,51 +5735,6 @@ window.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('hashchange', handleHash);
   });
 });
-
-// ════════════════════════════════════════════════
-// DARK MODE TOGGLE — persisted to localStorage
-// ════════════════════════════════════════════════
-(function () {
-  const STORAGE_KEY = 'e2e-portal-theme';
-  // Apply saved theme as early as possible to avoid a flash
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
-  } catch (e) { /* localStorage may be blocked */ }
-
-  function syncIcon(btn) {
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    btn.textContent = isDark ? '☀️' : '🌙';
-    btn.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
-    btn.title = isDark ? 'Switch to light mode' : 'Switch to dark mode';
-  }
-
-  function mountToggle() {
-    if (document.getElementById('theme-toggle')) return;
-    const btn = document.createElement('button');
-    btn.id = 'theme-toggle';
-    btn.type = 'button';
-    btn.addEventListener('click', () => {
-      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-      if (isDark) {
-        document.documentElement.removeAttribute('data-theme');
-        try { localStorage.setItem(STORAGE_KEY, 'light'); } catch (e) {}
-      } else {
-        document.documentElement.setAttribute('data-theme', 'dark');
-        try { localStorage.setItem(STORAGE_KEY, 'dark'); } catch (e) {}
-      }
-      syncIcon(btn);
-    });
-    document.body.appendChild(btn);
-    syncIcon(btn);
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', mountToggle);
-  } else {
-    mountToggle();
-  }
-})();
 </script>
 </body>
 </html>
