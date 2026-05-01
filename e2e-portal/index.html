@@ -2283,15 +2283,43 @@
       </div>
 
       <div class="card">
-        <div class="card-header" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+        <div class="card-header" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <div>
             <div class="card-title">Issue Log <span id="issues-count" style="font-family:'DM Mono',monospace;color:var(--blue-700);">0</span></div>
             <div class="card-subtitle">Auto-numbered ISS-XXX. Newest first. <strong>Click any row to view full details</strong>.</div>
           </div>
-          <div style="margin-left:auto;display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;">
-            <button class="issue-filter-btn is-active" data-filter="open" onclick="setIssueFilter('open')" style="padding:6px 14px;font-size:12px;font-weight:600;border:none;background:var(--blue-700);color:#fff;cursor:pointer;font-family:inherit;">Open</button>
-            <button class="issue-filter-btn" data-filter="resolved" onclick="setIssueFilter('resolved')" style="padding:6px 14px;font-size:12px;font-weight:600;border:none;background:#fff;color:var(--text-secondary);cursor:pointer;font-family:inherit;">Resolved</button>
-            <button class="issue-filter-btn" data-filter="all" onclick="setIssueFilter('all')" style="padding:6px 14px;font-size:12px;font-weight:600;border:none;background:#fff;color:var(--text-secondary);cursor:pointer;font-family:inherit;">All</button>
+          <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <select id="issue-filter-env" onchange="renderIssuesView()" style="font-family:inherit;font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;">
+              <option value="">All envs</option>
+              <option value="qa">DTC QA</option>
+              <option value="uat">DTC UAT</option>
+              <option value="prod">Production</option>
+            </select>
+            <select id="issue-filter-persona" onchange="renderIssuesView()" style="font-family:inherit;font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;">
+              <option value="">All personas</option>
+              <option value="nofo-dev">NOFO Dev</option>
+              <option value="program-office">Program Office</option>
+              <option value="grant-office">Grant Office</option>
+              <option value="oa-legal">OA Legal</option>
+              <option value="oa-cfo">OA CFO</option>
+              <option value="oa-leadership">OA Leadership</option>
+              <option value="reviewer">Reviewer</option>
+              <option value="ost-pc">OST-PC</option>
+              <option value="das">DAS</option>
+            </select>
+            <select id="issue-filter-severity" onchange="renderIssuesView()" style="font-family:inherit;font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;">
+              <option value="">Any severity</option>
+              <option value="Critical">Critical</option>
+              <option value="High">High</option>
+              <option value="Medium">Medium</option>
+              <option value="Low">Low</option>
+            </select>
+            <input id="issue-filter-tester" type="text" placeholder="Filter by tester..." oninput="renderIssuesView()" style="font-family:inherit;font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;">
+            <div style="display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+              <button class="issue-filter-btn is-active" data-filter="open" onclick="setIssueFilter('open')" style="padding:6px 14px;font-size:12px;font-weight:600;border:none;background:var(--blue-700);color:#fff;cursor:pointer;font-family:inherit;">Open</button>
+              <button class="issue-filter-btn" data-filter="resolved" onclick="setIssueFilter('resolved')" style="padding:6px 14px;font-size:12px;font-weight:600;border:none;background:#fff;color:var(--text-secondary);cursor:pointer;font-family:inherit;">Resolved</button>
+              <button class="issue-filter-btn" data-filter="all" onclick="setIssueFilter('all')" style="padding:6px 14px;font-size:12px;font-weight:600;border:none;background:#fff;color:var(--text-secondary);cursor:pointer;font-family:inherit;">All</button>
+            </div>
           </div>
         </div>
         <div class="table-wrap">
@@ -4105,18 +4133,31 @@ function renderIssuesView() {
   const resolvedTbody = document.getElementById('resolved-issues-tbody');
   const dashRecentEl = document.getElementById('dash-recently-resolved');
 
+  // Read additional filters (only present on the Issue Tracker view)
+  const fEnv      = (document.getElementById('issue-filter-env')?.value      || '').toLowerCase();
+  const fPersona  = (document.getElementById('issue-filter-persona')?.value  || '').toLowerCase();
+  const fSeverity = (document.getElementById('issue-filter-severity')?.value || '');
+  const fTester   = (document.getElementById('issue-filter-tester')?.value   || '').trim().toLowerCase();
+
   // Apply filter for the main Issue Tracker
   let filtered = allIssues;
-  if (_issueFilter === 'open') filtered = allIssues.filter(i => !isResolvedStatus(i.status));
-  else if (_issueFilter === 'resolved') filtered = allIssues.filter(i => isResolvedStatus(i.status));
+  if (_issueFilter === 'open') filtered = filtered.filter(i => !isResolvedStatus(i.status));
+  else if (_issueFilter === 'resolved') filtered = filtered.filter(i => isResolvedStatus(i.status));
+  if (fEnv)      filtered = filtered.filter(i => (i.env      || '').toLowerCase() === fEnv);
+  if (fPersona)  filtered = filtered.filter(i => (i.persona  || '').toLowerCase() === fPersona);
+  if (fSeverity) filtered = filtered.filter(i => (i.severity || '') === fSeverity);
+  if (fTester)   filtered = filtered.filter(i => (i.testerEmail || '').toLowerCase().includes(fTester));
 
   if (tbody) {
     if (filtered.length === 0) {
-      const msg = _issueFilter === 'open'
-        ? 'No open issues. 🎉'
-        : _issueFilter === 'resolved'
-          ? 'No resolved issues yet.'
-          : 'No issues logged yet. Use the 🐛 Log Issue button on any test case to file one.';
+      const anyExtraFilter = !!(fEnv || fPersona || fSeverity || fTester);
+      const msg = anyExtraFilter
+        ? 'No issues match the current filters.'
+        : _issueFilter === 'open'
+          ? 'No open issues. 🎉'
+          : _issueFilter === 'resolved'
+            ? 'No resolved issues yet.'
+            : 'No issues logged yet. Use the 🐛 Log Issue button on any test case to file one.';
       tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--text-muted);font-style:italic;">${msg}</td></tr>`;
     } else {
       tbody.innerHTML = filtered.map(i => {
