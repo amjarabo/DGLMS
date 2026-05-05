@@ -1,0 +1,1443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DGLMS E2E Testing Execution Guide</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+:root{--bg:#f6f8fa;--surface:#fff;--border:#d0d7de;--border2:#e1e4e8;--text:#1f2328;--muted:#656d76;--muted2:#8c959f;--accent:#0969da;--accent-bg:#ddf4ff;--e1:#cf4a14;--e2:#0550ae;--e3:#1a7f37;--e4:#6e40c9;--e5:#9a6700;--e6:#1b7f37;--e7:#cf222e;--p-po:#0550ae;--p-po-bg:#ddf4ff;--p-oa:#1a7f37;--p-oa-bg:#dafbe1;--p-ost:#9a6700;--p-ost-bg:#fff8c5;--p-nofo:#cf4a14;--p-nofo-bg:#fff0eb;--p-sys:#0550ae;--p-sys-bg:#e6f0ff;--p-api:#656d76;--p-api-bg:#f0f0f0;--p-ext:#8250df;--p-ext-bg:#f5f0ff}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:13px;line-height:1.5;overflow-x:hidden}
+header{background:#1f2328;color:#fff;padding:20px 32px 16px;position:sticky;top:0;z-index:200;border-bottom:3px solid var(--accent)}
+.hdr-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.hdr-eyebrow{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;color:#8b949e;text-transform:uppercase;margin-bottom:4px}
+.hdr-title{font-size:19px;font-weight:700;color:#fff}
+.hdr-sub{color:#8b949e;font-size:12px;margin-top:3px}
+.hdr-back{font-family:'JetBrains Mono',monospace;font-size:11px;color:#8b949e;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);padding:5px 12px;border-radius:5px;cursor:pointer;text-decoration:none;transition:all .15s;align-self:flex-start}
+.hdr-back:hover{color:#fff;background:rgba(255,255,255,.15)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.chip{font-family:'JetBrains Mono',monospace;font-size:11px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#e6edf3;padding:4px 12px;border-radius:20px}
+.chip strong{color:#58a6ff}
+.layout{display:flex;min-height:calc(100vh - 92px)}
+.sidebar{width:210px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);padding:20px 0;position:sticky;top:92px;height:calc(100vh - 92px);overflow-y:auto}
+.sb-label{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted2);letter-spacing:1.5px;text-transform:uppercase;padding:10px 16px 5px}
+.sb-link{display:flex;align-items:center;gap:8px;padding:6px 16px;color:var(--muted);font-size:12px;cursor:pointer;border-left:2px solid transparent;transition:all .15s;text-decoration:none;user-select:none}
+.sb-link:hover{color:var(--text);background:var(--bg)}
+.sb-link.active{color:var(--accent);border-left-color:var(--accent);background:var(--accent-bg);font-weight:500}
+.sb-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sb-cnt{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:1px 6px;color:var(--muted2)}
+.persona-key{padding:8px 12px}
+.pk-item{display:inline-flex;align-items:center;font-size:11px;font-weight:500;padding:3px 8px;border-radius:4px;margin:2px 2px 2px 0;cursor:pointer;transition:all .15s;border:1px solid transparent}
+.pk-item:hover{filter:brightness(.92);transform:translateY(-1px);box-shadow:0 2px 6px rgba(0,0,0,.1)}
+.pk-hint{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted2);padding:0 12px 8px;letter-spacing:.3px}
+.progress-wrap{padding:10px 16px 6px}
+.pb-bg{background:var(--border2);border-radius:3px;height:4px}
+.pb-fill{height:4px;border-radius:3px;background:#1a7f37;transition:width .4s}
+.pb-lbl{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted2);margin-top:4px}
+.content{flex:1;padding:28px 36px;max-width:1060px}
+.global-section{background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:36px;overflow:hidden}
+.global-hdr{background:#f6f8fa;border-bottom:1px solid var(--border);padding:12px 20px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:6px}
+.global-hdr span{color:#cf222e;font-weight:700}
+.global-body{display:grid;grid-template-columns:1fr 1fr}
+.global-col{padding:16px 20px;border-right:1px solid var(--border)}
+.global-col:last-child{border-right:none}
+.global-col:nth-child(3),.global-col:nth-child(4){border-top:1px solid var(--border)}
+.global-col h4{font-size:12px;font-weight:600;color:var(--text);margin-bottom:10px}
+.exec-section{background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:36px;overflow:hidden}
+.exec-hdr{background:#f6f8fa;border-bottom:1px solid var(--border);padding:12px 20px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.exec-table{width:100%;border-collapse:collapse;font-size:12px}
+.exec-table th{text-align:left;padding:8px 14px;background:#f6f8fa;border-bottom:1px solid var(--border);color:var(--muted);font-weight:600;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.5px}
+.exec-table td{padding:9px 14px;border-bottom:1px solid var(--border2);vertical-align:top}
+.exec-table tr:last-child td{border-bottom:none}
+.exec-table tr:hover td{background:var(--bg)}
+.exec-num{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted2);font-weight:600}
+.utag{font-family:'JetBrains Mono',monospace;font-size:10px;background:#ddf4ff;color:#0550ae;border:1px solid #b6e3ff;padding:2px 6px;border-radius:3px;display:inline-block;margin:1px 2px 1px 0}
+.epic-section{margin-bottom:44px;scroll-margin-top:110px}
+.epic-banner{border-radius:8px 8px 0 0;padding:16px 20px;border:1px solid;border-bottom:none}
+.epic-eyebrow{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;opacity:.7;margin-bottom:4px}
+.epic-name{font-size:18px;font-weight:700}
+.epic-desc{font-size:12px;opacity:.75;margin-top:4px;font-style:italic}
+.epic-stories{border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px}
+.story-card{background:var(--surface);border-bottom:1px solid var(--border)}
+.story-card:last-child{border-bottom:none;border-radius:0 0 8px 8px}
+.story-hdr{display:flex;align-items:center;gap:12px;padding:12px 20px;cursor:pointer;user-select:none;border-bottom:1px solid var(--border);background:#fafbfc}
+.story-hdr:hover{background:#f0f3f6}
+.story-id-badge{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:3px 9px;color:var(--text);font-weight:500;white-space:nowrap;flex-shrink:0}
+.story-name{font-size:13px;font-weight:600;flex:1}
+.story-tags{display:flex;gap:6px;flex-shrink:0}
+.story-tag{font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--bg);border:1px solid var(--border);color:var(--muted);padding:2px 7px;border-radius:3px}
+.story-chev{color:var(--muted2);font-size:12px;transition:transform .2s}
+.story-body{padding:16px 20px;display:none}
+.story-body.open{display:block}
+.ul{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted2);margin-bottom:8px}
+.ul.mt{margin-top:14px}
+.users-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px}
+.users-table th{text-align:left;padding:6px 10px;background:#f6f8fa;border:1px solid var(--border);color:var(--muted);font-weight:600;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.4px}
+.users-table td{padding:7px 10px;border:1px solid var(--border2);vertical-align:top}
+.users-table tr:hover td{background:#f6f8fa}
+.chk-list{list-style:none}
+.chk-item{display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px solid #f0f0f0;font-size:12px;line-height:1.5}
+.chk-item:last-child{border-bottom:none}
+.chk-box{width:15px;height:15px;border-radius:3px;border:1.5px solid var(--border);flex-shrink:0;margin-top:1px;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;user-select:none}
+.chk-box:hover{border-color:#1a7f37}
+.chk-box.done{background:#1a7f37;border-color:#1a7f37;color:#fff}
+.chk-txt code{font-family:'JetBrains Mono',monospace;font-size:11px;background:#f6f8fa;border:1px solid var(--border);border-radius:3px;padding:0 4px;color:#8250df}
+.chk-txt strong{color:var(--text)}
+.soql-wrap{margin:10px 0}
+.soql-lbl{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted2);letter-spacing:1px;margin-bottom:4px}
+.soql{background:#0d1117;border:1px solid #30363d;border-radius:5px;padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#c9d1d9;white-space:pre-wrap}
+.soql .kw{color:#ff7b72}.soql .fld{color:#79c0ff}.soql .val{color:#a5d6ff}
+.crit{background:#fff8f0;border:1px solid #f5a623;border-left:3px solid #f5a623;border-radius:4px;padding:9px 12px;margin:0 0 14px;font-size:12px;color:#7d4e00}
+.crit strong{color:#5c3600}
+.note-bar{background:#fff8c5;border:1px solid #d4a017;border-radius:5px;padding:7px 12px;font-size:11px;color:#7d4e00;margin-bottom:14px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px}
+.col-card{background:#f6f8fa;border:1px solid var(--border);border-radius:6px;padding:12px 14px}
+.col-card h5{font-size:11px;font-weight:600;color:var(--muted);margin-bottom:8px;font-family:'JetBrains Mono',monospace;letter-spacing:.5px;text-transform:uppercase}
+
+/* ── PERSONA MODAL OVERLAY ─────────────────────────── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:900;display:none;align-items:flex-start;justify-content:flex-end;padding:0}
+.modal-overlay.open{display:flex}
+.modal-panel{background:var(--surface);width:560px;max-width:100vw;height:100vh;overflow-y:auto;box-shadow:-8px 0 32px rgba(0,0,0,.2);display:flex;flex-direction:column;animation:slideIn .2s ease}
+@keyframes slideIn{from{transform:translateX(60px);opacity:0}to{transform:translateX(0);opacity:1}}
+.modal-hdr{padding:20px 24px 16px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:10}
+.modal-hdr-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.modal-persona-badge{display:inline-flex;align-items:center;font-size:14px;font-weight:600;padding:6px 14px;border-radius:6px;margin-bottom:8px}
+.modal-close{background:none;border:1px solid var(--border);border-radius:5px;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--muted);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.modal-close:hover{background:var(--bg);color:var(--text)}
+.modal-subtitle{font-size:12px;color:var(--muted);font-style:italic}
+.modal-body{padding:20px 24px;flex:1}
+.modal-section{margin-bottom:22px}
+.modal-section-title{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.8px;text-transform:uppercase;color:var(--muted2);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border2)}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.info-card{background:#f6f8fa;border:1px solid var(--border);border-radius:6px;padding:10px 12px}
+.info-card-label{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted2);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+.info-card-value{font-size:12px;font-weight:500;color:var(--text)}
+.info-card-value code{font-family:'JetBrains Mono',monospace;font-size:11px;color:#8250df}
+.perm-list{list-style:none}
+.perm-item{display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px solid #f0f0f0;font-size:12px}
+.perm-item:last-child{border-bottom:none}
+.perm-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.perm-green{background:#1a7f37}
+.perm-red{background:#cf222e}
+.perm-blue{background:#0550ae}
+.perm-label{font-weight:500;font-size:11px}
+.perm-desc{color:var(--muted);font-size:11px}
+.story-ref-list{display:flex;flex-direction:column;gap:6px}
+.story-ref{background:#f6f8fa;border:1px solid var(--border);border-radius:5px;padding:8px 12px;font-size:12px;cursor:pointer;transition:all .15s;display:flex;align-items:flex-start;gap:10px}
+.story-ref:hover{background:var(--accent-bg);border-color:#b6d7ff}
+.story-ref-id{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;flex-shrink:0;margin-top:1px}
+.story-ref-detail{flex:1}
+.story-ref-name{font-weight:500;color:var(--text)}
+.story-ref-when{font-size:11px;color:var(--muted);margin-top:2px}
+.story-ref-action{font-size:11px;color:var(--accent);margin-top:3px;font-style:italic}
+.step-list{counter-reset:step;list-style:none}
+.step-item{display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid #f0f0f0;font-size:12px}
+.step-item:last-child{border-bottom:none}
+.step-num{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;color:#fff}
+.warn-box{background:#fff8f0;border:1px solid #f5a623;border-radius:5px;padding:9px 12px;font-size:12px;color:#7d4e00;margin-top:8px}
+.modal-footer{padding:14px 24px;border-top:1px solid var(--border);background:#f6f8fa;display:flex;gap:8px;align-items:center}
+.modal-btn{font-family:'JetBrains Mono',monospace;font-size:11px;padding:6px 14px;border-radius:5px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text);transition:all .15s}
+.modal-btn:hover{background:var(--bg)}
+.modal-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.modal-btn.primary:hover{background:#0550ae}
+.env-bar{display:flex;align-items:center;gap:0;background:#1f2328;border-bottom:1px solid #30363d;padding:0 32px}.env-tab{font-family:"JetBrains Mono",monospace;font-size:11px;padding:8px 20px;cursor:pointer;border-bottom:3px solid transparent;color:#8b949e;transition:all .15s;user-select:none}.env-tab:hover{color:#e6edf3}.env-tab.active[data-env="qa"]{color:#3fb950;border-bottom-color:#3fb950}.env-tab.active[data-env="uat"]{color:#f0883e;border-bottom-color:#f0883e}.env-tab.active{background:rgba(255,255,255,.04)}.env-label{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:1px;color:#8b949e;margin-right:12px}.env-badge{display:inline-block;font-family:"JetBrains Mono",monospace;font-size:10px;padding:2px 8px;border-radius:3px;font-weight:600;vertical-align:middle;margin-left:4px}.env-qa{background:rgba(63,185,80,.12);color:#3fb950;border:1px solid rgba(63,185,80,.3)}.env-uat{background:rgba(240,136,62,.12);color:#f0883e;border:1px solid rgba(240,136,62,.3)}.env-both{display:inline-block;font-size:10px;color:var(--muted2);font-family:"JetBrains Mono",monospace;margin-left:6px}.dual-env-block{border:1px solid var(--border);border-radius:7px;overflow:hidden;margin-top:14px}.dual-env-hdr{display:grid;grid-template-columns:1fr 1fr}.dual-env-col-hdr{padding:8px 14px;font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--border)}.dual-env-col-hdr.qa{background:rgba(63,185,80,.07);color:#1a7f37;border-right:1px solid var(--border)}.dual-env-col-hdr.uat{background:rgba(240,136,62,.07);color:#9a6700}.dual-env-body{display:grid;grid-template-columns:1fr 1fr}.dual-env-col{padding:12px 14px;border-right:1px solid var(--border)}.dual-env-col:last-child{border-right:none}.env-note{font-size:11px;color:var(--muted);font-style:italic;margin-top:4px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hdr-top">
+    <div>
+      <div class="hdr-eyebrow">DOT · DGLMS · GrantLens</div>
+      <div class="hdr-title">E2E Testing Execution Guide — Organized by Epic</div>
+      <div class="hdr-sub">Who logs in, when, what they need, and what must be true before each story</div>
+    </div>
+    <a class="hdr-back" onclick="history.back()">← Back to Portal</a>
+  </div>
+  <div class="chips">
+    <div class="chip">Environments: <strong>DTC QA</strong> &amp; <strong>DTC UAT</strong></div>
+    <div class="chip">Sprints: <strong>1–6</strong></div>
+    <div class="chip">Stories: <strong>13+ covered</strong></div>
+    <div class="chip">QA Test Cases: <strong>88+</strong></div>
+    <div class="chip">UAT Scenarios: <strong>37</strong></div>
+  </div>
+</header>
+<div class="env-bar"><span class="env-label">TESTING IN:</span><div class="env-tab active" data-env="qa" onclick="setEnv('qa',this)">⬡ DTC QA</div><div class="env-tab" data-env="uat" onclick="setEnv('uat',this)">⬡ DTC UAT</div><div style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10px;color:#8b949e" id="envIndicator">Currently testing: <span style="color:#3fb950;font-weight:600">DTC QA</span></div></div>
+
+<div class="layout">
+<nav class="sidebar">
+  <div class="sb-label">Start Here</div>
+  <a class="sb-link" onclick="goTo('global',this)"><span class="sb-dot" style="background:#cf222e"></span>Global Setup</a>
+  <a class="sb-link" onclick="goTo('execorder',this)"><span class="sb-dot" style="background:#9a6700"></span>Execution Order</a>
+  <div class="sb-label" style="margin-top:6px">Epics — In Order</div>
+  <a class="sb-link" onclick="goTo('e6',this)"><span class="sb-dot" style="background:var(--e6)"></span>1 · Access &amp; PSG<span class="sb-cnt">1</span></a>
+  <a class="sb-link" onclick="goTo('e1',this)"><span class="sb-dot" style="background:var(--e1)"></span>2 · NOFO Setup<span class="sb-cnt">4</span></a>
+  <a class="sb-link" onclick="goTo('e2',this)"><span class="sb-dot" style="background:var(--e2)"></span>3 · App Intake<span class="sb-cnt">3</span></a>
+  <a class="sb-link" onclick="goTo('e3',this)"><span class="sb-dot" style="background:var(--e3)"></span>4 · App Review<span class="sb-cnt">3</span></a>
+  <a class="sb-link" onclick="goTo('e4',this)"><span class="sb-dot" style="background:var(--e4)"></span>5 · Award Selection<span class="sb-cnt">2</span></a>
+  <a class="sb-link" onclick="goTo('e5',this)"><span class="sb-dot" style="background:var(--e5)"></span>6 · Notifications<span class="sb-cnt">1</span></a>
+  <a class="sb-link" onclick="goTo('e7',this)"><span class="sb-dot" style="background:var(--e7)"></span>7 · Integrations<span class="sb-cnt">2</span></a>
+    <div class="sb-label" style="margin-top:10px">Persona Key</div>
+  <div class="persona-key">
+    <span class="pk-item" style="background:var(--p-po-bg);color:var(--p-po)" onclick="openPersona('po')" title="Click for full details">Program Office</span>
+    <span class="pk-item" style="background:var(--p-oa-bg);color:var(--p-oa)" onclick="openPersona('rev')" title="Click for full details">App Reviewer</span>
+    <span class="pk-item" style="background:var(--p-ost-bg);color:var(--p-ost)" onclick="openPersona('ost')" title="Click for full details">OST Admin</span>
+    <span class="pk-item" style="background:var(--p-nofo-bg);color:var(--p-nofo)" onclick="openPersona('nofo')" title="Click for full details">NOFO Dev Team</span>
+    <span class="pk-item" style="background:var(--p-sys-bg);color:var(--p-sys)" onclick="openPersona('sys')" title="Click for full details">Sys Admin</span>
+    <span class="pk-item" style="background:var(--p-api-bg);color:var(--p-api)" onclick="openPersona('api')" title="Click for full details">System / API</span>
+    <span class="pk-item" style="background:var(--p-ext-bg);color:var(--p-ext)" onclick="openPersona('ext')" title="Click for full details">Applicant / Ext</span>
+  </div>
+  <div class="pk-hint">↑ Click any persona for full details</div>
+  <div class="progress-wrap">
+    <div class="pb-lbl" id="pLbl">0 / 0 checked</div>
+    <div class="pb-bg"><div class="pb-fill" id="pFill" style="width:0%"></div></div>
+  </div>
+</nav>
+
+<main class="content">
+<div id="global" style="scroll-margin-top:110px">
+<div class="global-section">
+  <div class="global-hdr">⚠ <span>GLOBAL PREREQUISITES</span> — MUST BE TRUE BEFORE ANY STORY</div>
+  <div class="global-body">
+    <div class="global-col">
+      <h4>Users &amp; Profiles Ready in Both Environments</h4>
+      <ul class="chk-list">
+        <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">System Administrator test user — API access enabled</div></li>
+        <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Program Office user — <code>GL – Program Office (OST-PC)</code> profile/PSG</div></li>
+        <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Application Reviewer user — <code>GL-Application Reviewer</code> PSG (requires GRAN-263 first)</div></li>
+        <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">NOFO Dev Team user — NOFO Development access</div></li>
+        <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">OST Admin / Grant Admin user</div></li>
+        <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Read-only / no-privilege user (for negative tests)</div></li>
+      </ul>
+    </div>
+    <div class="global-col">
+      <h4>Org &amp; Environment Health <span class="env-badge env-qa">DTC QA</span> <span class="env-badge env-uat">DTC UAT</span></h4>
+      <ul class="chk-list">
+        <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">DTC QA</span> environment refreshed and accessible</div></li>
+        <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">DTC UAT</span> environment refreshed and accessible</div></li>
+        <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">All sprint stories deployed — no pending deployments</div></li>
+        <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">No critical Apex errors (Setup → Apex Jobs)</div></li>
+        <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Platform Events / Pub-Sub API enabled (for GRAN-244)</div></li>
+        <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">FlowEmailComposer (SalesforceLabs) installed (for GRAN-262)</div></li>
+        <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Email deliverability = All Email (Setup → Email → Deliverability)</div></li>
+      </ul>
+    </div>
+    <div class="global-col">
+      <h4>Baseline Data in Org</h4>
+      <ul class="chk-list">
+        <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">FO record in <code>Draft</code> status</div></li>
+        <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">FO record in <code>Published</code> status</div></li>
+        <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">FO record in <code>Award Selections Approved by S1</code> status</div></li>
+        <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Application Forms with statuses: Submitted, Selected for Award, Not Selected</div></li>
+        <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Account record with Account Team related list populated</div></li>
+        <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">ApplicationForm sample record ID <code>13XSL0000006gUQ2AY</code></div></li>
+      </ul>
+    </div>
+    <div class="global-col">
+      <h4>Integrations Reachable</h4>
+      <ul class="chk-list">
+        <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Grants.gov environment endpoint accessible from org</div></li>
+        <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Grants.gov intake integration active and connected in environment</div></li>
+        <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">SAM.gov / EAPI endpoint reachable (for GRAN-238)</div></li>
+        <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Named Credentials configured for external calls</div></li>
+      </ul>
+    </div>
+  </div>
+</div>
+</div>
+
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:28px;overflow:hidden">
+  <div style="background:#f6f8fa;border-bottom:1px solid var(--border);padding:12px 20px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">⚡ DUAL-ENVIRONMENT TESTING PROTOCOL</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr">
+    <div style="padding:16px 20px;border-right:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <span class="env-badge env-qa" style="font-size:12px;padding:4px 12px">DTC QA</span>
+        <span style="font-size:12px;font-weight:600">First Pass — Functional Testing</span>
+      </div>
+      <ul class="chk-list">
+        <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">All QA test cases executed and passed</div></li>
+        <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Defects logged and resolved in DTC QA before promoting</div></li>
+        <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">All GRAN story preconditions verified in DTC QA</div></li>
+        <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">SOQL verifications run and confirmed clean in DTC QA</div></li>
+        <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Sign-off obtained before promoting to UAT</div></li>
+      </ul>
+    </div>
+    <div style="padding:16px 20px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <span class="env-badge env-uat" style="font-size:12px;padding:4px 12px">DTC UAT</span>
+        <span style="font-size:12px;font-weight:600">Second Pass — User Acceptance</span>
+      </div>
+      <ul class="chk-list">
+        <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">DTC QA pass complete and signed off before starting UAT</div></li>
+        <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">All UAT scripts executed with business user personas</div></li>
+        <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">UAT defects logged separately from QA defects</div></li>
+        <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">All story acceptance criteria verified in DTC UAT</div></li>
+        <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Business stakeholder sign-off obtained for each epic</div></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div id="execorder" style="scroll-margin-top:110px;margin-bottom:36px">
+<div class="exec-section">
+  <div class="exec-hdr">RECOMMENDED EXECUTION ORDER — STORIES HAVE DEPENDENCIES</div>
+  <table class="exec-table">
+    <thead><tr><th style="width:36px">#</th><th>Story</th><th>Why First</th><th>Unlocks</th></tr></thead>
+    <tbody>
+      <tr><td class="exec-num">1</td><td><span class="story-id-badge">GRAN-263</span> — Application Reviewer PSG &amp; Account Team Role</td><td>Creates the PSG and role needed by all reviewer tests</td><td><span class="utag">GRAN-258 (Review Flows)</span></td></tr>
+      <tr><td class="exec-num">2</td><td><span class="story-id-badge">GRAN-25</span> — FO User Entitlements</td><td>Baseline FO access rules; needed before any FO story</td><td><span class="utag">All FO stories</span></td></tr>
+      <tr><td class="exec-num">3</td><td><span class="story-id-badge">GRAN-41</span> — DOT Agency Codes</td><td>Agency codes must exist before FO agency field works</td><td><span class="utag">GRAN-25</span> <span class="utag">FO creation</span></td></tr>
+      <tr><td class="exec-num">4</td><td><span class="story-id-badge">GRAN-260</span> — Review Factors</td><td>Review factors must exist before review flows can score</td><td><span class="utag">GRAN-258 Merit flow</span></td></tr>
+      <tr><td class="exec-num">5</td><td><span class="story-id-badge">GRAN-259</span> — Template Config</td><td>Templates must be assigned before review begins</td><td><span class="utag">GRAN-258</span></td></tr>
+      <tr><td class="exec-num">6</td><td><span class="story-id-badge">GRAN-111</span> — SF-424 / Account-Contact</td><td>Intake data model must be right before apps come in</td><td><span class="utag">GRAN-243</span> <span class="utag">GRAN-244</span></td></tr>
+      <tr><td class="exec-num">7</td><td><span class="story-id-badge">GRAN-243</span> — Grants.gov Intake</td><td>Applications must be in system before they can be reviewed</td><td><span class="utag">GRAN-244</span> <span class="utag">GRAN-258</span></td></tr>
+      <tr><td class="exec-num">8</td><td><span class="story-id-badge">GRAN-244</span> — Platform Event</td><td>Event-driven intake layer; depends on GRAN-243</td><td><span class="utag">GRAN-258</span></td></tr>
+      <tr><td class="exec-num">9</td><td><span class="story-id-badge">GRAN-223</span> — Application Status Field</td><td>Statuses must be correct before review flows change them</td><td>—</td></tr>
+      <tr><td class="exec-num">10</td><td><span class="story-id-badge">GRAN-258</span> — App Review Screen Flows</td><td>Needs PSG (263), factors (260), templates (259), apps (243)</td><td><span class="utag">GRAN-241</span></td></tr>
+      <tr><td class="exec-num">11</td><td><span class="story-id-badge">GRAN-241</span> — Update Award Selections (SRT)</td><td>Needs completed reviews from GRAN-258</td><td><span class="utag">GRAN-261</span></td></tr>
+      <tr><td class="exec-num">12</td><td><span class="story-id-badge">GRAN-261</span> — Selected for Award Status</td><td>Award selection statuses must exist before notifications</td><td><span class="utag">GRAN-262</span></td></tr>
+      <tr><td class="exec-num">13</td><td><span class="story-id-badge">GRAN-262</span> — Notify Selected Applicants</td><td>Needs "Award Selections Approved by S1" FO status</td><td>—</td></tr>
+      <tr><td class="exec-num" style="color:#8b949e">*</td><td><span class="story-id-badge">GRAN-238</span> — SAM EAPI</td><td>Technical only — run in parallel, no UAT</td><td>—</td></tr>
+    </tbody>
+  </table>
+</div>
+</div>
+
+<div class="epic-section" id="e6">
+  <div class="epic-banner" style="background:#f0fff4;border-color:#acf2bd;color:#0d6e2c">
+    <div class="epic-eyebrow">Run 1st</div><div class="epic-name">Access &amp; PSG</div>
+    <div class="epic-desc">Configure GL-Application Reviewer Permission Set Group and update Account Team roles. All reviewer tests depend on this.</div>
+  </div>
+  <div class="epic-stories">
+    <div class="story-card">
+      <div class="story-hdr" onclick="ts('s263')">
+        <span class="story-id-badge" style="border-color:#ffd8c5;color:#cf4a14">GRAN-263</span>
+        <span class="story-name">Application Reviewer PSG &amp; Account Team Role Update</span>
+        <div class="story-tags"><span class="story-tag">Sprint 6</span><span class="story-tag" style="background:#fff0eb;color:#cf4a14;border-color:#ffd8c5">⚑ Run First</span></div>
+        <span class="story-chev" id="c-s263">▶</span>
+      </div>
+      <div class="story-body" id="b-s263">
+        <div class="crit">⚑ <strong>Run this story first.</strong> GRAN-258 (Review Flows), GRAN-241 (SRT), and all reviewer tests depend on the PSG and Account Team role configured here.</div>
+        <div class="ul">Users Involved &amp; When</div>
+        <table class="users-table"><thead><tr><th>Persona</th><th>Profile / PSG</th><th>When They Log In</th><th>What They Do</th></tr></thead><tbody>
+          <tr><td><span class="pk-item" style="background:var(--p-sys-bg);color:var(--p-sys)" onclick="openPersona('sys')">Sys Admin</span></td><td>System Administrator</td><td>All setup &amp; verification steps</td><td>Creates/verifies GL-Application Reviewer PSG. Updates Account Team Role picklist (Reviewer → Application Reviewer). Migrates existing records. Assigns PSG to test user.</td></tr>
+          <tr><td><span class="pk-item" style="background:var(--p-oa-bg);color:var(--p-oa)" onclick="openPersona('rev')">App Reviewer</span></td><td>Standard + <code>GL-Application Reviewer PSG</code></td><td>Access verification</td><td>Logs in after PSG assigned. Navigates to reviewer-gated areas. Confirms access works. Cannot access Setup or admin features.</td></tr>
+          <tr><td><span class="pk-item" style="background:var(--p-api-bg);color:var(--p-api)" onclick="openPersona('api')">Non-privileged user</span></td><td>Standard / no PSG</td><td>Negative / security tests</td><td>Attempts Application Reviewer actions — blocked with Insufficient Privileges.</td></tr>
+        </tbody></table>
+        <div class="ul">Preconditions — PSG</div>
+        <ul class="chk-list">
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><code>GL-Application Reviewer PSG</code> exists in Setup → Permission Sets</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">PSG contains correct underlying Permission Sets per security matrix (confirm with the development team)</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Standard-profile test user ready to receive PSG assignment</div></li>
+        </ul>
+        <div class="soql-wrap"><div class="soql-lbl">Verify PSG exists</div>
+        <div class="soql"><span class="kw">SELECT</span> <span class="fld">Id, Label, DeveloperName</span> <span class="kw">FROM</span> PermissionSetGroup
+<span class="kw">WHERE</span> DeveloperName = <span class="val">'GL_Application_Reviewer'</span></div></div>
+        <div class="ul mt">Preconditions — Account Team Role</div>
+        <ul class="chk-list">
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Account Team Role picklist contains <strong>"Application Reviewer"</strong> as active value</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Old <strong>"Reviewer"</strong> picklist value deactivated or removed</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">All pre-existing AccountTeamMember records with role "Reviewer" migrated</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Test Account with Account Team related list available</div></li>
+        </ul>
+        <div class="soql-wrap"><div class="soql-lbl">Verify no old "Reviewer" records — expected: 0 rows</div>
+        <div class="soql"><span class="kw">SELECT</span> <span class="fld">Id, TeamMemberRole</span> <span class="kw">FROM</span> AccountTeamMember
+<span class="kw">WHERE</span> TeamMemberRole = <span class="val">'Reviewer'</span></div></div>
+        <div class="two-col">
+          <div class="col-card"><h5>Security Tests</h5>
+            <ul class="chk-list">
+              <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">User WITHOUT PSG → reviewer actions blocked → "Insufficient Privileges"</div></li>
+              <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">User WITH PSG + standard profile → cannot access Setup / admin features</div></li>
+              <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">PSG is additive only — does not elevate to System Admin</div></li>
+            </ul>
+          </div>
+          <div class="col-card"><h5>Negative Tests</h5>
+            <ul class="chk-list">
+              <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Account Team Role dropdown does NOT show "Reviewer"</div></li>
+              <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Duplicate PSG creation attempt → blocked by Salesforce</div></li>
+              <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">SOQL for old "Reviewer" role returns 0 rows</div></li>
+            </ul>
+          </div>
+        </div>
+        <div class="dual-env-block" style="margin-top:14px">
+          <div class="dual-env-hdr">
+            <div class="dual-env-col-hdr qa">⬡ DTC QA — Run First</div>
+            <div class="dual-env-col-hdr uat">⬡ DTC UAT — Run After QA Pass</div>
+          </div>
+          <div class="dual-env-body">
+            <div class="dual-env-col">
+              <ul class="chk-list">
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> All preconditions verified in DTC QA</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> Test cases executed and passed</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> Defects logged if any — resolved before UAT</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> QA sign-off documented</div></li>
+              </ul>
+            </div>
+            <div class="dual-env-col">
+              <ul class="chk-list">
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> DTC QA pass confirmed before starting</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> All preconditions re-verified in DTC UAT</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> UAT script executed with business user</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> Acceptance criteria met — stakeholder sign-off</div></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EPIC 7 -->
+
+<div class="epic-section" id="e1">
+  <div class="epic-banner" style="background:#fff8f4;border-color:#ffd8c5;color:var(--e1)">
+    <div class="epic-eyebrow">Run 2nd</div><div class="epic-name">NOFO Setup &amp; Configuration</div>
+    <div class="epic-desc">Configure Funding Opportunities, templates, review factors, and program-type settings before any application is received.</div>
+  </div>
+  <div class="epic-stories">
+    <div class="story-card">
+      <div class="story-hdr" onclick="ts('s25')"><span class="story-id-badge">GRAN-25</span><span class="story-name">Funding Opportunity — User Entitlements</span><div class="story-tags"><span class="story-tag">Sprint 1</span><span class="story-tag">Baseline TC</span></div><span class="story-chev" id="c-s25">▶</span></div>
+      <div class="story-body" id="b-s25">
+        <div class="ul">Users Involved &amp; When</div>
+        <table class="users-table"><thead><tr><th>Persona</th><th>Profile / PSG</th><th>When They Log In</th><th>What They Do</th></tr></thead><tbody>
+          <tr><td><span class="pk-item" style="background:var(--p-po-bg);color:var(--p-po)" onclick="openPersona('po')">Program Office</span></td><td><code>GL – Program Office (OST-PC)</code></td><td>Primary — all FO create/edit steps</td><td>Creates and edits FO records. Verifies agency auto-populates. Confirms view restricted to own agency.</td></tr>
+          <tr><td><span class="pk-item" style="background:var(--p-ost-bg);color:var(--p-ost)" onclick="openPersona('ost')">OST Admin</span></td><td><code>GL – OST Admin</code></td><td>Approval action steps</td><td>Reviews and approves FO at OST-P level.</td></tr>
+          <tr><td><span class="pk-item" style="background:var(--p-sys-bg);color:var(--p-sys)" onclick="openPersona('sys')">Sys Admin</span></td><td>Administrator</td><td>Role restriction verification</td><td>Validates restricted profiles cannot access admin functions. Checks cross-agency block.</td></tr>
+          <tr><td><span class="pk-item" style="background:var(--p-api-bg);color:var(--p-api)" onclick="openPersona('api')">Non-privileged user</span></td><td>Read-only / no PSG</td><td>Negative tests only</td><td>Attempts actions beyond scope — should get Insufficient Privileges.</td></tr>
+        </tbody></table>
+        <div class="ul">Preconditions</div>
+        <ul class="chk-list">
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">At least 2 Agency records exist (Agency A, Agency B) for cross-agency block tests</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Each test user is associated with a specific agency on their User record</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><code>GL – Program Office (OST-PC)</code> profile exists and assigned to Program Office test user</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">FO object and page layouts deployed with no missing fields</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Agency field auto-population rule deployed and active</div></li>
+        </ul>
+        <div class="dual-env-block" style="margin-top:14px">
+          <div class="dual-env-hdr">
+            <div class="dual-env-col-hdr qa">⬡ DTC QA — Run First</div>
+            <div class="dual-env-col-hdr uat">⬡ DTC UAT — Run After QA Pass</div>
+          </div>
+          <div class="dual-env-body">
+            <div class="dual-env-col">
+              <ul class="chk-list">
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> All preconditions verified in DTC QA</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> Test cases executed and passed</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> Defects logged if any — resolved before UAT</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> QA sign-off documented</div></li>
+              </ul>
+            </div>
+            <div class="dual-env-col">
+              <ul class="chk-list">
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> DTC QA pass confirmed before starting</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> All preconditions re-verified in DTC UAT</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> UAT script executed with business user</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> Acceptance criteria met — stakeholder sign-off</div></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="story-card">
+      <div class="story-hdr" onclick="ts('s41')"><span class="story-id-badge">GRAN-41</span><span class="story-name">DOT Agency Codes — FO Scope &amp; Access</span><div class="story-tags"><span class="story-tag">Sprint 1</span></div><span class="story-chev" id="c-s41">▶</span></div>
+      <div class="story-body" id="b-s41">
+        <div class="ul">Users Involved &amp; When</div>
+        <table class="users-table"><thead><tr><th>Persona</th><th>Profile / PSG</th><th>When They Log In</th><th>What They Do</th></tr></thead><tbody>
+          <tr><td><span class="pk-item" style="background:var(--p-po-bg);color:var(--p-po)" onclick="openPersona('po')">Program Office</span></td><td><code>GL – Program Office (OST-PC)</code></td><td>FO creation steps</td><td>Creates FO and verifies agency code auto-populates. Confirms cannot select a different agency code.</td></tr>
+          <tr><td><span class="pk-item" style="background:var(--p-sys-bg);color:var(--p-sys)" onclick="openPersona('sys')">Sys Admin</span></td><td>Administrator</td><td>Cross-agency / negative tests</td><td>Checks cross-agency data isolation. Verifies agency hierarchy works correctly.</td></tr>
+        </tbody></table>
+        <div class="ul">Preconditions</div>
+        <ul class="chk-list">
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">DOT Agency Code records exist in the org (multiple agencies, different hierarchy levels)</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">GRAN-25 tested and passed — FO access rules baseline confirmed</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Program Office test user's Agency field populated on their User record</div></li>
+        </ul>
+        <div class="dual-env-block" style="margin-top:14px">
+          <div class="dual-env-hdr">
+            <div class="dual-env-col-hdr qa">⬡ DTC QA — Run First</div>
+            <div class="dual-env-col-hdr uat">⬡ DTC UAT — Run After QA Pass</div>
+          </div>
+          <div class="dual-env-body">
+            <div class="dual-env-col">
+              <ul class="chk-list">
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> All preconditions verified in DTC QA</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> Test cases executed and passed</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> Defects logged if any — resolved before UAT</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> QA sign-off documented</div></li>
+              </ul>
+            </div>
+            <div class="dual-env-col">
+              <ul class="chk-list">
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> DTC QA pass confirmed before starting</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> All preconditions re-verified in DTC UAT</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> UAT script executed with business user</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> Acceptance criteria met — stakeholder sign-off</div></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="story-card">
+      <div class="story-hdr" onclick="ts('s259')"><span class="story-id-badge">GRAN-259</span><span class="story-name">Template Configuration — Construction &amp; Non-Construction Programs</span><div class="story-tags"><span class="story-tag">Sprint 6</span></div><span class="story-chev" id="c-s259">▶</span></div>
+      <div class="story-body" id="b-s259">
+        <div class="ul">Users Involved &amp; When</div>
+        <table class="users-table"><thead><tr><th>Persona</th><th>Profile / PSG</th><th>When They Log In</th><th>What They Do</th></tr></thead><tbody>
+          <tr><td><span class="pk-item" style="background:var(--p-po-bg);color:var(--p-po)" onclick="openPersona('po')">Program Office</span></td><td><code>GL – Program Office (OST-PC)</code></td><td>All template configuration steps</td><td>Configures and assigns email templates to Construction vs Non-Construction FOs. Previews and saves. Confirms wrong type cannot be assigned.</td></tr>
+        </tbody></table>
+        <div class="ul">Preconditions</div>
+        <ul class="chk-list">
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">At least one <strong>Construction</strong> program type FO exists</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">At least one <strong>Non-Construction</strong> program type FO exists</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Email template library accessible in environment</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Program type field correctly populated on both test FOs</div></li>
+        </ul>
+        <div class="dual-env-block" style="margin-top:14px">
+          <div class="dual-env-hdr">
+            <div class="dual-env-col-hdr qa">⬡ DTC QA — Run First</div>
+            <div class="dual-env-col-hdr uat">⬡ DTC UAT — Run After QA Pass</div>
+          </div>
+          <div class="dual-env-body">
+            <div class="dual-env-col">
+              <ul class="chk-list">
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> All preconditions verified in DTC QA</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> Test cases executed and passed</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> Defects logged if any — resolved before UAT</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> QA sign-off documented</div></li>
+              </ul>
+            </div>
+            <div class="dual-env-col">
+              <ul class="chk-list">
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> DTC QA pass confirmed before starting</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> All preconditions re-verified in DTC UAT</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> UAT script executed with business user</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> Acceptance criteria met — stakeholder sign-off</div></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="story-card">
+      <div class="story-hdr" onclick="ts('s260')"><span class="story-id-badge">GRAN-260</span><span class="story-name">NOFO Setup — Review Factors View &amp; Edit</span><div class="story-tags"><span class="story-tag">Sprint 6</span></div><span class="story-chev" id="c-s260">▶</span></div>
+      <div class="story-body" id="b-s260">
+        <div class="ul">Users Involved &amp; When</div>
+        <table class="users-table"><thead><tr><th>Persona</th><th>Profile / PSG</th><th>When They Log In</th><th>What They Do</th></tr></thead><tbody>
+          <tr><td><span class="pk-item" style="background:var(--p-po-bg);color:var(--p-po)" onclick="openPersona('po')">Program Office</span></td><td><code>GL – Program Office (OST-PC)</code></td><td>All NOFO setup steps</td><td>Views, adds, edits, deletes Review Factors. Confirms point weight validation (must total 100).</td></tr>
+        </tbody></table>
+        <div class="ul">Preconditions</div>
+        <ul class="chk-list">
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">FO is in <strong>NOFO Setup</strong> status — not yet published</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">At least one Review Factor record already exists on the test FO</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Expected point weight breakdown documented (must sum to 100)</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Review Factors related list visible on page layout</div></li>
+        </ul>
+        <div class="dual-env-block" style="margin-top:14px">
+          <div class="dual-env-hdr">
+            <div class="dual-env-col-hdr qa">⬡ DTC QA — Run First</div>
+            <div class="dual-env-col-hdr uat">⬡ DTC UAT — Run After QA Pass</div>
+          </div>
+          <div class="dual-env-body">
+            <div class="dual-env-col">
+              <ul class="chk-list">
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> All preconditions verified in DTC QA</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> Test cases executed and passed</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> Defects logged if any — resolved before UAT</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> QA sign-off documented</div></li>
+              </ul>
+            </div>
+            <div class="dual-env-col">
+              <ul class="chk-list">
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> DTC QA pass confirmed before starting</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> All preconditions re-verified in DTC UAT</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> UAT script executed with business user</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> Acceptance criteria met — stakeholder sign-off</div></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EPIC 2 -->
+
+<div class="epic-section" id="e2">
+  <div class="epic-banner" style="background:#f0f6ff;border-color:#b6d7ff;color:var(--e2)">
+    <div class="epic-eyebrow">Run 3rd</div><div class="epic-name">Application Intake</div>
+    <div class="epic-desc">Receive applications from Grants.gov , map SF-424 data to Salesforce objects, and fire platform events for downstream processes.</div>
+  </div>
+  <div class="epic-stories">
+    <div class="story-card">
+      <div class="story-hdr" onclick="ts('s111')"><span class="story-id-badge">GRAN-111</span><span class="story-name">SF-424 Field Alignment — Account &amp; Contact Split</span><div class="story-tags"><span class="story-tag">Earlier Sprint</span></div><span class="story-chev" id="c-s111">▶</span></div>
+      <div class="story-body" id="b-s111">
+        
+        <div class="ul">Users Involved &amp; When</div>
+        <table class="users-table"><thead><tr><th>Persona</th><th>Profile / PSG</th><th>When They Log In</th><th>What They Do</th></tr></thead><tbody>
+          <tr><td><span class="pk-item" style="background:var(--p-api-bg);color:var(--p-api)" onclick="openPersona('api')">System / API</span></td><td>Integration User / API</td><td>Data submission </td><td>Sends SF-424 payload through the intake integration into Salesforce. Does not log in via UI.</td></tr>
+          <tr><td><span class="pk-item" style="background:var(--p-sys-bg);color:var(--p-sys)" onclick="openPersona('sys')">Sys Admin</span></td><td>Administrator</td><td>Verification steps</td><td>Runs SOQL to confirm dedup logic, checks Contact record types, verifies Signature fields stayed on ApplicationForm.</td></tr>
+        </tbody></table>
+        <div class="ul">Preconditions &amp; Critical Rules</div>
+        <ul class="chk-list">
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Grants.gov intake integration active and connected in environment</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">ApplicationForm record <code>13XSL0000006gUQ2AY</code> exists in both DTC QA and DTC UAT</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Account dedup: lookup by <strong>UEI only</strong> — PIM is NOT in scope</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Contact dedup: lookup by <strong>First Name + Last Name + Email</strong></div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Exactly 2 Contact Record Types: <code>Point of Contact</code> and <code>Authorized Representative</code></div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><strong>Signature Name</strong> and <strong>Signature Date</strong> stay on ApplicationForm — NOT moved to Contact</div></li>
+        </ul>
+        <div class="soql-wrap"><div class="soql-lbl">Verify dedup — run after submission</div>
+        <div class="soql"><span class="kw">SELECT</span> <span class="fld">Id, Name, UEI__c</span> <span class="kw">FROM</span> Account <span class="kw">WHERE</span> UEI__c = <span class="val">'[test UEI]'</span>
+<span class="kw">SELECT</span> <span class="fld">Id, FirstName, LastName, Email, RecordType.Name</span> <span class="kw">FROM</span> Contact <span class="kw">WHERE</span> Email = <span class="val">'[test email]'</span></div></div>
+        <div class="dual-env-block" style="margin-top:14px">
+          <div class="dual-env-hdr">
+            <div class="dual-env-col-hdr qa">⬡ DTC QA — Run First</div>
+            <div class="dual-env-col-hdr uat">⬡ DTC UAT — Run After QA Pass</div>
+          </div>
+          <div class="dual-env-body">
+            <div class="dual-env-col">
+              <ul class="chk-list">
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> All preconditions verified in DTC QA</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> Test cases executed and passed</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> Defects logged if any — resolved before UAT</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> QA sign-off documented</div></li>
+              </ul>
+            </div>
+            <div class="dual-env-col">
+              <ul class="chk-list">
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> DTC QA pass confirmed before starting</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> All preconditions re-verified in DTC UAT</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> UAT script executed with business user</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> Acceptance criteria met — stakeholder sign-off</div></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="story-card">
+      <div class="story-hdr" onclick="ts('s243')"><span class="story-id-badge">GRAN-243</span><span class="story-name">Application Intake from Grants.gov</span><div class="story-tags"><span class="story-tag">Sprint 6</span></div><span class="story-chev" id="c-s243">▶</span></div>
+      <div class="story-body" id="b-s243">
+        <div class="ul">Users Involved &amp; When</div>
+        <table class="users-table"><thead><tr><th>Persona</th><th>Profile / PSG</th><th>When They Log In</th><th>What They Do</th></tr></thead><tbody>
+          <tr><td><span class="pk-item" style="background:var(--p-ext-bg);color:var(--p-ext)" onclick="openPersona('ext')">Applicant / Ext</span></td><td>External (Grants.gov)</td><td>Test submission trigger</td><td>Submits test application via Grants.gov environment. Does not access Salesforce directly.</td></tr>
+          <tr><td><span class="pk-item" style="background:var(--p-sys-bg);color:var(--p-sys)" onclick="openPersona('sys')">Sys Admin</span></td><td>Administrator</td><td>Verification in Salesforce</td><td>Confirms ApplicationForm created, dedup worked, no duplicate Account/Contact.</td></tr>
+        </tbody></table>
+        <div class="ul">Preconditions</div>
+        <ul class="chk-list">
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">GRAN-111 tested and passing</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Grants.gov intake active, environment endpoint reachable</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Test payload (with UEI, contact info, FO reference) ready</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">FO in "Open" / "Accepting Applications" status for the test submission</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Pre-existing Account with same UEI ready (to confirm dedup matches, not creates new)</div></li>
+        </ul>
+        <div class="dual-env-block" style="margin-top:14px">
+          <div class="dual-env-hdr">
+            <div class="dual-env-col-hdr qa">⬡ DTC QA — Run First</div>
+            <div class="dual-env-col-hdr uat">⬡ DTC UAT — Run After QA Pass</div>
+          </div>
+          <div class="dual-env-body">
+            <div class="dual-env-col">
+              <ul class="chk-list">
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> All preconditions verified in DTC QA</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> Test cases executed and passed</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> Defects logged if any — resolved before UAT</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> QA sign-off documented</div></li>
+              </ul>
+            </div>
+            <div class="dual-env-col">
+              <ul class="chk-list">
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> DTC QA pass confirmed before starting</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> All preconditions re-verified in DTC UAT</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> UAT script executed with business user</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> Acceptance criteria met — stakeholder sign-off</div></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="story-card">
+      <div class="story-hdr" onclick="ts('s244')"><span class="story-id-badge">GRAN-244</span><span class="story-name">Application Intake — Platform Event</span><div class="story-tags"><span class="story-tag">Sprint 6</span></div><span class="story-chev" id="c-s244">▶</span></div>
+      <div class="story-body" id="b-s244">
+        <div class="ul">Users Involved &amp; When</div>
+        <table class="users-table"><thead><tr><th>Persona</th><th>Profile / PSG</th><th>When They Log In</th><th>What They Do</th></tr></thead><tbody>
+          <tr><td><span class="pk-item" style="background:var(--p-api-bg);color:var(--p-api)" onclick="openPersona('api')">System / API</span></td><td>Integration / API</td><td>Event publishing (automated)</td><td>Platform Event published automatically when ApplicationForm created. No manual UI login.</td></tr>
+          <tr><td><span class="pk-item" style="background:var(--p-sys-bg);color:var(--p-sys)" onclick="openPersona('sys')">Sys Admin</span></td><td>Administrator</td><td>Verification</td><td>Checks Setup → Platform Events for event definition. Verifies subscriber received and processed the event.</td></tr>
+        </tbody></table>
+        <div class="ul">Preconditions</div>
+        <ul class="chk-list">
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">GRAN-243 tested and passing</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Platform Events enabled, event definition exists in Setup</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Subscriber (Flow, Apex trigger, or process) is listening for this event</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Pub-Sub API enabled in the org</div></li>
+        </ul>
+        <div class="dual-env-block" style="margin-top:14px">
+          <div class="dual-env-hdr">
+            <div class="dual-env-col-hdr qa">⬡ DTC QA — Run First</div>
+            <div class="dual-env-col-hdr uat">⬡ DTC UAT — Run After QA Pass</div>
+          </div>
+          <div class="dual-env-body">
+            <div class="dual-env-col">
+              <ul class="chk-list">
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> All preconditions verified in DTC QA</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> Test cases executed and passed</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> Defects logged if any — resolved before UAT</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> QA sign-off documented</div></li>
+              </ul>
+            </div>
+            <div class="dual-env-col">
+              <ul class="chk-list">
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> DTC QA pass confirmed before starting</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> All preconditions re-verified in DTC UAT</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> UAT script executed with business user</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> Acceptance criteria met — stakeholder sign-off</div></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EPIC 3 -->
+
+<div class="epic-section" id="e3">
+  <div class="epic-banner" style="background:#f0fff4;border-color:#acf2bd;color:var(--e3)">
+    <div class="epic-eyebrow">Run 4th</div><div class="epic-name">Application Review</div>
+    <div class="epic-desc">Reviewers use guided screen flows to score applications. Requires PSG (Epic 6), factors (Epic 1), templates (Epic 1), and apps in system (Epic 2).</div>
+  </div>
+  <div class="epic-stories">
+    <div class="story-card">
+      <div class="story-hdr" onclick="ts('s258')"><span class="story-id-badge">GRAN-258</span><span class="story-name">Application Review Screen Flows</span><div class="story-tags"><span class="story-tag">Sprint 6</span></div><span class="story-chev" id="c-s258">▶</span></div>
+      <div class="story-body" id="b-s258">
+        <div class="crit">⚑ <strong>Highest dependency story.</strong> GRAN-263 (PSG), GRAN-260 (Factors), GRAN-259 (Templates), and GRAN-243 (Apps in system) must all pass first.</div>
+        <div class="ul">Users Involved &amp; When</div>
+        <table class="users-table"><thead><tr><th>Persona</th><th>Profile / PSG</th><th>When They Log In</th><th>What They Do</th></tr></thead><tbody>
+          <tr><td><span class="pk-item" style="background:var(--p-oa-bg);color:var(--p-oa)" onclick="openPersona('rev')">App Reviewer</span></td><td><code>GL-Application Reviewer PSG</code></td><td>All review flow steps</td><td>Launches review flow from Application record. Completes all review questions, saves progress, submits final review.</td></tr>
+          <tr><td><span class="pk-item" style="background:var(--p-api-bg);color:var(--p-api)" onclick="openPersona('api')">Non-privileged user</span></td><td>No PSG assigned</td><td>Negative tests</td><td>Attempts to launch review flow — blocked with Insufficient Privileges.</td></tr>
+        </tbody></table>
+        <div class="ul">Preconditions</div>
+        <ul class="chk-list">
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Application Reviewer user has <code>GL-Application Reviewer PSG</code> assigned (GRAN-263 done)</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Reviewer is on the Account Team of relevant Account with role <code>Application Reviewer</code></div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Review Factors exist on the FO (GRAN-260 done)</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Templates assigned to the FO (GRAN-259 done)</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Application assigned to reviewer and in correct status to trigger review</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Real Application records in system from GRAN-243</div></li>
+        </ul>
+        <div class="dual-env-block" style="margin-top:14px">
+          <div class="dual-env-hdr">
+            <div class="dual-env-col-hdr qa">⬡ DTC QA — Run First</div>
+            <div class="dual-env-col-hdr uat">⬡ DTC UAT — Run After QA Pass</div>
+          </div>
+          <div class="dual-env-body">
+            <div class="dual-env-col">
+              <ul class="chk-list">
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> All preconditions verified in DTC QA</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> Test cases executed and passed</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> Defects logged if any — resolved before UAT</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> QA sign-off documented</div></li>
+              </ul>
+            </div>
+            <div class="dual-env-col">
+              <ul class="chk-list">
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> DTC QA pass confirmed before starting</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> All preconditions re-verified in DTC UAT</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> UAT script executed with business user</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> Acceptance criteria met — stakeholder sign-off</div></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="story-card">
+      <div class="story-hdr" onclick="ts('s161')"><span class="story-id-badge">GRAN-161</span><span class="story-name">Program Chatter &amp; Activity Tab</span><div class="story-tags"><span class="story-tag">Earlier Sprint</span></div><span class="story-chev" id="c-s161">▶</span></div>
+      <div class="story-body" id="b-s161">
+        <div class="ul">Users Involved &amp; When</div>
+        <table class="users-table"><thead><tr><th>Persona</th><th>Profile / PSG</th><th>When They Log In</th><th>What They Do</th></tr></thead><tbody>
+          <tr><td><span class="pk-item" style="background:var(--p-po-bg);color:var(--p-po)" onclick="openPersona('po')">Program Office</span></td><td><code>GL – Program Office (OST-PC)</code></td><td>All Chatter/Activity steps</td><td>Posts, mentions, replies, likes, attaches files, creates tasks from Activity tab. 28 test cases total.</td></tr>
+          <tr><td><span class="pk-item" style="background:var(--p-api-bg);color:var(--p-api)" onclick="openPersona('api')">Read-only user</span></td><td>Read-only profile</td><td>Permission tests</td><td>Verifies read-only users cannot post or edit in Chatter.</td></tr>
+        </tbody></table>
+        <div class="ul">Preconditions</div>
+        <ul class="chk-list">
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Chatter enabled in environment (Setup → Chatter Settings → Enable)</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">At least one Program record exists</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Second user account available for @mention and follow/unfollow tests</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Activity tab visible on Program record page layout</div></li>
+        </ul>
+        <div class="dual-env-block" style="margin-top:14px">
+          <div class="dual-env-hdr">
+            <div class="dual-env-col-hdr qa">⬡ DTC QA — Run First</div>
+            <div class="dual-env-col-hdr uat">⬡ DTC UAT — Run After QA Pass</div>
+          </div>
+          <div class="dual-env-body">
+            <div class="dual-env-col">
+              <ul class="chk-list">
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> All preconditions verified in DTC QA</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> Test cases executed and passed</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> Defects logged if any — resolved before UAT</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> QA sign-off documented</div></li>
+              </ul>
+            </div>
+            <div class="dual-env-col">
+              <ul class="chk-list">
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> DTC QA pass confirmed before starting</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> All preconditions re-verified in DTC UAT</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> UAT script executed with business user</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> Acceptance criteria met — stakeholder sign-off</div></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="story-card">
+      <div class="story-hdr" onclick="ts('s223')"><span class="story-id-badge">GRAN-223</span><span class="story-name">Application Status Field</span><div class="story-tags"><span class="story-tag">Sprint 6</span></div><span class="story-chev" id="c-s223">▶</span></div>
+      <div class="story-body" id="b-s223">
+        <div class="ul">Users Involved &amp; When</div>
+        <table class="users-table"><thead><tr><th>Persona</th><th>Profile / PSG</th><th>When They Log In</th><th>What They Do</th></tr></thead><tbody>
+          <tr><td><span class="pk-item" style="background:var(--p-po-bg);color:var(--p-po)" onclick="openPersona('po')">Program Office</span></td><td><code>GL – Program Office</code></td><td>Status field validation</td><td>Verifies Application status picklist values correct and status transitions work before review flows use them.</td></tr>
+        </tbody></table>
+        <div class="ul">Preconditions</div>
+        <ul class="chk-list">
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Application Status picklist has all values: Submitted, Under Review, Selected for Award, Not Selected</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">At least one Application in each status exists for transition testing</div></li>
+        </ul>
+        <div class="dual-env-block" style="margin-top:14px">
+          <div class="dual-env-hdr">
+            <div class="dual-env-col-hdr qa">⬡ DTC QA — Run First</div>
+            <div class="dual-env-col-hdr uat">⬡ DTC UAT — Run After QA Pass</div>
+          </div>
+          <div class="dual-env-body">
+            <div class="dual-env-col">
+              <ul class="chk-list">
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> All preconditions verified in DTC QA</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> Test cases executed and passed</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> Defects logged if any — resolved before UAT</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> QA sign-off documented</div></li>
+              </ul>
+            </div>
+            <div class="dual-env-col">
+              <ul class="chk-list">
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> DTC QA pass confirmed before starting</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> All preconditions re-verified in DTC UAT</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> UAT script executed with business user</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> Acceptance criteria met — stakeholder sign-off</div></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EPIC 4 -->
+
+<div class="epic-section" id="e4">
+  <div class="epic-banner" style="background:#faf0ff;border-color:#d2b0ff;color:var(--e4)">
+    <div class="epic-eyebrow">Run 5th</div><div class="epic-name">Award Selection</div>
+    <div class="epic-desc">SRT reviewers update award decisions and Program Office bulk-sets applications to "Selected for Award" status.</div>
+  </div>
+  <div class="epic-stories">
+    <div class="story-card">
+      <div class="story-hdr" onclick="ts('s241')"><span class="story-id-badge">GRAN-241</span><span class="story-name">Update Award Selections — SRT Review</span><div class="story-tags"><span class="story-tag">Sprint 6</span></div><span class="story-chev" id="c-s241">▶</span></div>
+      <div class="story-body" id="b-s241">
+        <div class="ul">Users Involved &amp; When</div>
+        <table class="users-table"><thead><tr><th>Persona</th><th>Profile / PSG</th><th>When They Log In</th><th>What They Do</th></tr></thead><tbody>
+          <tr><td><span class="pk-item" style="background:var(--p-oa-bg);color:var(--p-oa)" onclick="openPersona('rev')">App Reviewer</span></td><td>SRT Reviewer permissions</td><td>Award selection update steps</td><td>Views award selection list on FO in SRT Review status. Updates (approves/rejects/modifies) individual award decisions.</td></tr>
+          <tr><td><span class="pk-item" style="background:var(--p-api-bg);color:var(--p-api)" onclick="openPersona('api')">Non-SRT user</span></td><td>Standard / no SRT role</td><td>Negative test</td><td>Attempts to edit award selection screen — blocked.</td></tr>
+        </tbody></table>
+        <div class="ul">Preconditions</div>
+        <ul class="chk-list">
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">GRAN-258 reviewed and passed — completed review records exist</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">FO is in <strong>SRT Review</strong> status</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Applications linked to that FO are in reviewable statuses</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Expected award amounts/decisions documented before starting</div></li>
+        </ul>
+        <div class="dual-env-block" style="margin-top:14px">
+          <div class="dual-env-hdr">
+            <div class="dual-env-col-hdr qa">⬡ DTC QA — Run First</div>
+            <div class="dual-env-col-hdr uat">⬡ DTC UAT — Run After QA Pass</div>
+          </div>
+          <div class="dual-env-body">
+            <div class="dual-env-col">
+              <ul class="chk-list">
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> All preconditions verified in DTC QA</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> Test cases executed and passed</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> Defects logged if any — resolved before UAT</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> QA sign-off documented</div></li>
+              </ul>
+            </div>
+            <div class="dual-env-col">
+              <ul class="chk-list">
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> DTC QA pass confirmed before starting</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> All preconditions re-verified in DTC UAT</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> UAT script executed with business user</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> Acceptance criteria met — stakeholder sign-off</div></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="story-card">
+      <div class="story-hdr" onclick="ts('s261')"><span class="story-id-badge">GRAN-261</span><span class="story-name">Selected for Award — Status Changes</span><div class="story-tags"><span class="story-tag">Sprint 6</span></div><span class="story-chev" id="c-s261">▶</span></div>
+      <div class="story-body" id="b-s261">
+        <div class="ul">Users Involved &amp; When</div>
+        <table class="users-table"><thead><tr><th>Persona</th><th>Profile / PSG</th><th>When They Log In</th><th>What They Do</th></tr></thead><tbody>
+          <tr><td><span class="pk-item" style="background:var(--p-po-bg);color:var(--p-po)" onclick="openPersona('po')">Program Office</span></td><td><code>GL – Program Office (OST-PC)</code></td><td>Bulk status update steps</td><td>Selects multiple Applications and bulk-sets to "Selected for Award". Verifies non-selected apps remain in prior status.</td></tr>
+        </tbody></table>
+        <div class="ul">Preconditions</div>
+        <ul class="chk-list">
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">GRAN-241 passed — SRT review decisions recorded</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Multiple Application records in reviewable status (mix: some to select, some not)</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">FO in correct stage to allow award selections (post-SRT review)</div></li>
+        </ul>
+        <div class="dual-env-block" style="margin-top:14px">
+          <div class="dual-env-hdr">
+            <div class="dual-env-col-hdr qa">⬡ DTC QA — Run First</div>
+            <div class="dual-env-col-hdr uat">⬡ DTC UAT — Run After QA Pass</div>
+          </div>
+          <div class="dual-env-body">
+            <div class="dual-env-col">
+              <ul class="chk-list">
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> All preconditions verified in DTC QA</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> Test cases executed and passed</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> Defects logged if any — resolved before UAT</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> QA sign-off documented</div></li>
+              </ul>
+            </div>
+            <div class="dual-env-col">
+              <ul class="chk-list">
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> DTC QA pass confirmed before starting</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> All preconditions re-verified in DTC UAT</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> UAT script executed with business user</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> Acceptance criteria met — stakeholder sign-off</div></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EPIC 5 -->
+
+<div class="epic-section" id="e5">
+  <div class="epic-banner" style="background:#fffbeb;border-color:#f5cc6c;color:var(--e5)">
+    <div class="epic-eyebrow">Run 6th</div><div class="epic-name">Notifications</div>
+    <div class="epic-desc">Trigger and send award notification emails to selected applicants using the Flow Email Composer.</div>
+  </div>
+  <div class="epic-stories">
+    <div class="story-card">
+      <div class="story-hdr" onclick="ts('s262')"><span class="story-id-badge">GRAN-262</span><span class="story-name">Funding Opportunity — Notifications to Selected Applicants</span><div class="story-tags"><span class="story-tag">Sprint 6</span></div><span class="story-chev" id="c-s262">▶</span></div>
+      <div class="story-body" id="b-s262">
+        <div class="ul">Users Involved &amp; When</div>
+        <table class="users-table"><thead><tr><th>Persona</th><th>Profile / PSG</th><th>When They Log In</th><th>What They Do</th></tr></thead><tbody>
+          <tr><td><span class="pk-item" style="background:var(--p-po-bg);color:var(--p-po)" onclick="openPersona('po')">Program Office</span></td><td><code>GL – Program Office (OST-PC)</code></td><td>All notification steps</td><td>Clicks "Notify Applicants" button on FO. Reviews list in Flow Email Composer. Customizes and sends award emails.</td></tr>
+        </tbody></table>
+        <div class="ul">Preconditions</div>
+        <ul class="chk-list">
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">GRAN-261 passed — FO in status <strong>"Award Selections Approved by S1"</strong></div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><strong>FlowEmailComposer</strong> (SalesforceLabs) installed in environment</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Applications linked to FO are in "Selected for Award" status</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Applicant Contact records have valid email addresses</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Email Deliverability = All Email (Setup → Email → Deliverability)</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Second FO in different status ready — confirms button NOT shown (negative test)</div></li>
+        </ul>
+        <div class="dual-env-block" style="margin-top:14px">
+          <div class="dual-env-hdr">
+            <div class="dual-env-col-hdr qa">⬡ DTC QA — Run First</div>
+            <div class="dual-env-col-hdr uat">⬡ DTC UAT — Run After QA Pass</div>
+          </div>
+          <div class="dual-env-body">
+            <div class="dual-env-col">
+              <ul class="chk-list">
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> All preconditions verified in DTC QA</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> Test cases executed and passed</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> Defects logged if any — resolved before UAT</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> QA sign-off documented</div></li>
+              </ul>
+            </div>
+            <div class="dual-env-col">
+              <ul class="chk-list">
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> DTC QA pass confirmed before starting</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> All preconditions re-verified in DTC UAT</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> UAT script executed with business user</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> Acceptance criteria met — stakeholder sign-off</div></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EPIC 6 -->
+
+<div class="epic-section" id="e7">
+  <div class="epic-banner" style="background:#fff5f5;border-color:#ffb8b8;color:var(--e7)">
+    <div class="epic-eyebrow">Run 7th</div><div class="epic-name">Integrations</div>
+    <div class="epic-desc">External system connectivity: Grants.gov (covered in Epic 2) and SAM.gov EAPI for entity validation.</div>
+  </div>
+  <div class="epic-stories">
+    <div class="story-card">
+      <div class="story-hdr" onclick="ts('s238')"><span class="story-id-badge">GRAN-238</span><span class="story-name">SAM EAPI — Entity Validation</span><div class="story-tags"><span class="story-tag">Technical Only</span><span class="story-tag" style="background:#f0fff4;color:#1a7f37">No UAT</span></div><span class="story-chev" id="c-s238">▶</span></div>
+      <div class="story-body" id="b-s238">
+        <div class="note-bar">ℹ <strong>Technical only</strong> — run in parallel with other epics. No UAT scripts required.</div>
+        <div class="ul">Users Involved &amp; When</div>
+        <table class="users-table"><thead><tr><th>Persona</th><th>Profile / PSG</th><th>When They Log In</th><th>What They Do</th></tr></thead><tbody>
+          <tr><td><span class="pk-item" style="background:var(--p-api-bg);color:var(--p-api)" onclick="openPersona('api')">System / API</span></td><td>Integration User / API</td><td>Automated / background</td><td>System calls SAM.gov EAPI to validate entity UEI during application intake. No manual UI steps.</td></tr>
+          <tr><td><span class="pk-item" style="background:var(--p-sys-bg);color:var(--p-sys)" onclick="openPersona('sys')">Sys Admin</span></td><td>Administrator</td><td>Configuration verification</td><td>Verifies Named Credentials configured, endpoint reachable, Apex callout returns expected entity data.</td></tr>
+        </tbody></table>
+        <div class="ul">Preconditions</div>
+        <ul class="chk-list">
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">SAM.gov EAPI environment endpoint URL and API key in Named Credentials</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Remote Site Settings allow callout to SAM.gov endpoint</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Test UEI known to exist in SAM.gov available for validation</div></li>
+          <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt">Apex class for SAM callout deployed and active in environment</div></li>
+        </ul>
+        <div class="dual-env-block" style="margin-top:14px">
+          <div class="dual-env-hdr">
+            <div class="dual-env-col-hdr qa">⬡ DTC QA — Run First</div>
+            <div class="dual-env-col-hdr uat">⬡ DTC UAT — Run After QA Pass</div>
+          </div>
+          <div class="dual-env-body">
+            <div class="dual-env-col">
+              <ul class="chk-list">
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> All preconditions verified in DTC QA</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> Test cases executed and passed</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> Defects logged if any — resolved before UAT</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-qa">QA</span> QA sign-off documented</div></li>
+              </ul>
+            </div>
+            <div class="dual-env-col">
+              <ul class="chk-list">
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> DTC QA pass confirmed before starting</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> All preconditions re-verified in DTC UAT</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> UAT script executed with business user</div></li>
+                <li class="chk-item"><div class="chk-box" onclick="toggle(this)"></div><div class="chk-txt"><span class="env-badge env-uat">UAT</span> Acceptance criteria met — stakeholder sign-off</div></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="height:60px"></div>
+</main>
+</div>
+
+<!-- ══ PERSONA MODAL ══════════════════════════════════════ -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal-panel" id="modalPanel">
+    <div class="modal-hdr">
+      <div>
+        <div class="modal-persona-badge" id="mBadge"></div>
+        <div class="modal-subtitle" id="mSubtitle"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="mBody"></div>
+    <div class="modal-footer">
+      <button class="modal-btn" onclick="closeModal()">← Back to Guide</button>
+      <span id="mFooterNote" style="font-size:11px;color:var(--muted);margin-left:8px"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Persona detail data ─────────────────────────────────
+var PERSONAS = {
+  po: {
+    label:'Program Office',
+    bg:'#ddf4ff',color:'#0550ae',
+    subtitle:'Primary FO manager — creates, configures, and advances Funding Opportunities through the full lifecycle',
+    profile:'GL – Program Office (OST-PC)',
+    psg:'GL – Program Office PSG',
+    role:'Program Officer / FO Manager',
+    env:'DTC QA → then DTC UAT',
+    loginAs:'program.office.test@dot.gov — run in DTC QA first, then DTC UAT',
+    accessLevel:'Can create/edit FOs for own agency only. Cannot access Setup, cannot see other agency FOs.',
+    permissions:[
+      {dot:'green',label:'Read/Write FO records',desc:'Create, edit, and view Funding Opportunities assigned to their agency'},
+      {dot:'green',label:'NOFO Setup access',desc:'Configure review factors, templates, and program type settings'},
+      {dot:'green',label:'Award Selection controls',desc:'Bulk-set applications to Selected for Award, trigger notifications'},
+      {dot:'green',label:'Flow Email Composer',desc:'Send award notification emails via the FlowEmailComposer action'},
+      {dot:'red',label:'Cross-agency FOs',desc:'Cannot view or edit FOs belonging to a different agency'},
+      {dot:'red',label:'Setup / Admin',desc:'No access to Salesforce Setup, permission sets, or admin tools'},
+      {dot:'red',label:'Application Review flows',desc:'Cannot perform reviewer scoring — that is the App Reviewer role'}
+    ],
+    stories:[
+      {id:'GRAN-25',name:'FO User Entitlements',when:'All FO create/edit steps',action:'Creates and edits FO records. Verifies agency auto-populates. Confirms view restricted to own agency.'},
+      {id:'GRAN-41',name:'DOT Agency Codes',when:'FO creation steps',action:'Creates FO and verifies agency code auto-populates from user record.'},
+      {id:'GRAN-259',name:'Template Configuration',when:'All template configuration steps',action:'Assigns email templates to Construction vs Non-Construction FOs.'},
+      {id:'GRAN-260',name:'Review Factors View & Edit',when:'All NOFO setup steps',action:'Views, adds, edits, deletes Review Factors. Confirms point weights sum to 100.'},
+      {id:'GRAN-261',name:'Selected for Award Status',when:'Bulk status update steps',action:'Selects multiple Applications and bulk-sets to "Selected for Award".'},
+      {id:'GRAN-262',name:'Notify Selected Applicants',when:'All notification steps',action:'Clicks "Notify Applicants" button. Sends award emails via Flow Email Composer.'},
+      {id:'GRAN-223',name:'Application Status Field',when:'Status field validation',action:'Verifies Application status picklist values and transitions are correct.'},
+      {id:'GRAN-161',name:'Program Chatter & Activity Tab',when:'All Chatter/Activity steps',action:'Posts, mentions, replies, likes, attaches files, creates tasks.'}
+    ],
+    steps:[
+      {color:'#0550ae',text:'Log in to DTC QA first, then repeat in DTC UAT'},
+      {color:'#0550ae',text:'Navigate to the Grants app via App Launcher'},
+      {color:'#0550ae',text:'Confirm your Agency field is pre-populated on your User record (Setup → Users → [your user])'},
+      {color:'#0550ae',text:'Open or create a Funding Opportunity — verify Agency auto-populates to your agency'},
+      {color:'#0550ae',text:'Attempt to view an FO from a different agency — expect No Access / not visible'},
+      {color:'#1a7f37',text:'Proceed with story-specific test steps as defined in each epic above'}
+    ],
+    warn:'If you can see FOs from another agency, STOP — the OWD or sharing rules are misconfigured. Log a defect before proceeding.'
+  },
+  rev: {
+    label:'App Reviewer',
+    bg:'#dafbe1',color:'#1a7f37',
+    subtitle:'Assigned to score and evaluate applications using guided screen flows. Access is gated by PSG + Account Team membership.',
+    profile:'Standard User (no elevated profile)',
+    psg:'GL-Application Reviewer PSG',
+    role:'Application Reviewer (Account Team Role)',
+    env:'DTC QA → then DTC UAT',
+    loginAs:'app.reviewer.test@dot.gov (standard profile + GL-Application Reviewer PSG assigned)',
+    accessLevel:'Can access and complete review flows for assigned applications only. No Setup access. No admin capabilities.',
+    permissions:[
+      {dot:'green',label:'GL-Application Reviewer PSG',desc:'Permission Set Group grants access to Application review objects and screen flows'},
+      {dot:'green',label:'Account Team: Application Reviewer role',desc:'Must be on the Account Team of the relevant Account with this specific role (not the old "Reviewer" value)'},
+      {dot:'green',label:'View assigned Applications',desc:'Can read Application records assigned to them for review'},
+      {dot:'green',label:'Launch and complete review flows',desc:'Can run the screen flow, fill in review questions, save progress, and submit'},
+      {dot:'red',label:'Setup / Admin',desc:'Cannot access Salesforce Setup or admin features — PSG is additive only'},
+      {dot:'red',label:'Award Selection',desc:'Cannot change award statuses — that is Program Office territory'},
+      {dot:'red',label:'Applications not assigned to them',desc:'Cannot see or review Applications outside their assigned set'}
+    ],
+    stories:[
+      {id:'GRAN-263',name:'PSG & Account Team Role',when:'Setup step — before any review work',action:'Must receive GL-Application Reviewer PSG assignment and be added to Account Team with role "Application Reviewer" before any other step.'},
+      {id:'GRAN-258',name:'Application Review Screen Flows',when:'All review flow steps',action:'Launches review flow from Application record. Completes all review questions, saves progress, submits final review.'},
+      {id:'GRAN-241',name:'Update Award Selections (SRT)',when:'Award selection update steps',action:'Views award selection list. Updates individual award decisions on FO in SRT Review status.'}
+    ],
+    steps:[
+      {color:'#cf4a14',text:'FIRST: Confirm GRAN-263 is complete — PSG exists and has been assigned to your test user'},
+      {color:'#cf4a14',text:'Confirm your test user is on the Account Team of the relevant Account with role "Application Reviewer" (not "Reviewer")'},
+      {color:'#1a7f37',text:'Log in to DTC QA first — confirm PSG assigned in this environment, then repeat in DTC UAT'},
+      {color:'#1a7f37',text:'Navigate to the Applications list — confirm you can see assigned applications'},
+      {color:'#1a7f37',text:'Open an assigned Application and look for the Review flow launch button'},
+      {color:'#1a7f37',text:'Launch the flow — complete all required review questions'},
+      {color:'#1a7f37',text:'Save progress mid-flow and return — confirm data persists'},
+      {color:'#1a7f37',text:'Submit the completed review — confirm Application status updates'}
+    ],
+    warn:'If the review flow button does not appear, check: (1) PSG is assigned, (2) user is on Account Team with correct role, (3) Application is in the correct status to trigger review.'
+  },
+  ost: {
+    label:'OST Admin',
+    bg:'#fff8c5',color:'#9a6700',
+    subtitle:'Office of the Secretary of Transportation admin user — approves Funding Opportunities at the OST-P level.',
+    profile:'GL – OST Admin',
+    psg:'GL – OST Admin PSG',
+    role:'OST-P Approver',
+    env:'DTC QA → then DTC UAT',
+    loginAs:'ost.admin.test@dot.gov (GL – OST Admin profile)',
+    accessLevel:'Can view and approve FOs across agencies at the OST level. Cannot create or edit FO content. No Salesforce Setup access.',
+    permissions:[
+      {dot:'green',label:'Cross-agency FO visibility',desc:'Can view Funding Opportunities from all agencies for approval purposes'},
+      {dot:'green',label:'FO approval actions',desc:'Can approve or return FOs at the OST-P stage'},
+      {dot:'red',label:'FO creation/editing',desc:'Cannot create new FOs or edit FO content fields'},
+      {dot:'red',label:'Application Review flows',desc:'OST Admin does not perform reviewer scoring'},
+      {dot:'red',label:'Setup / Admin tools',desc:'No access to Salesforce Setup or permission management'}
+    ],
+    stories:[
+      {id:'GRAN-25',name:'FO User Entitlements',when:'Approval action steps',action:'Reviews and approves FO at OST-P level. Verifies cross-agency visibility works correctly for approver role.'}
+    ],
+    steps:[
+      {color:'#9a6700',text:'Log in to DTC QA first, then repeat all steps in DTC UAT'},
+      {color:'#9a6700',text:'Navigate to the Grants app → Funding Opportunities list'},
+      {color:'#9a6700',text:'Confirm you can see FOs from multiple agencies (cross-agency view)'},
+      {color:'#9a6700',text:'Open an FO pending OST-P approval and confirm the approval action is available'},
+      {color:'#9a6700',text:'Approve the FO and confirm status advances correctly'},
+      {color:'#9a6700',text:'Attempt to edit FO content fields — expect read-only or no edit permission'}
+    ],
+    warn:'If OST Admin cannot see FOs from other agencies, the sharing rules or OWD for OST Admin profile are misconfigured.'
+  },
+  nofo: {
+    label:'NOFO Dev Team',
+    bg:'#fff0eb',color:'#cf4a14',
+    subtitle:'NOFO Development team user — configures and manages the Notice of Funding Opportunity technical setup.',
+    profile:'NOFO Dev Team Profile',
+    psg:'NOFO Development Access PSG',
+    role:'NOFO Developer / Configurator',
+    env:'DTC QA → then DTC UAT',
+    loginAs:'nofo.dev.test@dot.gov (NOFO Dev Team profile)',
+    accessLevel:'Technical configuration of NOFO objects. Cannot approve FOs or perform reviewer actions.',
+    permissions:[
+      {dot:'green',label:'NOFO Setup objects',desc:'Full access to NOFO Setup configuration pages and related objects'},
+      {dot:'green',label:'Review Factor configuration',desc:'Can create and manage review factors, scoring rubrics, and templates'},
+      {dot:'blue',label:'Read-only FO access',desc:'Can view FO records for configuration context but not approve'},
+      {dot:'red',label:'FO approval / award actions',desc:'Cannot approve FOs or set award statuses'},
+      {dot:'red',label:'Application Review',desc:'Cannot perform reviewer scoring flows'}
+    ],
+    stories:[
+      {id:'GRAN-260',name:'Review Factors View & Edit',when:'NOFO setup configuration',action:'Configures review factors, scoring criteria, and point weights for the NOFO Setup page.'},
+      {id:'GRAN-259',name:'Template Configuration',when:'Template setup steps',action:'Creates and assigns email templates to Construction and Non-Construction program types.'}
+    ],
+    steps:[
+      {color:'#cf4a14',text:'Log in to DTC QA first, then repeat in DTC UAT'},
+      {color:'#cf4a14',text:'Navigate to an FO in NOFO Setup status'},
+      {color:'#cf4a14',text:'Open the NOFO Setup section and confirm Review Factors related list is visible'},
+      {color:'#cf4a14',text:'Add, edit, and delete review factors — confirm point weight validation fires'},
+      {color:'#cf4a14',text:'Configure templates for Construction and Non-Construction FOs'},
+      {color:'#cf4a14',text:'Attempt FO approval action — expect blocked / no button visible'}
+    ],
+    warn:null
+  },
+  sys: {
+    label:'Sys Admin',
+    bg:'#e6f0ff',color:'#0550ae',
+    subtitle:'Salesforce System Administrator — performs setup, configuration, SOQL verification, and negative test validation.',
+    profile:'System Administrator',
+    psg:'N/A — System Admin profile has all access',
+    role:'Environment Administrator',
+    env:'DTC QA → then DTC UAT',
+    loginAs:'sys.admin.test@dot.gov (System Administrator profile)',
+    accessLevel:'Full Salesforce access including Setup, all objects, all records, Developer Console, and SOQL execution.',
+    permissions:[
+      {dot:'green',label:'Full Salesforce Setup access',desc:'Can view and edit all Setup menus, profiles, PSGs, permission sets'},
+      {dot:'green',label:'Developer Console / SOQL',desc:'Can run SOQL queries and Apex execution for verification'},
+      {dot:'green',label:'All object visibility',desc:'Can view all records across all objects regardless of sharing rules'},
+      {dot:'green',label:'PSG and permission management',desc:'Creates and assigns Permission Set Groups for GRAN-263'},
+      {dot:'green',label:'Picklist administration',desc:'Updates Account Team Role picklist values (Reviewer → Application Reviewer)'},
+      {dot:'blue',label:'Used for cross-agency verification',desc:'Confirms data isolation is working correctly across agencies'}
+    ],
+    stories:[
+      {id:'GRAN-263',name:'PSG & Account Team Role',when:'All setup & verification steps',action:'Creates/verifies GL-Application Reviewer PSG. Updates Account Team Role picklist. Migrates existing records.'},
+      {id:'GRAN-111',name:'SF-424 Field Alignment',when:'Verification steps',action:'Runs SOQL to confirm dedup logic, checks Contact record types, verifies Signature fields.'},
+      {id:'GRAN-243',name:'Grants.gov Intake',when:'Verification in Salesforce',action:'Confirms ApplicationForm created, dedup worked, no duplicate Account/Contact.'},
+      {id:'GRAN-244',name:'Platform Event',when:'Verification',action:'Checks Setup → Platform Events. Verifies subscriber received and processed the event.'},
+      {id:'GRAN-238',name:'SAM EAPI',when:'Configuration verification',action:'Verifies Named Credentials, Remote Site Settings, and Apex callout returns expected data.'},
+      {id:'GRAN-25',name:'FO User Entitlements',when:'Role restriction verification',action:'Validates restricted profiles cannot access admin functions. Checks cross-agency block.'}
+    ],
+    steps:[
+      {color:'#0550ae',text:'Log in to DTC QA as System Administrator first, then repeat in DTC UAT'},
+      {color:'#0550ae',text:'Open Developer Console (Setup → Developer Console) — keep open for SOQL verification throughout testing'},
+      {color:'#0550ae',text:'Before testing GRAN-263: verify GL-Application Reviewer PSG exists in Setup → Permission Sets'},
+      {color:'#0550ae',text:'Before testing GRAN-263: verify Account Team Role picklist has "Application Reviewer" and NOT "Reviewer"'},
+      {color:'#0550ae',text:'Run SOQL: SELECT Id, TeamMemberRole FROM AccountTeamMember WHERE TeamMemberRole = \'Reviewer\' — expect 0 rows'},
+      {color:'#0550ae',text:'After each integration test (GRAN-111, GRAN-243): run dedup SOQL to confirm no duplicate Accounts or Contacts created'},
+      {color:'#0550ae',text:'For negative tests: confirm non-privileged users get "Insufficient Privileges" errors as expected'}
+    ],
+    warn:'As Sys Admin you bypass all security. When running negative tests, always switch to the restricted user — do NOT test security as Sys Admin.'
+  },
+  api: {
+    label:'System / API',
+    bg:'#f0f0f0',color:'#656d76',
+    subtitle:'Integration user or automated system process — no UI login. Used for the Grants.gov intake integration, Platform Events, and SAM.gov callouts.',
+    profile:'Integration User (API-only)',
+    psg:'Integration PSG / Connected App credentials',
+    role:'Automated Integration Process',
+    env:'DTC QA → then DTC UAT',
+    loginAs:'Not a UI login — uses OAuth / Connected App credentials  or Apex callout',
+    accessLevel:'API-only access scoped to integration objects. Cannot log into the Salesforce UI.',
+    permissions:[
+      {dot:'green',label:'API / REST access to ApplicationForm',desc:'Can create and update ApplicationForm records '},
+      {dot:'green',label:'Account and Contact creation/matching',desc:'Can create or match Account and Contact records per dedup rules'},
+      {dot:'green',label:'Platform Event publishing',desc:'Can publish Platform Events after ApplicationForm creation (GRAN-244)'},
+      {dot:'blue',label:'SAM.gov EAPI callout',desc:'Apex-driven callout to SAM.gov for UEI entity validation (GRAN-238)'},
+      {dot:'red',label:'No UI login',desc:'This persona does not access the Salesforce UI — all actions are API or code-driven'},
+      {dot:'red',label:'No Setup access',desc:'Integration user cannot view or modify Setup configuration'}
+    ],
+    stories:[
+      {id:'GRAN-111',name:'SF-424 Field Alignment',when:'Data submission via intake integration',action:'Sends SF-424 payload through the Grants.gov intake integration into Salesforce.'},
+      {id:'GRAN-243',name:'Grants.gov Intake',when:'Automated intake trigger',action:'Receives Grants.gov submission  and creates ApplicationForm in Salesforce.'},
+      {id:'GRAN-244',name:'Platform Event',when:'Event publishing (automated)',action:'Platform Event published automatically when ApplicationForm is created.'},
+      {id:'GRAN-238',name:'SAM EAPI',when:'Automated / background',action:'Apex callout to SAM.gov EAPI to validate entity UEI.'}
+    ],
+    steps:[
+      {color:'#656d76',text:'This persona does NOT log in via the Salesforce UI'},
+      {color:'#656d76',text:'Verify Named Credentials for the intake integration and SAM.gov are configured in Setup → Security → Named Credentials'},
+      {color:'#656d76',text:'Verify Remote Site Settings allow callouts to Grants.gov and SAM.gov endpoints'},
+      {color:'#656d76',text:'Trigger intake by submitting a test payload (coordinate with the integration team)'},
+      {color:'#656d76',text:'Verify results as Sys Admin using SOQL after each automated action'},
+      {color:'#656d76',text:'For Platform Event testing: confirm event subscriber processed the event in Setup → Platform Events → Subscriptions'}
+    ],
+    warn:'All verification for this persona must be done by Sys Admin using SOQL and Setup screens — the integration user itself has no UI.'
+  },
+  ext: {
+    label:'Applicant / Ext',
+    bg:'#f5f0ff',color:'#8250df',
+    subtitle:'External applicant submitting through Grants.gov. Does not access the Salesforce environment directly.',
+    profile:'External / Grants.gov user (no Salesforce profile)',
+    psg:'N/A — external system',
+    role:'Grant Applicant',
+    env:'Grants.gov test environment (external)',
+    loginAs:'grants.gov test account — coordinate with Grants.gov test environment access',
+    accessLevel:'No Salesforce access. Submits applications through Grants.gov portal only.',
+    permissions:[
+      {dot:'green',label:'Grants.gov submission',desc:'Can submit SF-424 application forms through the Grants.gov portal'},
+      {dot:'red',label:'No Salesforce access',desc:'Cannot log into the Salesforce environment — all Salesforce records are created by the integration'},
+      {dot:'red',label:'No internal systems access',desc:'No access to GrantLens, internal portals, or DOT internal systems'}
+    ],
+    stories:[
+      {id:'GRAN-243',name:'Grants.gov Intake',when:'Test submission trigger',action:'Submits test application via Grants.gov environment. Salesforce ApplicationForm is created  after submission.'}
+    ],
+    steps:[
+      {color:'#8250df',text:'Access Grants.gov test environment (not production)'},
+      {color:'#8250df',text:'Locate the test Funding Opportunity by CFDA/Opportunity Number'},
+      {color:'#8250df',text:'Complete and submit the SF-424 test application form'},
+      {color:'#8250df',text:'Note the Grants.gov tracking number for cross-reference'},
+      {color:'#8250df',text:'Coordinate with Sys Admin to verify the ApplicationForm record was created in Salesforce DTC QA (then repeat for DTC UAT)'},
+      {color:'#8250df',text:'Confirm tracking number or reference ID appears on the Salesforce ApplicationForm record'}
+    ],
+    warn:'Use the Grants.gov TEST environment only — never submit test applications to production Grants.gov. Coordinate with the Grants.gov integration team for test submission access.'
+  }
+};
+
+// ── Open persona modal ─────────────────────────────────
+function openPersona(id) {
+  var p = PERSONAS[id];
+  if (!p) return;
+  var overlay = document.getElementById('modalOverlay');
+  var badge = document.getElementById('mBadge');
+  var sub = document.getElementById('mSubtitle');
+  var body = document.getElementById('mBody');
+  var footer = document.getElementById('mFooterNote');
+
+  badge.textContent = p.label;
+  badge.style.background = p.bg;
+  badge.style.color = p.color;
+  sub.textContent = p.subtitle;
+  footer.textContent = 'Click any persona tag throughout the guide to open their detail page';
+
+  // Build permissions HTML
+  var permsHtml = p.permissions.map(function(pm) {
+    return '<li class="perm-item"><span class="perm-dot perm-'+pm.dot+'"></span><div><div class="perm-label">'+pm.label+'</div><div class="perm-desc">'+pm.desc+'</div></div></li>';
+  }).join('');
+
+  // Build stories HTML
+  var storiesHtml = p.stories.map(function(s) {
+    return '<div class="story-ref" onclick="closeAndGoTo(\''+s.id.toLowerCase().replace('-','')+'\')"><div class="story-ref-id">'+s.id+'</div><div class="story-ref-detail"><div class="story-ref-name">'+s.name+'</div><div class="story-ref-when">When: '+s.when+'</div><div class="story-ref-action">'+s.action+'</div></div></div>';
+  }).join('');
+
+  // Build steps HTML
+  var stepsHtml = p.steps.map(function(s,i) {
+    return '<li class="step-item"><div class="step-num" style="background:'+s.color+'">'+(i+1)+'</div><div>'+s.text+'</div></li>';
+  }).join('');
+
+  var warnHtml = p.warn ? '<div class="warn-box">⚑ '+p.warn+'</div>' : '';
+
+  body.innerHTML = [
+    '<div class="modal-section">',
+    '  <div class="modal-section-title">Identity &amp; Access</div>',
+    '  <div class="info-grid">',
+    '    <div class="info-card"><div class="info-card-label">Profile</div><div class="info-card-value"><code>'+p.profile+'</code></div></div>',
+    '    <div class="info-card"><div class="info-card-label">PSG</div><div class="info-card-value"><code>'+p.psg+'</code></div></div>',
+    '    <div class="info-card"><div class="info-card-label">Role / Title</div><div class="info-card-value">'+p.role+'</div></div>',
+    '    <div class="info-card"><div class="info-card-label">Test Environment</div><div class="info-card-value"><code>'+p.env+'</code></div></div>',
+    '  </div>',
+    '  <div class="info-card" style="margin-bottom:10px"><div class="info-card-label">Log In As</div><div class="info-card-value">'+p.loginAs+'</div></div>',
+    '  <div class="info-card"><div class="info-card-label">Access Level Summary</div><div class="info-card-value">'+p.accessLevel+'</div></div>',
+    '</div>',
+    '<div class="modal-section">',
+    '  <div class="modal-section-title">Permissions &amp; Restrictions</div>',
+    '  <ul class="perm-list">'+permsHtml+'</ul>',
+    '</div>',
+    '<div class="modal-section">',
+    '  <div class="modal-section-title">Stories This Persona Appears In — click to jump</div>',
+    '  <div class="story-ref-list">'+storiesHtml+'</div>',
+    '</div>',
+    '<div class="modal-section">',
+    '  <div class="modal-section-title">Step-by-Step Testing Process</div>',
+    '  <ul class="step-list">'+stepsHtml+'</ul>',
+    warnHtml,
+    '</div>'
+  ].join('');
+
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function closeModalOutside(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+}
+
+function closeAndGoTo(storyId) {
+  closeModal();
+  setTimeout(function() {
+    var el = document.getElementById('b-s'+storyId.replace('gran',''));
+    if (el) { ts('s'+storyId.replace('gran','')); el.scrollIntoView({behavior:'smooth',block:'start'}); }
+  }, 200);
+}
+
+
+// ── Dual Environment switcher ─────────────────────────
+var currentEnv = 'qa';
+function setEnv(env, el) {
+  currentEnv = env;
+  document.querySelectorAll('.env-tab').forEach(function(t){t.classList.remove('active')});
+  el.classList.add('active');
+  var ind = document.getElementById('envIndicator');
+  if (env === 'qa') {
+    ind.innerHTML = 'Currently testing: <span style="color:#3fb950;font-weight:600">DTC QA</span>';
+    document.querySelectorAll('.env-badge.env-uat').forEach(function(b){b.style.opacity='0.4'});
+    document.querySelectorAll('.env-badge.env-qa').forEach(function(b){b.style.opacity='1'});
+  } else {
+    ind.innerHTML = 'Currently testing: <span style="color:#f0883e;font-weight:600">DTC UAT</span>';
+    document.querySelectorAll('.env-badge.env-qa').forEach(function(b){b.style.opacity='0.4'});
+    document.querySelectorAll('.env-badge.env-uat').forEach(function(b){b.style.opacity='1'});
+  }
+}
+
+// ── Story toggle ───────────────────────────────────────
+function ts(id) {
+  var b=document.getElementById('b-'+id),c=document.getElementById('c-'+id),o=b.classList.contains('open');
+  b.classList.toggle('open',!o);c.textContent=o?'▶':'▼';
+}
+
+// ── Checkbox ───────────────────────────────────────────
+function toggle(el) {
+  el.classList.toggle('done');el.textContent=el.classList.contains('done')?'✓':'';
+  upP();save();
+}
+
+// ── Sidebar scroll ─────────────────────────────────────
+function goTo(id,el) {
+  var e=document.getElementById(id);if(e)e.scrollIntoView({behavior:'smooth',block:'start'});
+  document.querySelectorAll('.sb-link').forEach(function(l){l.classList.remove('active')});
+  el.classList.add('active');
+}
+
+// ── Progress ───────────────────────────────────────────
+function upP() {
+  var a=document.querySelectorAll('.chk-box').length,d=document.querySelectorAll('.chk-box.done').length,p=a?Math.round(d/a*100):0;
+  document.getElementById('pFill').style.width=p+'%';
+  document.getElementById('pLbl').textContent=d+' / '+a+' checked ('+p+'%)';
+}
+
+// ── Persist ────────────────────────────────────────────
+function save() {
+  var s={};document.querySelectorAll('.chk-box').forEach(function(b,i){s[i]=b.classList.contains('done')});
+  try{localStorage.setItem('eg3',JSON.stringify(s))}catch(e){}
+}
+(function(){
+  try{
+    var s=JSON.parse(localStorage.getItem('eg3')||'{}');
+    document.querySelectorAll('.chk-box').forEach(function(b,i){if(s[i]){b.classList.add('done');b.textContent='✓'}});
+  }catch(e){}
+  upP();
+  // Keyboard close
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal();});
+})();
+</script>
+</body>
+</html>
