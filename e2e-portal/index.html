@@ -798,9 +798,12 @@
   }
 
   /* ── E2E ENVIRONMENT VIEW HEADER STRIPE (color cue per env) ── */
-  .view[data-env="qa"]   .page-header { border-left: 6px solid #f59e0b; padding-left: 14px; }
-  .view[data-env="uat"]  .page-header { border-left: 6px solid #3b82f6; padding-left: 14px; }
-  .view[data-env="prod"] .page-header { border-left: 6px solid #8b5cf6; padding-left: 14px; }
+  .view[data-env="qa"]      .page-header { border-left: 6px solid #f59e0b; padding-left: 14px; }
+  .view[data-env="uat"]     .page-header { border-left: 6px solid #3b82f6; padding-left: 14px; }
+  .view[data-env="prod"]    .page-header { border-left: 6px solid #8b5cf6; padding-left: 14px; }
+  .view[data-env="dotdev"]  .page-header { border-left: 6px solid #06b6d4; padding-left: 14px; }
+  .view[data-env="dotqa"]   .page-header { border-left: 6px solid #14b8a6; padding-left: 14px; }
+  .view[data-env="dotuat"]  .page-header { border-left: 6px solid #10b981; padding-left: 14px; }
 
   /* ── E2E ENVIRONMENT OVERVIEW PANEL (top of each env view) ── */
   .env-overview {
@@ -890,9 +893,12 @@
     box-shadow: var(--shadow);
     border-top: 5px solid;
   }
-  .overall-env-card[data-env="qa"]   { border-top-color: #f59e0b; }
-  .overall-env-card[data-env="uat"]  { border-top-color: #3b82f6; }
-  .overall-env-card[data-env="prod"] { border-top-color: #8b5cf6; }
+  .overall-env-card[data-env="qa"]      { border-top-color: #f59e0b; }
+  .overall-env-card[data-env="uat"]     { border-top-color: #3b82f6; }
+  .overall-env-card[data-env="prod"]    { border-top-color: #8b5cf6; }
+  .overall-env-card[data-env="dotdev"]  { border-top-color: #06b6d4; }
+  .overall-env-card[data-env="dotqa"]   { border-top-color: #14b8a6; }
+  .overall-env-card[data-env="dotuat"]  { border-top-color: #10b981; }
   .overall-env-card-title {
     font-size: 14px; font-weight: 700;
     margin-bottom: 10px;
@@ -902,9 +908,12 @@
     font-size: 18px; font-weight: 700;
     font-family: 'DM Mono', monospace;
   }
-  .overall-env-card[data-env="qa"]   .overall-env-card-title .env-pct { color: #d97706; }
-  .overall-env-card[data-env="uat"]  .overall-env-card-title .env-pct { color: #2563eb; }
-  .overall-env-card[data-env="prod"] .overall-env-card-title .env-pct { color: #7c3aed; }
+  .overall-env-card[data-env="qa"]      .overall-env-card-title .env-pct { color: #d97706; }
+  .overall-env-card[data-env="uat"]     .overall-env-card-title .env-pct { color: #2563eb; }
+  .overall-env-card[data-env="prod"]    .overall-env-card-title .env-pct { color: #7c3aed; }
+  .overall-env-card[data-env="dotdev"]  .overall-env-card-title .env-pct { color: #0891b2; }
+  .overall-env-card[data-env="dotqa"]   .overall-env-card-title .env-pct { color: #0d9488; }
+  .overall-env-card[data-env="dotuat"]  .overall-env-card-title .env-pct { color: #059669; }
 
   .overall-stats {
     display: grid; grid-template-columns: repeat(3, 1fr);
@@ -1515,6 +1524,15 @@
       <span class="nav-icon" style="color:#8b5cf6;">🟣</span> Production
       <span class="nav-badge" style="background:#ef4444;">NEW</span>
     </button>
+    <button class="nav-item" onclick="showView('e2e-dotdev', this)">
+      <span class="nav-icon" style="color:#06b6d4;">🔷</span> DOT Dev
+    </button>
+    <button class="nav-item" onclick="showView('e2e-dotqa', this)">
+      <span class="nav-icon" style="color:#14b8a6;">🔶</span> DOT QA
+    </button>
+    <button class="nav-item" onclick="showView('e2e-dotuat', this)">
+      <span class="nav-icon" style="color:#10b981;">🟢</span> DOT UAT
+    </button>
     <button class="nav-item admin-only" onclick="showView('admin-view', this)" style="display:none;">
       <span class="nav-icon">👑</span> Admin View
     </button>
@@ -1594,7 +1612,7 @@
           <div class="stat-card-icon">📋</div>
           <div class="stat-card-label">Total Test Cases</div>
           <div class="stat-card-value" id="dash-total-cases">—</div>
-          <div class="stat-card-sub" id="dash-total-sub">Across 9 personas · 3 environments</div>
+          <div class="stat-card-sub" id="dash-total-sub">Across 9 personas · 6 environments</div>
         </div>
         <div class="stat-card">
           <div class="stat-card-icon">✅</div>
@@ -1721,7 +1739,7 @@
     <div id="view-overview-all" class="view">
       <div class="page-header">
         <h1>E2E Overview — All Environments</h1>
-        <p>Live summary of testing progress across <strong>DTC QA</strong>, <strong>DTC UAT</strong>, and <strong>Production</strong>. Each test must pass in QA first, then UAT, then Production. Each result is independently tracked and signed off.</p>
+        <p>Live summary of testing progress across all 6 environments. <strong>DTC</strong> environments (QA → UAT → Production) are run by the system integrator side. <strong>DOT</strong> environments (Dev → QA → UAT) are run by the DOT side. Each result is independently tracked and signed off.</p>
       </div>
 
       <div class="overall-grid">
@@ -1775,6 +1793,57 @@
           </div>
           <div class="overall-progress-bar"><div class="overall-progress-bar-fill"></div></div>
           <button class="topbar-btn" style="margin-top:10px;width:100%;justify-content:center;" onclick="showView('e2e-prod', document.querySelector('[onclick*=\'e2e-prod\']'))">Open Production →</button>
+        </div>
+        <div class="overall-env-card" data-env="dotdev">
+          <div class="overall-env-card-title">
+            <span><span style="color:#06b6d4;">🔷</span> DOT Dev</span>
+            <span class="env-pct" data-stat="pct">0%</span>
+          </div>
+          <div style="font-size:11.5px;color:var(--text-secondary);margin-bottom:10px;">DOT-side development sandbox. DOT IT/security teams validate platform stability before code reaches DOT QA. <strong>Smoke testing only.</strong></div>
+          <div class="overall-stats">
+            <div class="overall-stat"><div class="overall-stat-label">Total</div><div class="overall-stat-value" data-stat="total">0</div></div>
+            <div class="overall-stat is-passed"><div class="overall-stat-label">Passed</div><div class="overall-stat-value" data-stat="passed">0</div></div>
+            <div class="overall-stat is-failed"><div class="overall-stat-label">Failed</div><div class="overall-stat-value" data-stat="failed">0</div></div>
+            <div class="overall-stat is-inconc"><div class="overall-stat-label">Inconc.</div><div class="overall-stat-value" data-stat="inconc">0</div></div>
+            <div class="overall-stat"><div class="overall-stat-label">Pending</div><div class="overall-stat-value" data-stat="pending">0</div></div>
+            <div class="overall-stat"><div class="overall-stat-label">Signed</div><div class="overall-stat-value" data-stat="signedOff">0</div></div>
+          </div>
+          <div class="overall-progress-bar"><div class="overall-progress-bar-fill"></div></div>
+          <button class="topbar-btn" style="margin-top:10px;width:100%;justify-content:center;" onclick="showView('e2e-dotdev', document.querySelector('[onclick*=\'e2e-dotdev\']'))">Open DOT Dev →</button>
+        </div>
+        <div class="overall-env-card" data-env="dotqa">
+          <div class="overall-env-card-title">
+            <span><span style="color:#14b8a6;">🔶</span> DOT QA</span>
+            <span class="env-pct" data-stat="pct">0%</span>
+          </div>
+          <div style="font-size:11.5px;color:var(--text-secondary);margin-bottom:10px;">DOT-side QA environment. After DTC UAT signoff, the build is promoted here for DOT QA verification. <strong>Run regression here before DOT UAT.</strong></div>
+          <div class="overall-stats">
+            <div class="overall-stat"><div class="overall-stat-label">Total</div><div class="overall-stat-value" data-stat="total">0</div></div>
+            <div class="overall-stat is-passed"><div class="overall-stat-label">Passed</div><div class="overall-stat-value" data-stat="passed">0</div></div>
+            <div class="overall-stat is-failed"><div class="overall-stat-label">Failed</div><div class="overall-stat-value" data-stat="failed">0</div></div>
+            <div class="overall-stat is-inconc"><div class="overall-stat-label">Inconc.</div><div class="overall-stat-value" data-stat="inconc">0</div></div>
+            <div class="overall-stat"><div class="overall-stat-label">Pending</div><div class="overall-stat-value" data-stat="pending">0</div></div>
+            <div class="overall-stat"><div class="overall-stat-label">Signed</div><div class="overall-stat-value" data-stat="signedOff">0</div></div>
+          </div>
+          <div class="overall-progress-bar"><div class="overall-progress-bar-fill"></div></div>
+          <button class="topbar-btn" style="margin-top:10px;width:100%;justify-content:center;" onclick="showView('e2e-dotqa', document.querySelector('[onclick*=\'e2e-dotqa\']'))">Open DOT QA →</button>
+        </div>
+        <div class="overall-env-card" data-env="dotuat">
+          <div class="overall-env-card-title">
+            <span><span style="color:#10b981;">🟢</span> DOT UAT</span>
+            <span class="env-pct" data-stat="pct">0%</span>
+          </div>
+          <div style="font-size:11.5px;color:var(--text-secondary);margin-bottom:10px;">DOT-side UAT environment. Final business acceptance by DOT stakeholders before production release. <strong>Run all personas as the final gate.</strong></div>
+          <div class="overall-stats">
+            <div class="overall-stat"><div class="overall-stat-label">Total</div><div class="overall-stat-value" data-stat="total">0</div></div>
+            <div class="overall-stat is-passed"><div class="overall-stat-label">Passed</div><div class="overall-stat-value" data-stat="passed">0</div></div>
+            <div class="overall-stat is-failed"><div class="overall-stat-label">Failed</div><div class="overall-stat-value" data-stat="failed">0</div></div>
+            <div class="overall-stat is-inconc"><div class="overall-stat-label">Inconc.</div><div class="overall-stat-value" data-stat="inconc">0</div></div>
+            <div class="overall-stat"><div class="overall-stat-label">Pending</div><div class="overall-stat-value" data-stat="pending">0</div></div>
+            <div class="overall-stat"><div class="overall-stat-label">Signed</div><div class="overall-stat-value" data-stat="signedOff">0</div></div>
+          </div>
+          <div class="overall-progress-bar"><div class="overall-progress-bar-fill"></div></div>
+          <button class="topbar-btn" style="margin-top:10px;width:100%;justify-content:center;" onclick="showView('e2e-dotuat', document.querySelector('[onclick*=\'e2e-dotuat\']'))">Open DOT UAT →</button>
         </div>
       </div>
 
@@ -2205,6 +2274,420 @@
     </div>
 
     <!-- ═══════════════════════════════ -->
+    <!-- VIEW: DOT Dev (Environment) -->
+    <!-- ═══════════════════════════════ -->
+    <div id="view-e2e-dotdev" class="view" data-env="dotdev">
+      <div class="page-header">
+        <h1><span style="color:#06b6d4;">🔷</span> DOT Dev — E2E Tester Guide</h1>
+        <p>DOT-side development sandbox. Used by DOT IT/security teams to validate platform stability before code reaches DOT QA. <strong>Smoke testing only.</strong></p>
+      </div>
+
+        <!-- Environment Overview -->
+        <div class="env-overview">
+          <div class="env-overview-title">📊 DOT Dev Summary</div>
+          <div class="env-stats">
+            <div class="env-stat"><div class="env-stat-label">Total Tests</div><div class="env-stat-value" data-stat="total">0</div></div>
+            <div class="env-stat is-passed"><div class="env-stat-label">Passed</div><div class="env-stat-value" data-stat="passed">0</div></div>
+            <div class="env-stat is-failed"><div class="env-stat-label">Failed</div><div class="env-stat-value" data-stat="failed">0</div></div>
+            <div class="env-stat is-inconc"><div class="env-stat-label">Inconclusive</div><div class="env-stat-value" data-stat="inconc">0</div></div>
+            <div class="env-stat"><div class="env-stat-label">Pending</div><div class="env-stat-value" data-stat="pending">0</div></div>
+            <div class="env-stat is-signed"><div class="env-stat-label">Signed Off</div><div class="env-stat-value" data-stat="signedOff">0</div></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:12px;color:var(--text-secondary);">
+            <span>Pass rate</span>
+            <span style="font-weight:700;color:#16a34a;font-family:'DM Mono',monospace;" data-stat="pct">0%</span>
+          </div>
+          <div class="env-progress-bar"><div class="env-progress-bar-fill"></div></div>
+          <table class="env-persona-table" style="margin-top:14px;">
+            <thead>
+              <tr>
+                <th>Persona</th>
+                <th style="text-align:center;">Total</th>
+                <th style="text-align:center;">Passed</th>
+                <th style="text-align:center;">Failed</th>
+                <th style="text-align:center;">Inconc.</th>
+                <th style="text-align:center;">Signed Off</th>
+                <th style="text-align:center;">Pass %</th>
+              </tr>
+            </thead>
+            <tbody class="env-persona-tbody"></tbody>
+          </table>
+        </div>
+
+      <!-- PERSONA TABS -->
+      <div class="persona-tabs">
+        <button class="persona-tab active" onclick="showPersonaInEnv('dotdev', 'nofo-dev', this)">📝 NOFO Dev Team</button>
+        <button class="persona-tab" onclick="showPersonaInEnv('dotdev', 'program-office', this)">🏢 Program Office</button>
+        <button class="persona-tab" onclick="showPersonaInEnv('dotdev', 'grant-office', this)">⚖️ Grant Office</button>
+        <button class="persona-tab" onclick="showPersonaInEnv('dotdev', 'oa-legal', this)">⚖️ OA Legal</button>
+        <button class="persona-tab" onclick="showPersonaInEnv('dotdev', 'oa-cfo', this)">⚖️ OA CFO</button>
+        <button class="persona-tab" onclick="showPersonaInEnv('dotdev', 'oa-leadership', this)">👔 OA Leadership</button>
+        <button class="persona-tab" onclick="showPersonaInEnv('dotdev', 'reviewer', this)">🔎 Reviewer</button>
+        <button class="persona-tab" onclick="showPersonaInEnv('dotdev', 'ost-pc', this)">🏛️ OST-PC</button>
+        <button class="persona-tab" onclick="showPersonaInEnv('dotdev', 'das', this)">🎖️ DAS</button>
+      </div>
+
+      
+        <div id="persona-dotdev-nofo-dev" class="persona-panel active" data-persona="nofo-dev">
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-body" style="background:var(--blue-50);border-radius:var(--radius);">
+              <strong style="color:var(--blue-800);">👤 Persona: NOFO Development Team</strong><br>
+              <span style="font-size:13px;color:var(--text-secondary);">You are responsible for creating and managing Funding Opportunities (NOFOs) through the full lifecycle including creation, setup, approval routing, and publication.</span>
+            </div>
+          </div>
+          <div class="step-list" id="steps-dotdev-nofo-dev"></div>
+        </div>
+        <div id="persona-dotdev-program-office" class="persona-panel" data-persona="program-office">
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-body" style="background:var(--blue-50);border-radius:var(--radius);">
+              <strong style="color:var(--blue-800);">👤 Persona: Program Office</strong><br>
+              <span style="font-size:13px;color:var(--text-secondary);">You set up Programs, create and manage Funding Opportunities, run the NOFO approval process, retrieve applications, assign reviewers, and finalize award selections. The <strong>Award Selection workflow</strong> (TC 257, 240, 241, 252, 239, 253, 254, 255, 256, 261) takes the FO from Application Review Completed → Selected for Award.</span>
+            </div>
+          </div>
+          <div class="step-list" id="steps-dotdev-program-office"></div>
+        </div>
+        <div id="persona-dotdev-grant-office" class="persona-panel" data-persona="grant-office">
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-body" style="background:var(--blue-50);border-radius:var(--radius);">
+              <strong style="color:var(--blue-800);">👤 Persona: Grant Office</strong><br>
+              <span style="font-size:13px;color:var(--text-secondary);">You are the <strong>Grant Office</strong> concurrer in the NOFO approval process. You receive email notifications, review funding opportunities, and mark Grant Office concurrence via the Concurrence/Approval tab and Award Selection tab.</span>
+            </div>
+          </div>
+          <div class="step-list" id="steps-dotdev-grant-office"></div>
+        </div>
+        <div id="persona-dotdev-oa-legal" class="persona-panel" data-persona="oa-legal">
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-body" style="background:var(--blue-50);border-radius:var(--radius);">
+              <strong style="color:var(--blue-800);">👤 Persona: OA Legal Leadership</strong><br>
+              <span style="font-size:13px;color:var(--text-secondary);">You are the <strong>OA Legal Leadership</strong> concurrer. You provide legal review of NOFOs and Award Selection memos, marking concurrence in your designated section of the Concurrence/Approval tab and Award Selection tab.</span>
+            </div>
+          </div>
+          <div class="step-list" id="steps-dotdev-oa-legal"></div>
+        </div>
+        <div id="persona-dotdev-oa-cfo" class="persona-panel" data-persona="oa-cfo">
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-body" style="background:var(--blue-50);border-radius:var(--radius);">
+              <strong style="color:var(--blue-800);">👤 Persona: OA CFO Leadership</strong><br>
+              <span style="font-size:13px;color:var(--text-secondary);">You are the <strong>OA CFO Leadership</strong> concurrer. You provide financial review of NOFOs and Award Selection memos, marking concurrence in your designated section of the Concurrence/Approval tab and Award Selection tab.</span>
+            </div>
+          </div>
+          <div class="step-list" id="steps-dotdev-oa-cfo"></div>
+        </div>
+        <div id="persona-dotdev-oa-leadership" class="persona-panel" data-persona="oa-leadership">
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-body" style="background:var(--blue-50);border-radius:var(--radius);">
+              <strong style="color:var(--blue-800);">👤 Persona: OA Leadership</strong><br>
+              <span style="font-size:13px;color:var(--text-secondary);">You provide final OA-level approval on Funding Opportunities and participate in the NOFO approval process as the approving authority before OST-P review.</span>
+            </div>
+          </div>
+          <div class="step-list" id="steps-dotdev-oa-leadership"></div>
+        </div>
+        <div id="persona-dotdev-reviewer" class="persona-panel" data-persona="reviewer">
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-body" style="background:var(--blue-50);border-radius:var(--radius);">
+              <strong style="color:var(--blue-800);">👤 Persona: Reviewer</strong><br>
+              <span style="font-size:13px;color:var(--text-secondary);">You conduct application reviews across all review types: Completeness, Eligibility, Cost Share/Match, Compliance, and Technical/Merit Review. You also handle combined ratings and panel reviews.</span>
+            </div>
+          </div>
+          <div class="step-list" id="steps-dotdev-reviewer"></div>
+        </div>
+        <div id="persona-dotdev-ost-pc" class="persona-panel" data-persona="ost-pc">
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-body" style="background:var(--blue-50);border-radius:var(--radius);">
+              <strong style="color:var(--blue-800);">👤 Persona: OST-PC (Office of the Secretary — Policy Council)</strong><br>
+              <span style="font-size:13px;color:var(--text-secondary);">You review Funding Opportunities at the OST-P level and concur on NOFOs sent to you by the Program Office after OA Review is complete.</span>
+            </div>
+          </div>
+          <div class="step-list" id="steps-dotdev-ost-pc"></div>
+        </div>
+        <div id="persona-dotdev-das" class="persona-panel" data-persona="das">
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-body" style="background:var(--blue-50);border-radius:var(--radius);">
+              <strong style="color:var(--blue-800);">👤 Persona: Deputy Assistant Secretary (DAS)</strong><br>
+              <span style="font-size:13px;color:var(--text-secondary);">You provide DAS-level concurrence on Funding Opportunities that are in "Under OST-P Review" status. You receive an email notification and mark concurrence via the portal.</span>
+            </div>
+          </div>
+          <div class="step-list" id="steps-dotdev-das"></div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════ -->
+    <!-- VIEW: DOT QA (Environment) -->
+    <!-- ═══════════════════════════════ -->
+    <div id="view-e2e-dotqa" class="view" data-env="dotqa">
+      <div class="page-header">
+        <h1><span style="color:#14b8a6;">🔶</span> DOT QA — E2E Tester Guide</h1>
+        <p>DOT-side QA environment. After DTC UAT signoff, the build is promoted here for DOT QA team verification. <strong>Run regression suites here before promoting to DOT UAT.</strong></p>
+      </div>
+
+        <!-- Environment Overview -->
+        <div class="env-overview">
+          <div class="env-overview-title">📊 DOT QA Summary</div>
+          <div class="env-stats">
+            <div class="env-stat"><div class="env-stat-label">Total Tests</div><div class="env-stat-value" data-stat="total">0</div></div>
+            <div class="env-stat is-passed"><div class="env-stat-label">Passed</div><div class="env-stat-value" data-stat="passed">0</div></div>
+            <div class="env-stat is-failed"><div class="env-stat-label">Failed</div><div class="env-stat-value" data-stat="failed">0</div></div>
+            <div class="env-stat is-inconc"><div class="env-stat-label">Inconclusive</div><div class="env-stat-value" data-stat="inconc">0</div></div>
+            <div class="env-stat"><div class="env-stat-label">Pending</div><div class="env-stat-value" data-stat="pending">0</div></div>
+            <div class="env-stat is-signed"><div class="env-stat-label">Signed Off</div><div class="env-stat-value" data-stat="signedOff">0</div></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:12px;color:var(--text-secondary);">
+            <span>Pass rate</span>
+            <span style="font-weight:700;color:#16a34a;font-family:'DM Mono',monospace;" data-stat="pct">0%</span>
+          </div>
+          <div class="env-progress-bar"><div class="env-progress-bar-fill"></div></div>
+          <table class="env-persona-table" style="margin-top:14px;">
+            <thead>
+              <tr>
+                <th>Persona</th>
+                <th style="text-align:center;">Total</th>
+                <th style="text-align:center;">Passed</th>
+                <th style="text-align:center;">Failed</th>
+                <th style="text-align:center;">Inconc.</th>
+                <th style="text-align:center;">Signed Off</th>
+                <th style="text-align:center;">Pass %</th>
+              </tr>
+            </thead>
+            <tbody class="env-persona-tbody"></tbody>
+          </table>
+        </div>
+
+      <!-- PERSONA TABS -->
+      <div class="persona-tabs">
+        <button class="persona-tab active" onclick="showPersonaInEnv('dotqa', 'nofo-dev', this)">📝 NOFO Dev Team</button>
+        <button class="persona-tab" onclick="showPersonaInEnv('dotqa', 'program-office', this)">🏢 Program Office</button>
+        <button class="persona-tab" onclick="showPersonaInEnv('dotqa', 'grant-office', this)">⚖️ Grant Office</button>
+        <button class="persona-tab" onclick="showPersonaInEnv('dotqa', 'oa-legal', this)">⚖️ OA Legal</button>
+        <button class="persona-tab" onclick="showPersonaInEnv('dotqa', 'oa-cfo', this)">⚖️ OA CFO</button>
+        <button class="persona-tab" onclick="showPersonaInEnv('dotqa', 'oa-leadership', this)">👔 OA Leadership</button>
+        <button class="persona-tab" onclick="showPersonaInEnv('dotqa', 'reviewer', this)">🔎 Reviewer</button>
+        <button class="persona-tab" onclick="showPersonaInEnv('dotqa', 'ost-pc', this)">🏛️ OST-PC</button>
+        <button class="persona-tab" onclick="showPersonaInEnv('dotqa', 'das', this)">🎖️ DAS</button>
+      </div>
+
+      
+        <div id="persona-dotqa-nofo-dev" class="persona-panel active" data-persona="nofo-dev">
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-body" style="background:var(--blue-50);border-radius:var(--radius);">
+              <strong style="color:var(--blue-800);">👤 Persona: NOFO Development Team</strong><br>
+              <span style="font-size:13px;color:var(--text-secondary);">You are responsible for creating and managing Funding Opportunities (NOFOs) through the full lifecycle including creation, setup, approval routing, and publication.</span>
+            </div>
+          </div>
+          <div class="step-list" id="steps-dotqa-nofo-dev"></div>
+        </div>
+        <div id="persona-dotqa-program-office" class="persona-panel" data-persona="program-office">
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-body" style="background:var(--blue-50);border-radius:var(--radius);">
+              <strong style="color:var(--blue-800);">👤 Persona: Program Office</strong><br>
+              <span style="font-size:13px;color:var(--text-secondary);">You set up Programs, create and manage Funding Opportunities, run the NOFO approval process, retrieve applications, assign reviewers, and finalize award selections. The <strong>Award Selection workflow</strong> (TC 257, 240, 241, 252, 239, 253, 254, 255, 256, 261) takes the FO from Application Review Completed → Selected for Award.</span>
+            </div>
+          </div>
+          <div class="step-list" id="steps-dotqa-program-office"></div>
+        </div>
+        <div id="persona-dotqa-grant-office" class="persona-panel" data-persona="grant-office">
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-body" style="background:var(--blue-50);border-radius:var(--radius);">
+              <strong style="color:var(--blue-800);">👤 Persona: Grant Office</strong><br>
+              <span style="font-size:13px;color:var(--text-secondary);">You are the <strong>Grant Office</strong> concurrer in the NOFO approval process. You receive email notifications, review funding opportunities, and mark Grant Office concurrence via the Concurrence/Approval tab and Award Selection tab.</span>
+            </div>
+          </div>
+          <div class="step-list" id="steps-dotqa-grant-office"></div>
+        </div>
+        <div id="persona-dotqa-oa-legal" class="persona-panel" data-persona="oa-legal">
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-body" style="background:var(--blue-50);border-radius:var(--radius);">
+              <strong style="color:var(--blue-800);">👤 Persona: OA Legal Leadership</strong><br>
+              <span style="font-size:13px;color:var(--text-secondary);">You are the <strong>OA Legal Leadership</strong> concurrer. You provide legal review of NOFOs and Award Selection memos, marking concurrence in your designated section of the Concurrence/Approval tab and Award Selection tab.</span>
+            </div>
+          </div>
+          <div class="step-list" id="steps-dotqa-oa-legal"></div>
+        </div>
+        <div id="persona-dotqa-oa-cfo" class="persona-panel" data-persona="oa-cfo">
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-body" style="background:var(--blue-50);border-radius:var(--radius);">
+              <strong style="color:var(--blue-800);">👤 Persona: OA CFO Leadership</strong><br>
+              <span style="font-size:13px;color:var(--text-secondary);">You are the <strong>OA CFO Leadership</strong> concurrer. You provide financial review of NOFOs and Award Selection memos, marking concurrence in your designated section of the Concurrence/Approval tab and Award Selection tab.</span>
+            </div>
+          </div>
+          <div class="step-list" id="steps-dotqa-oa-cfo"></div>
+        </div>
+        <div id="persona-dotqa-oa-leadership" class="persona-panel" data-persona="oa-leadership">
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-body" style="background:var(--blue-50);border-radius:var(--radius);">
+              <strong style="color:var(--blue-800);">👤 Persona: OA Leadership</strong><br>
+              <span style="font-size:13px;color:var(--text-secondary);">You provide final OA-level approval on Funding Opportunities and participate in the NOFO approval process as the approving authority before OST-P review.</span>
+            </div>
+          </div>
+          <div class="step-list" id="steps-dotqa-oa-leadership"></div>
+        </div>
+        <div id="persona-dotqa-reviewer" class="persona-panel" data-persona="reviewer">
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-body" style="background:var(--blue-50);border-radius:var(--radius);">
+              <strong style="color:var(--blue-800);">👤 Persona: Reviewer</strong><br>
+              <span style="font-size:13px;color:var(--text-secondary);">You conduct application reviews across all review types: Completeness, Eligibility, Cost Share/Match, Compliance, and Technical/Merit Review. You also handle combined ratings and panel reviews.</span>
+            </div>
+          </div>
+          <div class="step-list" id="steps-dotqa-reviewer"></div>
+        </div>
+        <div id="persona-dotqa-ost-pc" class="persona-panel" data-persona="ost-pc">
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-body" style="background:var(--blue-50);border-radius:var(--radius);">
+              <strong style="color:var(--blue-800);">👤 Persona: OST-PC (Office of the Secretary — Policy Council)</strong><br>
+              <span style="font-size:13px;color:var(--text-secondary);">You review Funding Opportunities at the OST-P level and concur on NOFOs sent to you by the Program Office after OA Review is complete.</span>
+            </div>
+          </div>
+          <div class="step-list" id="steps-dotqa-ost-pc"></div>
+        </div>
+        <div id="persona-dotqa-das" class="persona-panel" data-persona="das">
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-body" style="background:var(--blue-50);border-radius:var(--radius);">
+              <strong style="color:var(--blue-800);">👤 Persona: Deputy Assistant Secretary (DAS)</strong><br>
+              <span style="font-size:13px;color:var(--text-secondary);">You provide DAS-level concurrence on Funding Opportunities that are in "Under OST-P Review" status. You receive an email notification and mark concurrence via the portal.</span>
+            </div>
+          </div>
+          <div class="step-list" id="steps-dotqa-das"></div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════ -->
+    <!-- VIEW: DOT UAT (Environment) -->
+    <!-- ═══════════════════════════════ -->
+    <div id="view-e2e-dotuat" class="view" data-env="dotuat">
+      <div class="page-header">
+        <h1><span style="color:#10b981;">🟢</span> DOT UAT — E2E Tester Guide</h1>
+        <p>DOT-side UAT environment. Final business acceptance by DOT stakeholders before production release. <strong>Run all personas here as the final gate.</strong></p>
+      </div>
+
+        <!-- Environment Overview -->
+        <div class="env-overview">
+          <div class="env-overview-title">📊 DOT UAT Summary</div>
+          <div class="env-stats">
+            <div class="env-stat"><div class="env-stat-label">Total Tests</div><div class="env-stat-value" data-stat="total">0</div></div>
+            <div class="env-stat is-passed"><div class="env-stat-label">Passed</div><div class="env-stat-value" data-stat="passed">0</div></div>
+            <div class="env-stat is-failed"><div class="env-stat-label">Failed</div><div class="env-stat-value" data-stat="failed">0</div></div>
+            <div class="env-stat is-inconc"><div class="env-stat-label">Inconclusive</div><div class="env-stat-value" data-stat="inconc">0</div></div>
+            <div class="env-stat"><div class="env-stat-label">Pending</div><div class="env-stat-value" data-stat="pending">0</div></div>
+            <div class="env-stat is-signed"><div class="env-stat-label">Signed Off</div><div class="env-stat-value" data-stat="signedOff">0</div></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:12px;color:var(--text-secondary);">
+            <span>Pass rate</span>
+            <span style="font-weight:700;color:#16a34a;font-family:'DM Mono',monospace;" data-stat="pct">0%</span>
+          </div>
+          <div class="env-progress-bar"><div class="env-progress-bar-fill"></div></div>
+          <table class="env-persona-table" style="margin-top:14px;">
+            <thead>
+              <tr>
+                <th>Persona</th>
+                <th style="text-align:center;">Total</th>
+                <th style="text-align:center;">Passed</th>
+                <th style="text-align:center;">Failed</th>
+                <th style="text-align:center;">Inconc.</th>
+                <th style="text-align:center;">Signed Off</th>
+                <th style="text-align:center;">Pass %</th>
+              </tr>
+            </thead>
+            <tbody class="env-persona-tbody"></tbody>
+          </table>
+        </div>
+
+      <!-- PERSONA TABS -->
+      <div class="persona-tabs">
+        <button class="persona-tab active" onclick="showPersonaInEnv('dotuat', 'nofo-dev', this)">📝 NOFO Dev Team</button>
+        <button class="persona-tab" onclick="showPersonaInEnv('dotuat', 'program-office', this)">🏢 Program Office</button>
+        <button class="persona-tab" onclick="showPersonaInEnv('dotuat', 'grant-office', this)">⚖️ Grant Office</button>
+        <button class="persona-tab" onclick="showPersonaInEnv('dotuat', 'oa-legal', this)">⚖️ OA Legal</button>
+        <button class="persona-tab" onclick="showPersonaInEnv('dotuat', 'oa-cfo', this)">⚖️ OA CFO</button>
+        <button class="persona-tab" onclick="showPersonaInEnv('dotuat', 'oa-leadership', this)">👔 OA Leadership</button>
+        <button class="persona-tab" onclick="showPersonaInEnv('dotuat', 'reviewer', this)">🔎 Reviewer</button>
+        <button class="persona-tab" onclick="showPersonaInEnv('dotuat', 'ost-pc', this)">🏛️ OST-PC</button>
+        <button class="persona-tab" onclick="showPersonaInEnv('dotuat', 'das', this)">🎖️ DAS</button>
+      </div>
+
+      
+        <div id="persona-dotuat-nofo-dev" class="persona-panel active" data-persona="nofo-dev">
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-body" style="background:var(--blue-50);border-radius:var(--radius);">
+              <strong style="color:var(--blue-800);">👤 Persona: NOFO Development Team</strong><br>
+              <span style="font-size:13px;color:var(--text-secondary);">You are responsible for creating and managing Funding Opportunities (NOFOs) through the full lifecycle including creation, setup, approval routing, and publication.</span>
+            </div>
+          </div>
+          <div class="step-list" id="steps-dotuat-nofo-dev"></div>
+        </div>
+        <div id="persona-dotuat-program-office" class="persona-panel" data-persona="program-office">
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-body" style="background:var(--blue-50);border-radius:var(--radius);">
+              <strong style="color:var(--blue-800);">👤 Persona: Program Office</strong><br>
+              <span style="font-size:13px;color:var(--text-secondary);">You set up Programs, create and manage Funding Opportunities, run the NOFO approval process, retrieve applications, assign reviewers, and finalize award selections. The <strong>Award Selection workflow</strong> (TC 257, 240, 241, 252, 239, 253, 254, 255, 256, 261) takes the FO from Application Review Completed → Selected for Award.</span>
+            </div>
+          </div>
+          <div class="step-list" id="steps-dotuat-program-office"></div>
+        </div>
+        <div id="persona-dotuat-grant-office" class="persona-panel" data-persona="grant-office">
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-body" style="background:var(--blue-50);border-radius:var(--radius);">
+              <strong style="color:var(--blue-800);">👤 Persona: Grant Office</strong><br>
+              <span style="font-size:13px;color:var(--text-secondary);">You are the <strong>Grant Office</strong> concurrer in the NOFO approval process. You receive email notifications, review funding opportunities, and mark Grant Office concurrence via the Concurrence/Approval tab and Award Selection tab.</span>
+            </div>
+          </div>
+          <div class="step-list" id="steps-dotuat-grant-office"></div>
+        </div>
+        <div id="persona-dotuat-oa-legal" class="persona-panel" data-persona="oa-legal">
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-body" style="background:var(--blue-50);border-radius:var(--radius);">
+              <strong style="color:var(--blue-800);">👤 Persona: OA Legal Leadership</strong><br>
+              <span style="font-size:13px;color:var(--text-secondary);">You are the <strong>OA Legal Leadership</strong> concurrer. You provide legal review of NOFOs and Award Selection memos, marking concurrence in your designated section of the Concurrence/Approval tab and Award Selection tab.</span>
+            </div>
+          </div>
+          <div class="step-list" id="steps-dotuat-oa-legal"></div>
+        </div>
+        <div id="persona-dotuat-oa-cfo" class="persona-panel" data-persona="oa-cfo">
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-body" style="background:var(--blue-50);border-radius:var(--radius);">
+              <strong style="color:var(--blue-800);">👤 Persona: OA CFO Leadership</strong><br>
+              <span style="font-size:13px;color:var(--text-secondary);">You are the <strong>OA CFO Leadership</strong> concurrer. You provide financial review of NOFOs and Award Selection memos, marking concurrence in your designated section of the Concurrence/Approval tab and Award Selection tab.</span>
+            </div>
+          </div>
+          <div class="step-list" id="steps-dotuat-oa-cfo"></div>
+        </div>
+        <div id="persona-dotuat-oa-leadership" class="persona-panel" data-persona="oa-leadership">
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-body" style="background:var(--blue-50);border-radius:var(--radius);">
+              <strong style="color:var(--blue-800);">👤 Persona: OA Leadership</strong><br>
+              <span style="font-size:13px;color:var(--text-secondary);">You provide final OA-level approval on Funding Opportunities and participate in the NOFO approval process as the approving authority before OST-P review.</span>
+            </div>
+          </div>
+          <div class="step-list" id="steps-dotuat-oa-leadership"></div>
+        </div>
+        <div id="persona-dotuat-reviewer" class="persona-panel" data-persona="reviewer">
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-body" style="background:var(--blue-50);border-radius:var(--radius);">
+              <strong style="color:var(--blue-800);">👤 Persona: Reviewer</strong><br>
+              <span style="font-size:13px;color:var(--text-secondary);">You conduct application reviews across all review types: Completeness, Eligibility, Cost Share/Match, Compliance, and Technical/Merit Review. You also handle combined ratings and panel reviews.</span>
+            </div>
+          </div>
+          <div class="step-list" id="steps-dotuat-reviewer"></div>
+        </div>
+        <div id="persona-dotuat-ost-pc" class="persona-panel" data-persona="ost-pc">
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-body" style="background:var(--blue-50);border-radius:var(--radius);">
+              <strong style="color:var(--blue-800);">👤 Persona: OST-PC (Office of the Secretary — Policy Council)</strong><br>
+              <span style="font-size:13px;color:var(--text-secondary);">You review Funding Opportunities at the OST-P level and concur on NOFOs sent to you by the Program Office after OA Review is complete.</span>
+            </div>
+          </div>
+          <div class="step-list" id="steps-dotuat-ost-pc"></div>
+        </div>
+        <div id="persona-dotuat-das" class="persona-panel" data-persona="das">
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-body" style="background:var(--blue-50);border-radius:var(--radius);">
+              <strong style="color:var(--blue-800);">👤 Persona: Deputy Assistant Secretary (DAS)</strong><br>
+              <span style="font-size:13px;color:var(--text-secondary);">You provide DAS-level concurrence on Funding Opportunities that are in "Under OST-P Review" status. You receive an email notification and mark concurrence via the portal.</span>
+            </div>
+          </div>
+          <div class="step-list" id="steps-dotuat-das"></div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════ -->
     <!-- VIEW: ADMIN — full team visibility -->
     <!-- ═══════════════════════════════ -->
     <div id="view-admin-view" class="view">
@@ -2551,7 +3034,7 @@ function toggleStep(el) {
 // ════════════════════════════════════════════════
 // RESULT LOGGING — environment-scoped (each env has its own copy of every test card)
 // ════════════════════════════════════════════════
-const ENV_LABELS = { qa: 'DTC QA', uat: 'DTC UAT', prod: 'Production' };
+const ENV_LABELS = { qa: 'DTC QA', uat: 'DTC UAT', prod: 'Production', dotdev: 'DOT Dev', dotqa: 'DOT QA', dotuat: 'DOT UAT' };
 const PERSONA_NAMES = {
   'nofo-dev': '📝 NOFO Dev Team',
   'program-office': '🏢 Program Office',
@@ -4946,11 +5429,12 @@ function updateEnvSummaryFor(envKey) {
 function updateOverallSummary() {
   const root = document.getElementById('view-overview-all');
   if (!root) return;
+  const allEnvs = Object.keys(ENV_LABELS);  // ['qa','uat','prod','dotdev','dotqa','dotuat']
   const summary = {};
-  ['qa', 'uat', 'prod'].forEach(env => {
+  allEnvs.forEach(env => {
     summary[env] = updateEnvSummaryFor(env) || { total:0, passed:0, failed:0, inconc:0, pending:0, signedOff:0 };
   });
-  ['qa', 'uat', 'prod'].forEach(env => {
+  allEnvs.forEach(env => {
     const card = root.querySelector('.overall-env-card[data-env=' + env + ']');
     if (!card) return;
     const s = summary[env];
@@ -4966,11 +5450,11 @@ function updateOverallSummary() {
   });
   const grandRow = root.querySelector('.overall-grand-row');
   if (grandRow) {
-    const t = summary.qa.total + summary.uat.total + summary.prod.total;
-    const p = summary.qa.passed + summary.uat.passed + summary.prod.passed;
-    const f = summary.qa.failed + summary.uat.failed + summary.prod.failed;
-    const i = summary.qa.inconc + summary.uat.inconc + summary.prod.inconc;
-    const so = summary.qa.signedOff + summary.uat.signedOff + summary.prod.signedOff;
+    const t = allEnvs.reduce((acc, env) => acc + summary[env].total, 0);
+    const p = allEnvs.reduce((acc, env) => acc + summary[env].passed, 0);
+    const f = allEnvs.reduce((acc, env) => acc + summary[env].failed, 0);
+    const i = allEnvs.reduce((acc, env) => acc + summary[env].inconc, 0);
+    const so = allEnvs.reduce((acc, env) => acc + summary[env].signedOff, 0);
     grandRow.querySelector('[data-stat=total]').textContent = t;
     grandRow.querySelector('[data-stat=passed]').textContent = p;
     grandRow.querySelector('[data-stat=failed]').textContent = f;
@@ -4995,20 +5479,31 @@ function updateDashboardStats() {
 
   if (!totalCardsEl) return;
 
-  // Env breakdowns
-  const envs = ['qa', 'uat', 'prod'];
-  const envCounts = { qa: 0, uat: 0, prod: 0 };
-  const envPassed = { qa: 0, uat: 0, prod: 0 };
-  const envInProg = { qa: 0, uat: 0, prod: 0 };
-  const envIssues = { qa: 0, uat: 0, prod: 0 };
+  // Env breakdowns (driven by ENV_LABELS so all envs are auto-included)
+  const envs = Object.keys(ENV_LABELS);
+  const envCounts = {};
+  const envPassed = {};
+  const envInProg = {};
+  const envIssues = {};
+  envs.forEach(e => { envCounts[e] = 0; envPassed[e] = 0; envInProg[e] = 0; envIssues[e] = 0; });
+
+  // Short labels for the dashboard pills (compact)
+  const envShort = {
+    qa: 'DTC QA', uat: 'DTC UAT', prod: 'Prod',
+    dotdev: 'DOT Dev', dotqa: 'DOT QA', dotuat: 'DOT UAT'
+  };
 
   // Count cards per env from DOM
   envs.forEach(env => {
     envCounts[env] = document.querySelectorAll(`.view[data-env="${env}"] .step-card`).length;
   });
-  const totalCount = envCounts.qa + envCounts.uat + envCounts.prod;
+  const totalCount = envs.reduce((s, e) => s + envCounts[e], 0);
   totalCardsEl.textContent = totalCount;
-  if (totalSubEl) totalSubEl.innerHTML = `<span style="color:var(--blue-700);font-weight:600;">QA</span> ${envCounts.qa} · <span style="color:var(--blue-700);font-weight:600;">UAT</span> ${envCounts.uat} · <span style="color:var(--blue-700);font-weight:600;">Prod</span> ${envCounts.prod}`;
+  if (totalSubEl) {
+    totalSubEl.innerHTML = envs.filter(e => envCounts[e] > 0).map(e =>
+      `<span style="color:var(--blue-700);font-weight:600;">${envShort[e] || e}</span> ${envCounts[e]}`
+    ).join(' · ');
+  }
 
   // My passed / in-progress per env
   let myPassed = 0, myInProg = 0;
@@ -5027,14 +5522,18 @@ function updateDashboardStats() {
   });
   myPassedEl.textContent = myPassed;
   if (myEmail) {
-    myPassedSub.innerHTML = `<span style="color:#16a34a;font-weight:600;">QA</span> ${envPassed.qa} · <span style="color:#16a34a;font-weight:600;">UAT</span> ${envPassed.uat} · <span style="color:#16a34a;font-weight:600;">Prod</span> ${envPassed.prod}`;
+    myPassedSub.innerHTML = envs.filter(e => envPassed[e] > 0 || envCounts[e] > 0).map(e =>
+      `<span style="color:#16a34a;font-weight:600;">${envShort[e] || e}</span> ${envPassed[e]}`
+    ).join(' · ') || 'No passes yet';
   } else {
     myPassedSub.textContent = 'Sign in to track your progress';
   }
 
   inProgEl.textContent = myInProg;
   if (inProgSub) {
-    inProgSub.innerHTML = `<span style="color:#d97706;font-weight:600;">QA</span> ${envInProg.qa} · <span style="color:#d97706;font-weight:600;">UAT</span> ${envInProg.uat} · <span style="color:#d97706;font-weight:600;">Prod</span> ${envInProg.prod}`;
+    inProgSub.innerHTML = envs.filter(e => envInProg[e] > 0 || envCounts[e] > 0).map(e =>
+      `<span style="color:#d97706;font-weight:600;">${envShort[e] || e}</span> ${envInProg[e]}`
+    ).join(' · ') || 'Nothing in progress';
   }
 
   // Issues logged per env
@@ -5047,7 +5546,10 @@ function updateDashboardStats() {
   if (issues.length === 0) {
     issuesSubEl.textContent = 'No issues yet';
   } else {
-    issuesSubEl.innerHTML = `<span style="color:#dc2626;font-weight:600;">QA</span> ${envIssues.qa} · <span style="color:#dc2626;font-weight:600;">UAT</span> ${envIssues.uat} · <span style="color:#dc2626;font-weight:600;">Prod</span> ${envIssues.prod} <span style="color:var(--text-muted);">· ${openCount} open</span>`;
+    const envBreakdown = envs.filter(e => envIssues[e] > 0).map(e =>
+      `<span style="color:#dc2626;font-weight:600;">${envShort[e] || e}</span> ${envIssues[e]}`
+    ).join(' · ');
+    issuesSubEl.innerHTML = `${envBreakdown}${envBreakdown ? ' ' : ''}<span style="color:var(--text-muted);">· ${openCount} open</span>`;
   }
 
   // Progress by Persona — uses my own results across all envs
@@ -5083,8 +5585,8 @@ function updateDashboardStats() {
   // Per-Environment Progress card
   const envProgressEl = document.getElementById('dash-env-progress');
   if (envProgressEl) {
-    const envLabels = { qa: 'DTC QA', uat: 'DTC UAT', prod: 'Production' };
-    const envEmojis = { qa: '🧪', uat: '🔍', prod: '🚀' };
+    const envLabels = { qa: 'DTC QA', uat: 'DTC UAT', prod: 'Production', dotdev: 'DOT Dev', dotqa: 'DOT QA', dotuat: 'DOT UAT' };
+    const envEmojis = { qa: '🧪', uat: '🔍', prod: '🚀', dotdev: '🔷', dotqa: '🔶', dotuat: '🟢' };
     envProgressEl.innerHTML = envs.map(env => {
       const total = envCounts[env];
       const passed = envPassed[env];
@@ -5809,10 +6311,10 @@ function showPersonaInEnv(envKey, personaId, btn) {
 }
 
 // ════════════════════════════════════════════════
-// INIT — build all step cards across all 3 environments
+// INIT — build all step cards across all 6 environments
 // ════════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded', () => {
-  const ENVS = ['qa', 'uat', 'prod'];
+  const ENVS = ['qa', 'uat', 'prod', 'dotdev', 'dotqa', 'dotuat'];
   const PERSONA_DATA = {
     'nofo-dev': nofoDev,
     'program-office': programOffice,
