@@ -1514,16 +1514,6 @@
     <button class="nav-item" onclick="showView('overview-all', this)">
       <span class="nav-icon">📊</span> E2E Overview (All Environments)
     </button>
-    <button class="nav-item" onclick="showView('e2e-qa', this)">
-      <span class="nav-icon" style="color:#f59e0b;">🟡</span> DTC QA
-    </button>
-    <button class="nav-item" onclick="showView('e2e-uat', this)">
-      <span class="nav-icon" style="color:#3b82f6;">🔵</span> DTC UAT
-    </button>
-    <button class="nav-item" onclick="showView('e2e-prod', this)">
-      <span class="nav-icon" style="color:#8b5cf6;">🟣</span> Production
-      <span class="nav-badge" style="background:#ef4444;">NEW</span>
-    </button>
     <button class="nav-item" onclick="showView('e2e-dotdev', this)">
       <span class="nav-icon" style="color:#06b6d4;">🔷</span> DOT Dev
     </button>
@@ -1532,6 +1522,15 @@
     </button>
     <button class="nav-item" onclick="showView('e2e-dotuat', this)">
       <span class="nav-icon" style="color:#10b981;">🟢</span> DOT UAT
+    </button>
+    <button class="nav-item" onclick="showView('e2e-qa', this)">
+      <span class="nav-icon" style="color:#f59e0b;">🟡</span> DTC QA
+    </button>
+    <button class="nav-item" onclick="showView('e2e-uat', this)">
+      <span class="nav-icon" style="color:#3b82f6;">🔵</span> DTC UAT
+    </button>
+    <button class="nav-item" onclick="showView('e2e-prod', this)">
+      <span class="nav-icon" style="color:#8b5cf6;">🟣</span> Production
     </button>
     <button class="nav-item admin-only" onclick="showView('admin-view', this)" style="display:none;">
       <span class="nav-icon">👑</span> Admin View
@@ -1743,57 +1742,6 @@
       </div>
 
       <div class="overall-grid">
-        <div class="overall-env-card" data-env="qa">
-          <div class="overall-env-card-title">
-            <span><span style="color:#f59e0b;">🟡</span> DTC QA</span>
-            <span class="env-pct" data-stat="pct">0%</span>
-          </div>
-          <div style="font-size:11.5px;color:var(--text-secondary);margin-bottom:10px;">Sandbox/QA environment used by the system integrator and developers for regression and feature verification. <strong>Run tests here first.</strong></div>
-          <div class="overall-stats">
-            <div class="overall-stat"><div class="overall-stat-label">Total</div><div class="overall-stat-value" data-stat="total">0</div></div>
-            <div class="overall-stat is-passed"><div class="overall-stat-label">Passed</div><div class="overall-stat-value" data-stat="passed">0</div></div>
-            <div class="overall-stat is-failed"><div class="overall-stat-label">Failed</div><div class="overall-stat-value" data-stat="failed">0</div></div>
-            <div class="overall-stat is-inconc"><div class="overall-stat-label">Inconc.</div><div class="overall-stat-value" data-stat="inconc">0</div></div>
-            <div class="overall-stat"><div class="overall-stat-label">Pending</div><div class="overall-stat-value" data-stat="pending">0</div></div>
-            <div class="overall-stat"><div class="overall-stat-label">Signed</div><div class="overall-stat-value" data-stat="signedOff">0</div></div>
-          </div>
-          <div class="overall-progress-bar"><div class="overall-progress-bar-fill"></div></div>
-          <button class="topbar-btn" style="margin-top:10px;width:100%;justify-content:center;" onclick="showView('e2e-qa', document.querySelector('[onclick*=\'e2e-qa\']'))">Open DTC QA →</button>
-        </div>
-        <div class="overall-env-card" data-env="uat">
-          <div class="overall-env-card-title">
-            <span><span style="color:#3b82f6;">🔵</span> DTC UAT</span>
-            <span class="env-pct" data-stat="pct">0%</span>
-          </div>
-          <div style="font-size:11.5px;color:var(--text-secondary);margin-bottom:10px;">DTC business user acceptance testing environment. Personas execute the same scripts as in QA to validate business workflows. <strong>Run tests here second.</strong></div>
-          <div class="overall-stats">
-            <div class="overall-stat"><div class="overall-stat-label">Total</div><div class="overall-stat-value" data-stat="total">0</div></div>
-            <div class="overall-stat is-passed"><div class="overall-stat-label">Passed</div><div class="overall-stat-value" data-stat="passed">0</div></div>
-            <div class="overall-stat is-failed"><div class="overall-stat-label">Failed</div><div class="overall-stat-value" data-stat="failed">0</div></div>
-            <div class="overall-stat is-inconc"><div class="overall-stat-label">Inconc.</div><div class="overall-stat-value" data-stat="inconc">0</div></div>
-            <div class="overall-stat"><div class="overall-stat-label">Pending</div><div class="overall-stat-value" data-stat="pending">0</div></div>
-            <div class="overall-stat"><div class="overall-stat-label">Signed</div><div class="overall-stat-value" data-stat="signedOff">0</div></div>
-          </div>
-          <div class="overall-progress-bar"><div class="overall-progress-bar-fill"></div></div>
-          <button class="topbar-btn" style="margin-top:10px;width:100%;justify-content:center;" onclick="showView('e2e-uat', document.querySelector('[onclick*=\'e2e-uat\']'))">Open DTC UAT →</button>
-        </div>
-        <div class="overall-env-card" data-env="prod">
-          <div class="overall-env-card-title">
-            <span><span style="color:#8b5cf6;">🟣</span> Production</span>
-            <span class="env-pct" data-stat="pct">0%</span>
-          </div>
-          <div style="font-size:11.5px;color:var(--text-secondary);margin-bottom:10px;">Live Production environment. Smoke/verification testing post-deployment. <strong>Run tests here last to confirm parity with UAT.</strong></div>
-          <div class="overall-stats">
-            <div class="overall-stat"><div class="overall-stat-label">Total</div><div class="overall-stat-value" data-stat="total">0</div></div>
-            <div class="overall-stat is-passed"><div class="overall-stat-label">Passed</div><div class="overall-stat-value" data-stat="passed">0</div></div>
-            <div class="overall-stat is-failed"><div class="overall-stat-label">Failed</div><div class="overall-stat-value" data-stat="failed">0</div></div>
-            <div class="overall-stat is-inconc"><div class="overall-stat-label">Inconc.</div><div class="overall-stat-value" data-stat="inconc">0</div></div>
-            <div class="overall-stat"><div class="overall-stat-label">Pending</div><div class="overall-stat-value" data-stat="pending">0</div></div>
-            <div class="overall-stat"><div class="overall-stat-label">Signed</div><div class="overall-stat-value" data-stat="signedOff">0</div></div>
-          </div>
-          <div class="overall-progress-bar"><div class="overall-progress-bar-fill"></div></div>
-          <button class="topbar-btn" style="margin-top:10px;width:100%;justify-content:center;" onclick="showView('e2e-prod', document.querySelector('[onclick*=\'e2e-prod\']'))">Open Production →</button>
-        </div>
         <div class="overall-env-card" data-env="dotdev">
           <div class="overall-env-card-title">
             <span><span style="color:#06b6d4;">🔷</span> DOT Dev</span>
@@ -1845,7 +1793,57 @@
           <div class="overall-progress-bar"><div class="overall-progress-bar-fill"></div></div>
           <button class="topbar-btn" style="margin-top:10px;width:100%;justify-content:center;" onclick="showView('e2e-dotuat', document.querySelector('[onclick*=\'e2e-dotuat\']'))">Open DOT UAT →</button>
         </div>
-      </div>
+        <div class="overall-env-card" data-env="qa">
+          <div class="overall-env-card-title">
+            <span><span style="color:#f59e0b;">🟡</span> DTC QA</span>
+            <span class="env-pct" data-stat="pct">0%</span>
+          </div>
+          <div style="font-size:11.5px;color:var(--text-secondary);margin-bottom:10px;">Sandbox/QA environment used by the system integrator and developers for regression and feature verification. <strong>Run tests here first.</strong></div>
+          <div class="overall-stats">
+            <div class="overall-stat"><div class="overall-stat-label">Total</div><div class="overall-stat-value" data-stat="total">0</div></div>
+            <div class="overall-stat is-passed"><div class="overall-stat-label">Passed</div><div class="overall-stat-value" data-stat="passed">0</div></div>
+            <div class="overall-stat is-failed"><div class="overall-stat-label">Failed</div><div class="overall-stat-value" data-stat="failed">0</div></div>
+            <div class="overall-stat is-inconc"><div class="overall-stat-label">Inconc.</div><div class="overall-stat-value" data-stat="inconc">0</div></div>
+            <div class="overall-stat"><div class="overall-stat-label">Pending</div><div class="overall-stat-value" data-stat="pending">0</div></div>
+            <div class="overall-stat"><div class="overall-stat-label">Signed</div><div class="overall-stat-value" data-stat="signedOff">0</div></div>
+          </div>
+          <div class="overall-progress-bar"><div class="overall-progress-bar-fill"></div></div>
+          <button class="topbar-btn" style="margin-top:10px;width:100%;justify-content:center;" onclick="showView('e2e-qa', document.querySelector('[onclick*=\'e2e-qa\']'))">Open DTC QA →</button>
+        </div>
+        <div class="overall-env-card" data-env="uat">
+          <div class="overall-env-card-title">
+            <span><span style="color:#3b82f6;">🔵</span> DTC UAT</span>
+            <span class="env-pct" data-stat="pct">0%</span>
+          </div>
+          <div style="font-size:11.5px;color:var(--text-secondary);margin-bottom:10px;">DTC business user acceptance testing environment. Personas execute the same scripts as in QA to validate business workflows. <strong>Run tests here second.</strong></div>
+          <div class="overall-stats">
+            <div class="overall-stat"><div class="overall-stat-label">Total</div><div class="overall-stat-value" data-stat="total">0</div></div>
+            <div class="overall-stat is-passed"><div class="overall-stat-label">Passed</div><div class="overall-stat-value" data-stat="passed">0</div></div>
+            <div class="overall-stat is-failed"><div class="overall-stat-label">Failed</div><div class="overall-stat-value" data-stat="failed">0</div></div>
+            <div class="overall-stat is-inconc"><div class="overall-stat-label">Inconc.</div><div class="overall-stat-value" data-stat="inconc">0</div></div>
+            <div class="overall-stat"><div class="overall-stat-label">Pending</div><div class="overall-stat-value" data-stat="pending">0</div></div>
+            <div class="overall-stat"><div class="overall-stat-label">Signed</div><div class="overall-stat-value" data-stat="signedOff">0</div></div>
+          </div>
+          <div class="overall-progress-bar"><div class="overall-progress-bar-fill"></div></div>
+          <button class="topbar-btn" style="margin-top:10px;width:100%;justify-content:center;" onclick="showView('e2e-uat', document.querySelector('[onclick*=\'e2e-uat\']'))">Open DTC UAT →</button>
+        </div>
+        <div class="overall-env-card" data-env="prod">
+          <div class="overall-env-card-title">
+            <span><span style="color:#8b5cf6;">🟣</span> Production</span>
+            <span class="env-pct" data-stat="pct">0%</span>
+          </div>
+          <div style="font-size:11.5px;color:var(--text-secondary);margin-bottom:10px;">Live Production environment. Smoke/verification testing post-deployment. <strong>Run tests here last to confirm parity with UAT.</strong></div>
+          <div class="overall-stats">
+            <div class="overall-stat"><div class="overall-stat-label">Total</div><div class="overall-stat-value" data-stat="total">0</div></div>
+            <div class="overall-stat is-passed"><div class="overall-stat-label">Passed</div><div class="overall-stat-value" data-stat="passed">0</div></div>
+            <div class="overall-stat is-failed"><div class="overall-stat-label">Failed</div><div class="overall-stat-value" data-stat="failed">0</div></div>
+            <div class="overall-stat is-inconc"><div class="overall-stat-label">Inconc.</div><div class="overall-stat-value" data-stat="inconc">0</div></div>
+            <div class="overall-stat"><div class="overall-stat-label">Pending</div><div class="overall-stat-value" data-stat="pending">0</div></div>
+            <div class="overall-stat"><div class="overall-stat-label">Signed</div><div class="overall-stat-value" data-stat="signedOff">0</div></div>
+          </div>
+          <div class="overall-progress-bar"><div class="overall-progress-bar-fill"></div></div>
+          <button class="topbar-btn" style="margin-top:10px;width:100%;justify-content:center;" onclick="showView('e2e-prod', document.querySelector('[onclick*=\'e2e-prod\']'))">Open Production →</button>
+        </div></div>
 
       <!-- Grand totals row -->
       <div class="overall-grand-row">
@@ -3034,7 +3032,7 @@ function toggleStep(el) {
 // ════════════════════════════════════════════════
 // RESULT LOGGING — environment-scoped (each env has its own copy of every test card)
 // ════════════════════════════════════════════════
-const ENV_LABELS = { qa: 'DTC QA', uat: 'DTC UAT', prod: 'Production', dotdev: 'DOT Dev', dotqa: 'DOT QA', dotuat: 'DOT UAT' };
+const ENV_LABELS = { dotdev: 'DOT Dev', dotqa: 'DOT QA', dotuat: 'DOT UAT', qa: 'DTC QA', uat: 'DTC UAT', prod: 'Production' };
 const PERSONA_NAMES = {
   'nofo-dev': '📝 NOFO Dev Team',
   'program-office': '🏢 Program Office',
@@ -5489,8 +5487,8 @@ function updateDashboardStats() {
 
   // Short labels for the dashboard pills (compact)
   const envShort = {
-    qa: 'DTC QA', uat: 'DTC UAT', prod: 'Prod',
-    dotdev: 'DOT Dev', dotqa: 'DOT QA', dotuat: 'DOT UAT'
+    dotdev: 'DOT Dev', dotqa: 'DOT QA', dotuat: 'DOT UAT',
+    qa: 'DTC QA', uat: 'DTC UAT', prod: 'Prod'
   };
 
   // Count cards per env from DOM
@@ -5585,8 +5583,8 @@ function updateDashboardStats() {
   // Per-Environment Progress card
   const envProgressEl = document.getElementById('dash-env-progress');
   if (envProgressEl) {
-    const envLabels = { qa: 'DTC QA', uat: 'DTC UAT', prod: 'Production', dotdev: 'DOT Dev', dotqa: 'DOT QA', dotuat: 'DOT UAT' };
-    const envEmojis = { qa: '🧪', uat: '🔍', prod: '🚀', dotdev: '🔷', dotqa: '🔶', dotuat: '🟢' };
+    const envLabels = { dotdev: 'DOT Dev', dotqa: 'DOT QA', dotuat: 'DOT UAT', qa: 'DTC QA', uat: 'DTC UAT', prod: 'Production' };
+    const envEmojis = { dotdev: '🔷', dotqa: '🔶', dotuat: '🟢', qa: '🧪', uat: '🔍', prod: '🚀' };
     envProgressEl.innerHTML = envs.map(env => {
       const total = envCounts[env];
       const passed = envPassed[env];
@@ -6314,7 +6312,7 @@ function showPersonaInEnv(envKey, personaId, btn) {
 // INIT — build all step cards across all 6 environments
 // ════════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded', () => {
-  const ENVS = ['qa', 'uat', 'prod', 'dotdev', 'dotqa', 'dotuat'];
+  const ENVS = ['dotdev', 'dotqa', 'dotuat', 'qa', 'uat', 'prod'];
   const PERSONA_DATA = {
     'nofo-dev': nofoDev,
     'program-office': programOffice,
