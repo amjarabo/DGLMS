@@ -5485,11 +5485,27 @@ function updateDashboardStats() {
   const envIssues = {};
   envs.forEach(e => { envCounts[e] = 0; envPassed[e] = 0; envInProg[e] = 0; envIssues[e] = 0; });
 
-  // Short labels for the dashboard pills (compact)
-  const envShort = {
-    dotdev: 'DOT Dev', dotqa: 'DOT QA', dotuat: 'DOT UAT',
-    qa: 'DTC QA', uat: 'DTC UAT', prod: 'Prod'
+  // Short labels for the dashboard pills (compact — no group prefix, that's added by group label)
+  const envShortNoGroup = {
+    dotdev: 'Dev', dotqa: 'QA', dotuat: 'UAT',
+    qa: 'QA', uat: 'UAT', prod: 'Prod'
   };
+  const dotEnvs = ['dotdev', 'dotqa', 'dotuat'];
+  const dtcEnvs = ['qa', 'uat', 'prod'];
+
+  // Helper — render grouped pill breakdown for a stat card subtitle
+  // color = pill text color; data = object keyed by env, returning the count for that env
+  function renderGrouped(color, data) {
+    const renderGroup = (groupName, groupEnvs, groupColor) => {
+      const items = groupEnvs.map(e => 
+        `<span style="color:${color};font-weight:600;white-space:nowrap;">${envShortNoGroup[e]}</span> <span style="font-family:'DM Mono',monospace;">${data[e]}</span>`
+      ).join(' · ');
+      return `<span style="color:${groupColor};font-weight:700;font-size:10.5px;letter-spacing:0.4px;margin-right:5px;">${groupName}</span>${items}`;
+    };
+    const dotPart = renderGroup('DOT', dotEnvs, 'var(--text-muted)');
+    const dtcPart = renderGroup('DTC', dtcEnvs, 'var(--text-muted)');
+    return `<span style="display:inline-flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;">${dotPart}<span style="color:var(--border);">|</span>${dtcPart}</span>`;
+  }
 
   // Count cards per env from DOM
   envs.forEach(env => {
@@ -5498,9 +5514,7 @@ function updateDashboardStats() {
   const totalCount = envs.reduce((s, e) => s + envCounts[e], 0);
   totalCardsEl.textContent = totalCount;
   if (totalSubEl) {
-    totalSubEl.innerHTML = envs.filter(e => envCounts[e] > 0).map(e =>
-      `<span style="color:var(--blue-700);font-weight:600;">${envShort[e] || e}</span> ${envCounts[e]}`
-    ).join(' · ');
+    totalSubEl.innerHTML = renderGrouped('var(--blue-700)', envCounts);
   }
 
   // My passed / in-progress per env
@@ -5520,18 +5534,14 @@ function updateDashboardStats() {
   });
   myPassedEl.textContent = myPassed;
   if (myEmail) {
-    myPassedSub.innerHTML = envs.filter(e => envPassed[e] > 0 || envCounts[e] > 0).map(e =>
-      `<span style="color:#16a34a;font-weight:600;">${envShort[e] || e}</span> ${envPassed[e]}`
-    ).join(' · ') || 'No passes yet';
+    myPassedSub.innerHTML = renderGrouped('#16a34a', envPassed);
   } else {
     myPassedSub.textContent = 'Sign in to track your progress';
   }
 
   inProgEl.textContent = myInProg;
   if (inProgSub) {
-    inProgSub.innerHTML = envs.filter(e => envInProg[e] > 0 || envCounts[e] > 0).map(e =>
-      `<span style="color:#d97706;font-weight:600;">${envShort[e] || e}</span> ${envInProg[e]}`
-    ).join(' · ') || 'Nothing in progress';
+    inProgSub.innerHTML = renderGrouped('#d97706', envInProg);
   }
 
   // Issues logged per env
@@ -5544,10 +5554,7 @@ function updateDashboardStats() {
   if (issues.length === 0) {
     issuesSubEl.textContent = 'No issues yet';
   } else {
-    const envBreakdown = envs.filter(e => envIssues[e] > 0).map(e =>
-      `<span style="color:#dc2626;font-weight:600;">${envShort[e] || e}</span> ${envIssues[e]}`
-    ).join(' · ');
-    issuesSubEl.innerHTML = `${envBreakdown}${envBreakdown ? ' ' : ''}<span style="color:var(--text-muted);">· ${openCount} open</span>`;
+    issuesSubEl.innerHTML = renderGrouped('#dc2626', envIssues) + ` <span style="color:var(--text-muted);margin-left:6px;">· ${openCount} open</span>`;
   }
 
   // Progress by Persona — uses my own results across all envs
