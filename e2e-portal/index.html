@@ -6056,6 +6056,12 @@ const programOffice = [
     expected:`<ol><li>User Can:</li><li>Navigate to the Application</li><li>Click the 'New' button record.</li><li>All of the fields display under certain sections of the page layout</li><li>These fields will automatically be populated with information as Application are retrieved and created in the system</li></ol>`,
     negative:`<ol><li>Program Office users have no access to the Application Form  and cannot access the 'New' button</li></ol>`
   },
+  { tc:`265`, uid:`265`, type:`Functional`, story:`GRAN-265`, title:`Account - COI/NDA Checkbox and Upload`,
+    prerequisites:`<ol><li>Program office User has access to read the account.</li></ol>`,
+    instructions:`<ol><li>Program Office User Navigates to the Account record.</li><li>Select the COI/NDA Updates button</li><li>User check check off users with the COI/NDA checkbox.</li><li>User Uploads the COI/NDA Upload</li></ol>`,
+    expected:`<ol><li>Users can see the checkboxes updated in the Account Team</li><li>User can see the Files in the Account Related Files area.</li></ol>`,
+    negative:`<ol><li>User does not have access to COI/NDA button</li><li>Completing the flow does not update the user checkbox.</li></ol>`
+  },
   { tc:`225`, uid:`225`, type:`Functional`, story:`GRAN-225`, title:`Retrieve Applications Button - Application Intake (Grants.gov into GrantLens)`,
     prerequisites:`<ol><li>Program Office user test account available.</li><li>Funding Opportunity record exists in a 'Published' status</li></ol>`,
     instructions:`<ol><li>Log in as Program Office User.</li><li>Open a Funding Opportunity with Status = Published.</li><li>Click Retrieve Applications button</li><li>Pop-up displays with the following text: 'Retrieval has been initiated for Funding Opportunity', click the 'Finish' button</li><li>Click the 'Related' tab</li><li>Application records will be generated under the 'Application Forms' section</li></ol>`,
@@ -6205,12 +6211,6 @@ const programOffice = [
     instructions:`<ol><li>Select Nofity Applicants button on the right hand side of the page.</li><li>Users will be presented with a table showing all applications that have been selected for award. User can select Next.</li><li>Pre-determined DOT email inbox will act as sender of outbound communications</li><li>Users will be presented with a subject line and email template to update and select Next.</li><li>Users can submit and it will send the Notification to each Applicant. User is presented with a Success Message.</li></ol>`,
     expected:`<ol><li>Users will have succesfully notified applicants via email that were in a status of selected for award.</li></ol>`,
     negative:`<ol><li>Program office does not have access to the "Notifiy Applicants" Button when status is in "Award Selections Approved by S1".</li><li>Program office has access to the button in other status options.</li><li>Notify Applicants button does nothing.</li></ol>`
-  },
-  { tc:`265`, uid:`265`, type:`Functional`, story:`GRAN-265`, title:`Account - COI/NDA Checkbox and Upload`,
-    prerequisites:`<ol><li>Program office User has access to read the account.</li></ol>`,
-    instructions:`<ol><li>Program Office User Navigates to the Account record.</li><li>Select the COI/NDA Updates button</li><li>User check check off users with the COI/NDA checkbox.</li><li>User Uploads the COI/NDA Upload</li></ol>`,
-    expected:`<ol><li>Users can see the checkboxes updated in the Account Team</li><li>User can see the Files in the Account Related Files area.</li></ol>`,
-    negative:`<ol><li>User does not have access to COI/NDA button</li><li>Completing the flow does not update the user checkbox.</li></ol>`
   }
 ];
 
