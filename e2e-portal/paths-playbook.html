@@ -1,0 +1,1693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DGLMS Test Paths Playbook — Admin Reference</title>
+<style>
+:root{
+  --bg:#f6f8fa;--surface:#fff;--border:#d0d7de;--border2:#e1e4e8;
+  --text:#1f2328;--muted:#656d76;--muted2:#8c959f;
+  --accent:#0969da;--accent-bg:#ddf4ff;
+  --happy:#1a7f37;--happy-bg:#dafbe1;--happy-border:#2da44e;
+  --sad:#9a6700;--sad-bg:#fff8c5;--sad-border:#d4a72c;
+  --neg:#cf222e;--neg-bg:#ffebe9;--neg-border:#fa897b;
+  --p-po:#0550ae;--p-po-bg:#ddf4ff;
+  --p-rev:#1a7f37;--p-rev-bg:#dafbe1;
+  --p-ost:#9a6700;--p-ost-bg:#fff8c5;
+  --p-nofo:#cf4a14;--p-nofo-bg:#fff0eb;
+  --p-go:#0e7490;--p-go-bg:#cffafe;
+  --p-legal:#7c2d12;--p-legal-bg:#fef3c7;
+  --p-cfo:#166534;--p-cfo-bg:#dcfce7;
+  --p-oal:#3730a3;--p-oal-bg:#e0e7ff;
+  --p-das:#9f1239;--p-das-bg:#ffe4e6;
+  --p-s1:#581c87;--p-s1-bg:#f3e8ff;
+  --p-app:#8250df;--p-app-bg:#f5f0ff;
+  --p-sys:#0550ae;--p-sys-bg:#e6f0ff;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:'Inter','Segoe UI',-apple-system,sans-serif;font-size:14px;line-height:1.55;color:var(--text);background:var(--bg)}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+code{font-family:'JetBrains Mono','Consolas',monospace;font-size:12.5px;background:rgba(175,184,193,0.2);padding:1px 5px;border-radius:3px;color:#1a1f24}
+.wrap{max-width:1200px;margin:0 auto;padding:0 24px 60px}
+
+/* ── Header ── */
+header{background:#0d1117;color:#e6edf3;padding:36px 24px 28px;border-bottom:1px solid #30363d;position:relative}
+.hdr-inner{max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap}
+.hdr-text h1{margin:0 0 4px;font-size:26px;font-weight:700;letter-spacing:-0.02em}
+.hdr-text .crumbs{font-family:'JetBrains Mono',monospace;font-size:10px;color:#8b949e;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px}
+.hdr-text .desc{color:#8b949e;font-size:13px;margin:0}
+.hdr-back{font-family:'JetBrains Mono',monospace;font-size:11px;color:#8b949e;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);padding:5px 12px;border-radius:5px;cursor:pointer;text-decoration:none;transition:all .15s;align-self:flex-start}
+.hdr-back:hover{color:#fff;background:rgba(255,255,255,.15);text-decoration:none}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.chip{font-family:'JetBrains Mono',monospace;font-size:10px;padding:4px 10px;border-radius:3px;font-weight:600;background:rgba(255,255,255,.06);color:#8b949e;border:1px solid rgba(255,255,255,.12)}
+.chip strong{color:#e6edf3}
+
+/* ── Admin badge ── */
+.admin-badge{position:absolute;top:18px;right:24px;background:#cf222e;color:#fff;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;padding:4px 10px;border-radius:3px;letter-spacing:1px;text-transform:uppercase}
+
+/* ── Top nav ── */
+.top-nav{background:#fff;border-bottom:1px solid var(--border);padding:8px 24px;position:sticky;top:0;z-index:50;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+.top-nav-inner{max-width:1200px;margin:0 auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap;overflow-x:auto}
+.top-nav-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding-right:8px;flex-shrink:0}
+.nav-btn{font-family:'Inter',sans-serif;font-size:12px;font-weight:600;background:#f6f8fa;color:var(--text);border:1px solid var(--border);padding:6px 12px;border-radius:5px;cursor:pointer;white-space:nowrap;transition:all .15s}
+.nav-btn:hover{background:var(--accent-bg);border-color:var(--accent);color:var(--accent)}
+.nav-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* ── Intro / protocol section ── */
+.protocol{background:var(--surface);border:1px solid var(--border);border-radius:8px;margin:24px 0;overflow:hidden}
+.protocol-head{background:#f6f8fa;border-bottom:1px solid var(--border);padding:12px 20px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.protocol-body{padding:18px 20px}
+.protocol-body p{margin:0 0 10px}
+.protocol-body p:last-child{margin-bottom:0}
+.path-legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:16px}
+.path-legend-card{padding:10px 14px;border-radius:6px;border-left:4px solid;background:#fafbfc}
+.path-legend-card.happy{border-color:var(--happy);background:var(--happy-bg)}
+.path-legend-card.sad{border-color:var(--sad);background:var(--sad-bg)}
+.path-legend-card.neg{border-color:var(--neg);background:var(--neg-bg)}
+.path-legend-card .lbl{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:4px}
+.path-legend-card.happy .lbl{color:var(--happy)}
+.path-legend-card.sad .lbl{color:var(--sad)}
+.path-legend-card.neg .lbl{color:var(--neg)}
+
+/* ── Process section ── */
+.process{margin-bottom:32px;background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;scroll-margin-top:80px}
+.process-head{background:linear-gradient(180deg,#fafbfc,#f6f8fa);border-bottom:1px solid var(--border);padding:18px 22px}
+.process-num{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);font-weight:600;letter-spacing:1.5px;text-transform:uppercase}
+.process-title{font-size:20px;font-weight:700;margin:4px 0 2px;color:var(--text)}
+.process-summary{color:var(--muted);font-size:13px;margin:6px 0 0}
+
+/* Personas involved */
+.personas-row{padding:12px 22px;border-bottom:1px solid var(--border);background:#fafbfc;font-size:12px}
+.personas-row strong{color:var(--text);font-size:11px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-right:8px}
+.persona-pill{display:inline-block;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:600;margin-right:4px;margin-bottom:4px}
+
+/* Path block */
+.path-block{padding:18px 22px;border-bottom:1px solid var(--border)}
+.path-block:last-child{border-bottom:none}
+.path-block.happy{background:linear-gradient(90deg,var(--happy-bg) 0%,#fff 60%)}
+.path-block.sad{background:linear-gradient(90deg,var(--sad-bg) 0%,#fff 60%)}
+.path-block.neg{background:linear-gradient(90deg,var(--neg-bg) 0%,#fff 60%)}
+.path-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.path-tag{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border-radius:3px;color:#fff}
+.path-tag.happy{background:var(--happy)}
+.path-tag.sad{background:var(--sad);color:#1a1f24}
+.path-tag.neg{background:var(--neg)}
+.path-title{font-weight:600;font-size:14.5px}
+.path-meta{font-size:11.5px;color:var(--muted);margin-bottom:8px}
+.path-meta strong{color:var(--text)}
+
+.field-grid{display:grid;grid-template-columns:120px 1fr;gap:10px 16px;margin:10px 0;font-size:13px}
+.field-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;padding-top:2px}
+.field-value{color:var(--text)}
+.field-value ol,.field-value ul{margin:0;padding-left:20px}
+.field-value li{margin-bottom:4px}
+.field-value li ol,.field-value li ul{margin-top:4px}
+
+.expect-row{margin-top:10px;padding:10px 12px;background:rgba(255,255,255,0.7);border-radius:5px;border-left:3px solid;font-size:12.5px}
+.path-block.happy .expect-row{border-left-color:var(--happy)}
+.path-block.sad .expect-row{border-left-color:var(--sad)}
+.path-block.neg .expect-row{border-left-color:var(--neg)}
+.expect-row strong{font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;display:inline-block;margin-right:6px}
+
+/* Footer */
+footer{padding:30px 0 50px;text-align:center;color:var(--muted);font-size:11px}
+footer code{font-size:10.5px}
+
+/* ── Path-type tabs ── */
+.path-type-tabs{background:#fff;border-bottom:1px solid var(--border);padding:0;position:sticky;top:0;z-index:60;display:flex;align-items:center;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.ptt-inner{max-width:1200px;margin:0 auto;width:100%;display:flex;align-items:center;padding:0 24px;flex-wrap:wrap}
+.ptt-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;padding-right:12px}
+.ptt-btns{display:flex;gap:0;flex-wrap:wrap}
+.ptt-btn{font-family:'Inter',sans-serif;font-size:13px;font-weight:600;background:transparent;color:var(--muted);border:none;border-bottom:3px solid transparent;padding:12px 16px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.ptt-btn:hover{color:var(--text);background:#fafbfc}
+.ptt-btn.active{color:var(--text);border-bottom-color:var(--accent);background:#f6faff}
+.ptt-btn[data-type="happy"].active{border-bottom-color:var(--happy);background:var(--happy-bg)}
+.ptt-btn[data-type="sad"].active{border-bottom-color:var(--sad);background:var(--sad-bg)}
+.ptt-btn[data-type="neg"].active{border-bottom-color:var(--neg);background:var(--neg-bg)}
+.ptt-btn .count{font-family:'JetBrains Mono',monospace;font-size:10px;background:rgba(0,0,0,0.06);padding:2px 6px;border-radius:3px;color:var(--muted)}
+.ptt-btn.active .count{background:rgba(0,0,0,0.1)}
+
+/* Process-level controls */
+.process-controls{padding:10px 22px;background:#fafbfc;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:12px}
+.process-progress{font-family:'JetBrains Mono',monospace;color:var(--muted);font-size:11px}
+.process-progress strong{color:var(--text)}
+.process-progress .progress-bar{display:inline-block;width:80px;height:6px;background:#e1e4e8;border-radius:3px;margin-left:8px;vertical-align:middle;overflow:hidden}
+.process-progress .progress-fill{height:100%;background:var(--happy);width:0%;transition:width .25s}
+.btn-reset{font-family:'Inter',sans-serif;font-size:11px;font-weight:600;background:#fff;color:var(--muted);border:1px solid var(--border);padding:4px 10px;border-radius:4px;cursor:pointer;transition:all .15s}
+.btn-reset:hover{color:var(--neg);border-color:var(--neg);background:var(--neg-bg)}
+
+/* Path checkbox & completion */
+.path-block{position:relative;transition:opacity .15s}
+.path-block.path-hidden{display:none !important}
+.path-block.path-done{opacity:0.55}
+.path-block.path-done .path-title{text-decoration:line-through;text-decoration-color:rgba(0,0,0,0.3)}
+.path-checkbox{position:absolute;top:20px;right:22px;width:22px;height:22px;cursor:pointer;flex-shrink:0;accent-color:var(--happy)}
+.path-block.sad .path-checkbox{accent-color:var(--sad)}
+.path-block.neg .path-checkbox{accent-color:var(--neg)}
+.path-head{padding-right:42px}
+
+/* Tab sections (one visible at a time) */
+.tab-section{display:none;padding:0}
+.tab-section.active{display:block}
+.tab-section-header{padding:24px 24px 16px;border-bottom:1px solid var(--border);background:#fafbfc;margin-bottom:0}
+.tab-section-title{margin:0 0 4px;font-size:18px;font-weight:700;color:var(--text)}
+.tab-section-summary{margin:0;color:var(--muted);font-size:13px}
+
+/* Number prefix in path titles */
+.path-num-prefix{font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-right:6px}
+.path-block.happy .path-num-prefix{color:var(--happy)}
+.path-block.sad .path-num-prefix{color:var(--sad)}
+.path-block.neg .path-num-prefix{color:var(--neg)}
+
+/* Process tag (small label showing source process) */
+.path-process-tag{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;color:var(--muted);background:rgba(0,0,0,0.05);padding:2px 7px;border-radius:3px;margin-left:8px;letter-spacing:0.5px;text-transform:uppercase;vertical-align:middle;cursor:help}
+
+/* Per-tab progress in tab buttons */
+.ptt-progress{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);font-weight:600;margin-left:4px;padding-left:6px;border-left:1px solid rgba(0,0,0,0.1)}
+.ptt-btn.active .ptt-progress{color:inherit}
+
+/* No process-empty rule needed anymore */
+
+
+/* ── Item-level checkboxes (preconditions, steps, expected) ── */
+.field-value ol > li, .field-value ul > li {
+  position: relative;
+  padding-left: 28px;
+  list-style: none;
+  margin-bottom: 6px;
+}
+.field-value ol { counter-reset: item; padding-left: 0; }
+.field-value ol > li::before {
+  counter-increment: item;
+  content: counter(item) ".";
+  position: absolute;
+  left: 28px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+  margin-right: 6px;
+}
+.field-value ol > li > .item-content {
+  display: inline;
+  margin-left: 16px;
+}
+.field-value ul > li {
+  padding-left: 28px;
+}
+.field-value ul > li::before {
+  content: "•";
+  position: absolute;
+  left: 30px;
+  color: var(--muted);
+  font-weight: 700;
+}
+.field-value ul > li > .item-content {
+  display: inline;
+  margin-left: 12px;
+}
+
+/* The injected checkbox */
+.item-checkbox {
+  position: absolute;
+  left: 0;
+  top: 3px;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin: 0;
+  accent-color: var(--accent);
+}
+.path-block.happy .item-checkbox { accent-color: var(--happy); }
+.path-block.sad .item-checkbox { accent-color: var(--sad); }
+.path-block.neg .item-checkbox { accent-color: var(--neg); }
+
+/* Strikethrough completed items */
+.field-value li.item-done > .item-content {
+  text-decoration: line-through;
+  text-decoration-color: rgba(0,0,0,0.3);
+  opacity: 0.6;
+}
+.field-value li.item-done::before {
+  opacity: 0.4;
+}
+
+/* Sub-list (a, b, c) — preserve nested numbering */
+.field-value ol[style*="lower-alpha"] {
+  counter-reset: subitem;
+  margin-top: 4px;
+  padding-left: 16px;
+}
+.field-value ol[style*="lower-alpha"] > li::before {
+  counter-increment: subitem;
+  content: counter(subitem, lower-alpha) ".";
+}
+.field-value ol[style*="lower-alpha"] > li {
+  padding-left: 28px;
+}
+
+/* Per-path step counter inline with checkbox */
+.path-progress-mini {
+  position: absolute;
+  top: 26px;
+  right: 56px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  font-weight: 600;
+  background: rgba(0,0,0,0.05);
+  padding: 2px 7px;
+  border-radius: 3px;
+}
+.path-block.path-done .path-progress-mini {
+  background: rgba(0,0,0,0.08);
+  color: var(--text);
+}
+
+
+/* ── Run context bar (env + persona + tester selectors) ── */
+.run-context-bar{background:linear-gradient(180deg,#fafbfc,#f0f3f6);border-bottom:1px solid var(--border);padding:10px 24px;position:sticky;top:46px;z-index:55}
+.run-ctx-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.run-ctx-group{display:flex;flex-direction:column;gap:3px;min-width:0}
+.run-ctx-label{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:700}
+.run-ctx-select{font-family:'Inter',sans-serif;font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:4px;background:#fff;color:var(--text);min-width:140px;cursor:pointer}
+.run-ctx-select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(9,105,218,.15)}
+.run-ctx-status{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.conn-dot{width:7px;height:7px;border-radius:50%;background:var(--muted);display:inline-block}
+.conn-dot.online{background:var(--happy);box-shadow:0 0 6px rgba(26,127,55,0.5)}
+.conn-dot.offline{background:var(--neg)}
+
+/* ── Path action buttons (Mark Complete, Log Issue) ── */
+.path-actions{display:flex;gap:6px;margin-top:12px;padding-top:12px;border-top:1px dashed rgba(0,0,0,0.1)}
+.path-action-btn{font-family:'Inter',sans-serif;font-size:11px;font-weight:600;padding:5px 11px;border-radius:4px;border:1px solid var(--border);background:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .15s;color:var(--text)}
+.path-action-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
+.path-action-btn.primary{background:var(--happy);color:#fff;border-color:var(--happy)}
+.path-action-btn.primary:hover{background:#0e6e2e;color:#fff}
+.path-block.sad .path-action-btn.primary{background:var(--sad);color:#1a1f24;border-color:var(--sad)}
+.path-block.neg .path-action-btn.primary{background:var(--neg);color:#fff;border-color:var(--neg)}
+
+/* ── Modal ── */
+.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(13,17,23,.65);z-index:1000;align-items:center;justify-content:center;padding:20px}
+.modal-backdrop.open{display:flex}
+.modal-content{background:#fff;border-radius:8px;max-width:560px;width:100%;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+.modal-head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border)}
+.modal-head h3{margin:0;font-size:16px;font-weight:600}
+.modal-close{background:transparent;border:none;font-size:24px;color:var(--muted);cursor:pointer;line-height:1;padding:0 4px}
+.modal-close:hover{color:var(--text)}
+.modal-body{padding:18px 20px;overflow-y:auto;flex:1}
+.modal-field{margin-bottom:14px}
+.modal-field label{display:block;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;margin-bottom:5px}
+.modal-field input[type=text],.modal-field input[type=email],.modal-field input[type=date],.modal-field select,.modal-field textarea{width:100%;font-family:'Inter',sans-serif;font-size:13px;padding:7px 10px;border:1px solid var(--border);border-radius:4px;background:#fff;color:var(--text)}
+.modal-field input:focus,.modal-field select:focus,.modal-field textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(9,105,218,.15)}
+.modal-readonly{padding:7px 10px;background:#f6f8fa;border:1px solid var(--border2);border-radius:4px;font-size:13px;color:var(--text);min-height:34px}
+.modal-itemsummary{padding:10px 12px;background:#fafbfc;border-radius:4px;font-size:11.5px;color:var(--muted);font-family:'JetBrains Mono',monospace;border-left:3px solid var(--accent);margin-top:4px}
+.modal-foot{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+.nav-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.nav-btn.primary:hover{background:#0855b4;border-color:#0855b4;color:#fff}
+
+/* ── Runs table ── */
+.runs-toolbar{padding:14px 22px;background:#fafbfc;border-bottom:1px solid var(--border);display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.runs-filter-group{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.runs-filter-group select{font-family:'Inter',sans-serif;font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:4px;background:#fff}
+.runs-table-wrap{overflow-x:auto}
+.runs-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.runs-table thead{background:#f6f8fa;border-bottom:2px solid var(--border)}
+.runs-table th{text-align:left;padding:10px 12px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;font-weight:700}
+.runs-table tbody tr{border-bottom:1px solid var(--border2)}
+.runs-table tbody tr:hover{background:#fafbfc}
+.runs-table td{padding:10px 12px;vertical-align:top}
+.runs-table .run-result{display:inline-block;padding:2px 8px;border-radius:3px;font-size:10.5px;font-weight:700;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.3px}
+.run-result.passed{background:var(--happy-bg);color:var(--happy)}
+.run-result.passed_with_issues{background:var(--sad-bg);color:var(--sad)}
+.run-result.failed{background:var(--neg-bg);color:var(--neg)}
+.run-result.blocked{background:#e1e4e8;color:var(--muted)}
+.runs-empty{padding:40px;text-align:center;color:var(--muted);font-size:13px}
+
+/* Per-path actions area must clear the path-checkbox absolute positioning */
+.path-block .path-actions{margin-right:36px}
+
+/* Print */
+@media print {
+  .top-nav, .hdr-back { display:none !important }
+  body{background:#fff;font-size:11pt}
+  .process{break-inside:avoid;page-break-inside:avoid}
+  .path-block{break-inside:avoid}
+}
+
+/* Mobile */
+@media (max-width:700px){
+  .field-grid{grid-template-columns:1fr;gap:4px 0}
+  .field-label{padding-top:8px}
+  .top-nav-label{display:none}
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="admin-badge">🔒 Admin Reference</div>
+  <div class="hdr-inner">
+    <div class="hdr-text">
+      <div class="crumbs">DOT · DGLMS · GRANT LENS · ADMIN</div>
+      <h1>Test Paths Playbook</h1>
+      <p class="desc">Happy / Sad / Negative path scenarios for the major DGLMS workflows. Reference document for admins, BAs, and QA leads.</p>
+      <div class="chips">
+        <div class="chip">Scope: <strong>Multi-Environment</strong></div>
+        <div class="chip">🟢 Happy: <strong>6</strong></div>
+        <div class="chip">🟡 Sad: <strong>12</strong></div>
+        <div class="chip">🔴 Negative: <strong>11</strong></div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+      <div id="tester-chip-wrapper" style="display:none">
+        <span id="tester-chip" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.08);padding:5px 10px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#e6edf3;border:1px solid rgba(255,255,255,.15)">
+          <span id="tester-chip-avatar" style="width:18px;height:18px;border-radius:50%;background:#1f6feb;color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700">--</span>
+          <span id="tester-chip-email">not signed in</span>
+        </span>
+      </div>
+      <a class="hdr-back" onclick="window.close()">✕ Close Tab</a>
+    </div>
+  </div>
+</header>
+
+<nav class="top-nav">
+  <div class="top-nav-inner">
+    <span class="top-nav-label">Actions:</span>
+    <button class="nav-btn" onclick="resetAllPaths()" title="Clear all path checkboxes">↺ Reset All Progress</button>
+    <button class="nav-btn" onclick="window.print()" style="margin-left:auto">🖨 Print / PDF</button>
+  </div>
+</nav>
+
+<div class="run-context-bar" id="run-context-bar">
+  <div class="run-ctx-inner">
+    <div class="run-ctx-group">
+      <label class="run-ctx-label">Environment</label>
+      <select id="run-ctx-env" class="run-ctx-select">
+        <option value="">— Select —</option>
+        <option value="dotdev">🔷 DOT Dev</option>
+        <option value="dotqa">🔶 DOT QA</option>
+        <option value="dotuat">🟢 DOT UAT</option>
+        <option value="qa">🟡 DTC QA</option>
+        <option value="uat">🔵 DTC UAT</option>
+        <option value="prod">🟣 Production</option>
+      </select>
+    </div>
+    <div class="run-ctx-group">
+      <label class="run-ctx-label">Persona</label>
+      <select id="run-ctx-persona" class="run-ctx-select">
+        <option value="">— Select —</option>
+        <option value="po">Program Office</option>
+        <option value="rev">App Reviewer</option>
+        <option value="ost">OST Admin</option>
+        <option value="nofo">NOFO Dev Team</option>
+        <option value="go">Grant Office</option>
+        <option value="legal">OA Legal</option>
+        <option value="cfo">OA CFO</option>
+        <option value="oal">OA Leadership</option>
+        <option value="das">DAS</option>
+        <option value="s1">S1</option>
+        <option value="app">Applicant / External</option>
+        <option value="sys">Sys Admin / API</option>
+      </select>
+    </div>
+    <div class="run-ctx-group">
+      <label class="run-ctx-label">Tester Email</label>
+      <input type="email" id="run-ctx-email" class="run-ctx-select" placeholder="you@example.com" style="width:200px">
+    </div>
+    <div class="run-ctx-status" id="run-ctx-status">
+      <span id="run-ctx-conn-dot" class="conn-dot"></span>
+      <span id="run-ctx-conn-text">Checking sync…</span>
+    </div>
+  </div>
+</div>
+
+<div class="path-type-tabs" id="path-type-tabs">
+  <div class="ptt-inner">
+    <span class="ptt-label">Path type:</span>
+    <div class="ptt-btns">
+      <button class="ptt-btn active" data-type="happy" onclick="switchTab('happy')">🟢 Happy Paths <span class="count">6</span> <span class="ptt-progress" id="ptt-prog-happy">0/6</span></button>
+      <button class="ptt-btn" data-type="sad" onclick="switchTab('sad')">🟡 Sad Paths <span class="count">12</span> <span class="ptt-progress" id="ptt-prog-sad">0/12</span></button>
+      <button class="ptt-btn" data-type="neg" onclick="switchTab('neg')">🔴 Negative Paths <span class="count">11</span> <span class="ptt-progress" id="ptt-prog-neg">0/11</span></button>
+      <button class="ptt-btn" data-type="runs" onclick="switchTab('runs')">📊 Completed Runs <span class="count" id="runs-count">—</span></button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- INTRO / PROTOCOL -->
+<section class="protocol">
+  <div class="protocol-head">⚡ How to use this playbook</div>
+  <div class="protocol-body">
+    <p>Each major DGLMS workflow below has three path types: <strong style="color:var(--happy)">Happy</strong> (ideal flow), <strong style="color:var(--sad)">Sad</strong> (valid user, expected friction), and <strong style="color:var(--neg)">Negative</strong> (invalid/unauthorized intent).</p>
+    <p>Path content is <strong>environment-agnostic</strong> — the same scenarios run across all six environments per the testing protocol: <strong>DOT Dev → DOT QA → DOT UAT</strong> (DOT acceptance chain) and <strong>DTC QA → DTC UAT → Production</strong> (system integrator chain). Defects, sign-off, and results are tracked separately per environment in the <a href="index.html" target="_blank">E2E Dashboard</a>.</p>
+    <div class="path-legend">
+      <div class="path-legend-card happy">
+        <span class="lbl">🟢 Happy Path</span>
+        Valid user, valid data, expected system behavior. Demonstrates the feature works as designed end-to-end.
+      </div>
+      <div class="path-legend-card sad">
+        <span class="lbl">🟡 Sad Path</span>
+        Valid user encounters expected friction: missing field, validation rule, network blip, session timeout. System should handle gracefully.
+      </div>
+      <div class="path-legend-card neg">
+        <span class="lbl">🔴 Negative Path</span>
+        Invalid intent or unauthorized actor: wrong permission, bypass attempt, malformed input. System should block/protect.
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="tab-section" data-tab-kind="happy">
+  <div class="tab-section-header">
+    <h2 class="tab-section-title">🟢 All Happy Paths</h2>
+    <p class="tab-section-summary">6 happy path scenarios across all 5 processes.</p>
+  </div>
+  <div class="path-block happy" data-path-type="happy" data-path-id="p1-path-0" data-process="p1">
+      <input type="checkbox" class="path-checkbox" data-path-id="p1-path-0" onchange="togglePath(this)" title="Mark this path complete">
+      <div class="path-head">
+        <span class="path-tag happy">🟢 Happy Path</span>
+        <span class="path-title"><span class="path-num-prefix">Happy Path 1:</span> Full lifecycle — Draft to Published</span><span class="path-process-tag" title="From NOFO Lifecycle — Create → Approve → Publish">Process 01</span>
+      </div>
+      <div class="path-meta"><strong>Persona:</strong> All approval-chain personas (NOFO Dev → Program Office → OA concurrers → OA Leadership → OST Admin → DAS → S1) &nbsp;·&nbsp; <strong>Runs in:</strong> All 6 environments (run separately per environment per protocol)</div>
+      <div class="field-grid">
+        <div class="field-label">Preconditions</div>
+        <div class="field-value"><ol><li>Test users for each persona exist with correct PSGs assigned</li><li>Pre-defined GFA data templates are loaded (Construction and Non-Construction criteria)</li><li>Grants.gov test environment is reachable and credentials valid</li><li>No prior in-flight test FOs from a previous run (clean slate or staging cleared)</li></ol></div>
+        <div class="field-label">Steps</div>
+        <div class="field-value"><ol><li>NOFO Dev Team logs in and creates a new Funding Opportunity record from the Funding Opportunity tab</li><li>Complete the FO Creation screen with all required fields (Title, Type Code, Program Type, Funding Amount, etc.) and Save</li><li>Program Office opens the recently created NOFO record and completes NOFO Setup tab with valid staging data across all 11 sections:<ol style="list-style-type:lower-alpha"><li>NOFO Identity & Announcement</li><li>Funding Details & Description</li><li>Application Timeline</li><li>Eligibility & Program Description</li><li>Application Contents & Format</li><li>Submission & Intergovernmental Review</li><li>Award Notices & Other Information</li><li>Evaluation & Review Setup</li><li>Review Factors</li><li>Risk Criteria</li><li>Intake and Eligibility Requirements</li></ol></li><li>Program Office clicks "Submit for Approval" — confirms FO advances to <code>Under OA Review</code> status</li><li>Grant Office concurrer (notified via email) opens the FO, navigates to the Concurrence/Approval tab, and marks Grant Office concurrence</li><li>OA Legal concurrer marks legal concurrence on the same tab</li><li>OA CFO concurrer marks CFO concurrence</li><li>OA Leadership opens the FO once all upstream concurrences are complete and clicks "OA Review Complete" — FO advances to <code>Under OST-P Review</code></li><li>OST Admin reviews the FO and marks OST-P concurrence (or routes to DAS for concurrence)</li><li>DAS opens the FO and marks DAS concurrence on the Concurrence/Approval tab</li><li>S1 reviews the FO and clicks "S1 Approval Complete" — FO advances to <code>S1 Approval Complete</code> status</li><li>Program Office clicks "Publish Funding Opportunity" — status moves to <code>Pending Publish</code></li><li>After refresh, status changes to <code>Published</code></li><li>Verify the FO, related documents, and packages populate in Grants.gov test environment</li></ol></div>
+        <div class="field-label">Expected</div>
+        <div class="field-value"><ul><li>Each status transition is recorded with timestamp and acting user on the Approval History</li><li>Each concurrence checkbox shows the concurrer's name and date</li><li>Email notifications fire to the next persona at each gate</li><li>Once published, the Synopsis Tab shows Version Number = 1</li><li>The FO is searchable in Grants.gov test environment with correct metadata</li></ul></div>
+      </div>
+      
+    </div>
+<div class="path-block happy" data-path-type="happy" data-path-id="p2-path-0" data-process="p2">
+      <input type="checkbox" class="path-checkbox" data-path-id="p2-path-0" onchange="togglePath(this)" title="Mark this path complete">
+      <div class="path-head">
+        <span class="path-tag happy">🟢 Happy Path</span>
+        <span class="path-title"><span class="path-num-prefix">Happy Path 2:</span> Successful Grants.gov submission → Salesforce Application Form record</span><span class="path-process-tag" title="From Application Submission & Intake">Process 02</span>
+      </div>
+      <div class="path-meta"><strong>Persona:</strong> Applicant / External (origin) and System / API (intake) &nbsp;·&nbsp; <strong>Runs in:</strong> All 6 environments</div>
+      <div class="field-grid">
+        <div class="field-label">Preconditions</div>
+        <div class="field-value"><ol><li>Published FO exists and is open for applications (within Application Open/Close window)</li><li>Applicant has a valid SAM-registered UEI</li><li>Grants.gov → Salesforce intake integration is configured (TC 225, 214)</li><li>Apex Pub/Sub API is enabled (GRAN-244)</li></ol></div>
+        <div class="field-label">Steps</div>
+        <div class="field-value"><ol><li>Applicant logs into Grants.gov and locates the published FO using the FO Number</li><li>Applicant downloads the Application Package and completes all required forms (SF-424, project narrative, budget)</li><li>Applicant submits the completed package via Grants.gov Workspace</li><li>Salesforce intake job (or "Retrieve Applications" button) pulls submission metadata into Salesforce</li><li>System creates an Application Form record in Salesforce with all SF-424 fields populated (TC 111)</li><li>System runs SAM/UEI deduplication check against existing applicants</li><li>Application appears in the FO's Related → Application Forms list</li><li>Program Office can navigate to the Application Form record and verify all data</li></ol></div>
+        <div class="field-label">Expected</div>
+        <div class="field-value"><ul><li>Application Form record exists in Salesforce with status <code>Submitted</code></li><li>All key SF-424 fields are populated (UEI, applicant name, requested amount, project title)</li><li>Submission timestamp matches Grants.gov submission time</li><li>No duplicate Application Form records created for the same applicant on the same FO</li><li>Account record exists or is linked correctly via UEI</li></ul></div>
+      </div>
+      
+    </div>
+<div class="path-block happy" data-path-type="happy" data-path-id="p3-path-0" data-process="p3">
+      <input type="checkbox" class="path-checkbox" data-path-id="p3-path-0" onchange="togglePath(this)" title="Mark this path complete">
+      <div class="path-head">
+        <span class="path-tag happy">🟢 Happy Path</span>
+        <span class="path-title"><span class="path-num-prefix">Happy Path 3:</span> Compliance + Merit + Combined Rating end-to-end</span><span class="path-process-tag" title="From Application Review — Compliance, Merit, Combined Rating">Process 03</span>
+      </div>
+      <div class="path-meta"><strong>Persona:</strong> Application Reviewer (assigned to the FO) and Program Office &nbsp;·&nbsp; <strong>Runs in:</strong> All 6 environments</div>
+      <div class="field-grid">
+        <div class="field-label">Preconditions</div>
+        <div class="field-value"><ol><li>FO is published and applications have been received and intake-processed</li><li>Reviewer is assigned to the FO with the GL-Application Reviewer PSG (GRAN-263)</li><li>Review Factors and Risk Criteria are configured on the FO (TC 181-185)</li><li>Reviewer is logged in and notification email received</li></ol></div>
+        <div class="field-label">Steps</div>
+        <div class="field-value"><ol><li>Reviewer navigates to the assigned Application Form record from email link</li><li>Opens the Compliance Review record under the Related tab (TC 250)</li><li>Under the Review tab, completes Evaluation (Merit) Criteria for each criterion:<ol style="list-style-type:lower-alpha"><li>Technical Merit — assess project quality and feasibility</li><li>Broader Impacts and Benefits — assess wider effects</li><li>Project Readiness (for construction projects)</li><li>Project Benefits (for construction projects)</li></ol></li><li>For each criterion, selects rating (Highly Recommend / Recommend / Acceptable / Not Recommended) and adds Reviewer Comment</li><li>Completes Selection Considerations section, including COI/NDA acknowledgment (TC 265)</li><li>Clicks Save Progress to persist responses</li><li>Clicks Submit when review is complete</li><li>Status moves to one of the 17 valid review statuses (TC 223)</li><li>Program Office views Combined Rating once all assigned reviewers complete</li></ol></div>
+        <div class="field-label">Expected</div>
+        <div class="field-value"><ul><li>All review responses persist correctly across save/submit cycles</li><li>Cannot submit until all required criteria are rated</li><li>Combined Rating uses correct weight per GRAN-260 (point weight = 100 for primary criteria)</li><li>Submitted review record is read-only to the reviewer after submission</li><li>Audit log captures reviewer name, timestamp, and final rating</li></ul></div>
+      </div>
+      
+    </div>
+<div class="path-block happy" data-path-type="happy" data-path-id="p4-path-0" data-process="p4">
+      <input type="checkbox" class="path-checkbox" data-path-id="p4-path-0" onchange="togglePath(this)" title="Mark this path complete">
+      <div class="path-head">
+        <span class="path-tag happy">🟢 Happy Path</span>
+        <span class="path-title"><span class="path-num-prefix">Happy Path 4:</span> SRT → Concurrences → S1 Approval → Notify Applicants</span><span class="path-process-tag" title="From Award Selection & Notification">Process 04</span>
+      </div>
+      <div class="path-meta"><strong>Persona:</strong> Program Office through S1, then external applicants &nbsp;·&nbsp; <strong>Runs in:</strong> All 6 environments</div>
+      <div class="field-grid">
+        <div class="field-label">Preconditions</div>
+        <div class="field-value"><ol><li>All applications for the FO have completed review (Combined Ratings finalized)</li><li>Selection Recommendation Table (SRT) data is populated</li><li>Award memo template is configured</li><li>All approval personas have correct PSGs</li></ol></div>
+        <div class="field-label">Steps</div>
+        <div class="field-value"><ol><li>Program Office opens the SRT (Data for RAAW Report — TC 239)</li><li>Reviews proposed selections and award amounts</li><li>Generates the Award Memo / RAAW document</li><li>Submits the memo for OA concurrence</li><li>Grant Office concurrer reviews and signs off</li><li>OA Legal concurrer reviews and signs off</li><li>OA CFO concurrer reviews and signs off</li><li>OA Leadership reviews and approves</li><li>S1 reviews the consolidated award memo and approves (status moves to <code>Award Selections Approved by S1</code>)</li><li>Program Office returns to the FO and clicks "Notify Applicants" (TC 262)</li><li>System presents a table of all applicants with selection status</li><li>Program Office reviews the table and confirms notifications</li><li>Notifications fire to all applicants (selected and non-selected)</li></ol></div>
+        <div class="field-label">Expected</div>
+        <div class="field-value"><ul><li>Selected applicants receive award notification emails with next-steps and award amount</li><li>Non-selected applicants receive non-selection emails with feedback option</li><li>All notifications are logged in Salesforce Activity history</li><li>Audit log captures S1 approval timestamp and acting user</li><li>No duplicate notifications sent</li></ul></div>
+      </div>
+      
+    </div>
+<div class="path-block happy" data-path-type="happy" data-path-id="p5-path-0" data-process="p5">
+      <input type="checkbox" class="path-checkbox" data-path-id="p5-path-0" onchange="togglePath(this)" title="Mark this path complete">
+      <div class="path-head">
+        <span class="path-tag happy">🟢 Happy Path</span>
+        <span class="path-title"><span class="path-num-prefix">Happy Path 5:</span> Material Modification → Republish (TC 203)</span><span class="path-process-tag" title="From Special Workflows — Material Modifications, Republish, COI/NDA">Process 05</span>
+      </div>
+      <div class="path-meta"><strong>Persona:</strong> Program Office + OA approval chain &nbsp;·&nbsp; <strong>Runs in:</strong> All 6 environments</div>
+      <div class="field-grid">
+        <div class="field-label">Preconditions</div>
+        <div class="field-value"><ol><li>FO is in <code>Published</code> status with applications already received</li><li>Material change is needed (e.g., extended deadline, amended eligibility)</li></ol></div>
+        <div class="field-label">Steps</div>
+        <div class="field-value"><ol><li>Program Office opens the published FO</li><li>Initiates Material Modifications workflow (Step 3 — TC 203)</li><li>Edits the affected fields (Application Close Date, Eligibility Description, etc.)</li><li>Routes the modified FO through OA concurrences again</li><li>OA concurrers and OA Leadership re-approve the modifications</li><li>OST Admin re-runs OST-P review on the modified FO</li><li>S1 re-approves</li><li>Program Office clicks "Re-Initiate Approval" on the Republished NOFO (TC 203 second variant)</li><li>Status advances; system republishes to Grants.gov</li><li>Synopsis Tab Version Number increments to 2</li></ol></div>
+        <div class="field-label">Expected</div>
+        <div class="field-value"><ul><li>Modification is captured with full audit trail</li><li>Original FO history is preserved (not overwritten)</li><li>Existing applications remain valid; applicants notified of changes</li><li>Grants.gov reflects the updated FO with new version number</li></ul></div>
+      </div>
+      
+    </div>
+<div class="path-block happy" data-path-type="happy" data-path-id="p5-path-1" data-process="p5">
+      <input type="checkbox" class="path-checkbox" data-path-id="p5-path-1" onchange="togglePath(this)" title="Mark this path complete">
+      <div class="path-head">
+        <span class="path-tag happy">🟢 Happy Path</span>
+        <span class="path-title"><span class="path-num-prefix">Happy Path 6:</span> COI/NDA acknowledgment on Application Account (TC 265)</span><span class="path-process-tag" title="From Special Workflows — Material Modifications, Republish, COI/NDA">Process 05</span>
+      </div>
+      <div class="path-meta"><strong>Persona:</strong> App Reviewer &nbsp;·&nbsp; <strong>Runs in:</strong> All 6 environments</div>
+      <div class="field-grid">
+        <div class="field-label">Preconditions</div>
+        <div class="field-value"><ol><li>Reviewer is assigned to an Application Form</li><li>Account record (the applicant) has COI/NDA tracking fields</li><li>TC 265 functionality deployed (Account COI/NDA Checkbox and Upload)</li></ol></div>
+        <div class="field-label">Steps</div>
+        <div class="field-value"><ol><li>Reviewer opens the Account associated with the Application</li><li>Reviews the COI/NDA section</li><li>If a conflict exists: checks the COI checkbox and adds explanatory comment</li><li>If NDA is required: uploads signed NDA document</li><li>Saves the Account record</li></ol></div>
+        <div class="field-label">Expected</div>
+        <div class="field-value"><ul><li>Checkbox state and uploaded NDA persist on the Account record</li><li>COI flag is visible on subsequent reviews of any application from the same applicant</li><li>Audit log captures the acknowledgment with reviewer and timestamp</li><li>Reviewer can proceed with Compliance Review only after COI/NDA acknowledgment</li></ul></div>
+      </div>
+      
+    </div>
+</section>
+<section class="tab-section" data-tab-kind="sad">
+  <div class="tab-section-header">
+    <h2 class="tab-section-title">🟡 All Sad Paths</h2>
+    <p class="tab-section-summary">12 sad path scenarios across all 5 processes.</p>
+  </div>
+  <div class="path-block sad" data-path-type="sad" data-path-id="p1-path-1" data-process="p1">
+      <input type="checkbox" class="path-checkbox" data-path-id="p1-path-1" onchange="togglePath(this)" title="Mark this path complete">
+      <div class="path-head">
+        <span class="path-tag sad">🟡 Sad Path</span>
+        <span class="path-title"><span class="path-num-prefix">Sad Path 1:</span> Required field missing on NOFO Setup</span><span class="path-process-tag" title="From NOFO Lifecycle — Create → Approve → Publish">Process 01</span>
+      </div>
+      <div class="path-meta"><strong>Persona:</strong> Program Office &nbsp;·&nbsp; <strong>Runs in:</strong> All 6 environments</div>
+      <div class="field-grid">
+        <div class="field-label">Preconditions</div>
+        <div class="field-value"><ol><li>Program Office user has access to a Draft FO</li><li>NOFO Setup tab is open</li></ol></div>
+        <div class="field-label">Steps</div>
+        <div class="field-value"><ol><li>Program Office attempts to leave a required field blank (e.g., Total Amount of Funding)</li><li>Click Save</li></ol></div>
+        <div class="field-label">Expected</div>
+        <div class="field-value"><ul><li>Save is blocked with a validation error identifying the missing required field</li><li>FO does not advance status</li><li>No data is persisted for the partial entry</li><li>User can correct the field and save successfully on retry</li></ul></div>
+      </div>
+      <div class="expect-row" style="margin-top:8px"><strong>Defects to log if seen:</strong><ul style="margin:4px 0 0"><li>Save succeeded with empty required field</li><li>Validation error message is unclear or doesn't identify which field</li><li>FO advanced status despite incomplete data</li></ul></div>
+    </div>
+<div class="path-block sad" data-path-type="sad" data-path-id="p1-path-2" data-process="p1">
+      <input type="checkbox" class="path-checkbox" data-path-id="p1-path-2" onchange="togglePath(this)" title="Mark this path complete">
+      <div class="path-head">
+        <span class="path-tag sad">🟡 Sad Path</span>
+        <span class="path-title"><span class="path-num-prefix">Sad Path 2:</span> Concurrer rejects and sends back</span><span class="path-process-tag" title="From NOFO Lifecycle — Create → Approve → Publish">Process 01</span>
+      </div>
+      <div class="path-meta"><strong>Persona:</strong> OA Legal (or any OA concurrer) &nbsp;·&nbsp; <strong>Runs in:</strong> All 6 environments</div>
+      <div class="field-grid">
+        <div class="field-label">Preconditions</div>
+        <div class="field-value"><ol><li>FO is in <code>Under OA Review</code> status with at least Grant Office concurrence already granted</li><li>OA Legal user has access to the FO</li></ol></div>
+        <div class="field-label">Steps</div>
+        <div class="field-value"><ol><li>OA Legal opens the FO from the email notification</li><li>Reviews content and identifies an issue (e.g., missing eligibility statement)</li><li>Adds a Chatter comment describing the issue</li><li>Does NOT mark OA Legal concurrence; instead, sends an email/Chatter notification back to Program Office</li><li>Program Office receives notification, opens the FO, makes corrections</li><li>Program Office re-saves and re-routes for OA review</li></ol></div>
+        <div class="field-label">Expected</div>
+        <div class="field-value"><ul><li>FO remains in <code>Under OA Review</code> until concurrer signs off</li><li>OA Leadership cannot approve while OA Legal concurrence is missing</li><li>Chatter comment is visible on the FO record with timestamp</li><li>After Program Office corrections and re-routing, OA Legal can re-review and concur</li></ul></div>
+      </div>
+      <div class="expect-row" style="margin-top:8px"><strong>Defects to log if seen:</strong><ul style="margin:4px 0 0"><li>OA Leadership Approval button became enabled before all concurrers signed off</li><li>Chatter comment did not save or wasn't visible to other personas</li></ul></div>
+    </div>
+<div class="path-block sad" data-path-type="sad" data-path-id="p1-path-3" data-process="p1">
+      <input type="checkbox" class="path-checkbox" data-path-id="p1-path-3" onchange="togglePath(this)" title="Mark this path complete">
+      <div class="path-head">
+        <span class="path-tag sad">🟡 Sad Path</span>
+        <span class="path-title"><span class="path-num-prefix">Sad Path 3:</span> Publish to Grants.gov fails — connectivity issue</span><span class="path-process-tag" title="From NOFO Lifecycle — Create → Approve → Publish">Process 01</span>
+      </div>
+      <div class="path-meta"><strong>Persona:</strong> Program Office &nbsp;·&nbsp; <strong>Runs in:</strong> All 6 environments (most likely surfaces in DTC UAT or Production due to live integration)</div>
+      <div class="field-grid">
+        <div class="field-label">Preconditions</div>
+        <div class="field-value"><ol><li>FO is in <code>S1 Approval Complete</code> status</li><li>Grants.gov test endpoint may be unreachable or credentials expired</li></ol></div>
+        <div class="field-label">Steps</div>
+        <div class="field-value"><ol><li>Program Office clicks "Publish Funding Opportunity"</li><li>Status moves to <code>Pending Publish</code></li><li>Refresh after 30 seconds</li></ol></div>
+        <div class="field-label">Expected</div>
+        <div class="field-value"><ul><li>If integration fails, status remains <code>Pending Publish</code> and an error notification appears</li><li>Apex error log captures the failure with retry capability</li><li>FO does not advance to <code>Published</code> until integration succeeds</li><li>Sys Admin can re-trigger publish via Apex job once Grants.gov is reachable</li></ul></div>
+      </div>
+      <div class="expect-row" style="margin-top:8px"><strong>Defects to log if seen:</strong><ul style="margin:4px 0 0"><li>Status incorrectly advanced to Published despite Grants.gov integration failing</li><li>No error notification surfaced to Program Office</li><li>Retry mechanism is not available or is hidden</li></ul></div>
+    </div>
+<div class="path-block sad" data-path-type="sad" data-path-id="p2-path-1" data-process="p2">
+      <input type="checkbox" class="path-checkbox" data-path-id="p2-path-1" onchange="togglePath(this)" title="Mark this path complete">
+      <div class="path-head">
+        <span class="path-tag sad">🟡 Sad Path</span>
+        <span class="path-title"><span class="path-num-prefix">Sad Path 4:</span> Duplicate UEI detected during intake</span><span class="path-process-tag" title="From Application Submission & Intake">Process 02</span>
+      </div>
+      <div class="path-meta"><strong>Persona:</strong> System / API + Sys Admin &nbsp;·&nbsp; <strong>Runs in:</strong> All 6 environments</div>
+      <div class="field-grid">
+        <div class="field-label">Preconditions</div>
+        <div class="field-value"><ol><li>An applicant with UEI <code>ABC123XYZ</code> already has an Account record in Salesforce</li><li>Same applicant submits a new application (different FO) via Grants.gov</li></ol></div>
+        <div class="field-label">Steps</div>
+        <div class="field-value"><ol><li>Salesforce intake retrieves the new submission</li><li>Dedup logic detects the existing UEI in the org</li></ol></div>
+        <div class="field-label">Expected</div>
+        <div class="field-value"><ul><li>New Application Form record is created and LINKED to the existing Account (not a duplicate Account)</li><li>Account Team membership for the existing Account is preserved</li><li>Sys Admin sees a log entry indicating dedup match was applied</li><li>No data corruption on the existing Account record</li></ul></div>
+      </div>
+      <div class="expect-row" style="margin-top:8px"><strong>Defects to log if seen:</strong><ul style="margin:4px 0 0"><li>Duplicate Account created with same UEI</li><li>Application Form linked to wrong Account</li><li>Dedup match log not recorded</li></ul></div>
+    </div>
+<div class="path-block sad" data-path-type="sad" data-path-id="p2-path-2" data-process="p2">
+      <input type="checkbox" class="path-checkbox" data-path-id="p2-path-2" onchange="togglePath(this)" title="Mark this path complete">
+      <div class="path-head">
+        <span class="path-tag sad">🟡 Sad Path</span>
+        <span class="path-title"><span class="path-num-prefix">Sad Path 5:</span> Malformed XML payload from Grants.gov</span><span class="path-process-tag" title="From Application Submission & Intake">Process 02</span>
+      </div>
+      <div class="path-meta"><strong>Persona:</strong> System / API + Sys Admin &nbsp;·&nbsp; <strong>Runs in:</strong> All 6 environments (most likely surfaces in DOT QA / DTC QA during integration testing)</div>
+      <div class="field-grid">
+        <div class="field-label">Preconditions</div>
+        <div class="field-value"><ol><li>Grants.gov submission contains malformed or incomplete XML (e.g., missing required namespace, truncated element)</li><li>Apex intake handler is configured with error capture</li></ol></div>
+        <div class="field-label">Steps</div>
+        <div class="field-value"><ol><li>Salesforce intake job runs and encounters the malformed payload</li></ol></div>
+        <div class="field-label">Expected</div>
+        <div class="field-value"><ul><li>Intake job logs an error with payload reference and skips the malformed record</li><li>No partial Application Form record is created (all-or-nothing transaction)</li><li>Sys Admin receives notification of failed intake with payload diagnostics</li><li>Other valid submissions in the same batch process successfully</li></ul></div>
+      </div>
+      <div class="expect-row" style="margin-top:8px"><strong>Defects to log if seen:</strong><ul style="margin:4px 0 0"><li>Partial Application Form record created with null required fields</li><li>Entire batch failed because of one malformed record</li><li>No error notification reached Sys Admin</li></ul></div>
+    </div>
+<div class="path-block sad" data-path-type="sad" data-path-id="p3-path-1" data-process="p3">
+      <input type="checkbox" class="path-checkbox" data-path-id="p3-path-1" onchange="togglePath(this)" title="Mark this path complete">
+      <div class="path-head">
+        <span class="path-tag sad">🟡 Sad Path</span>
+        <span class="path-title"><span class="path-num-prefix">Sad Path 6:</span> Reviewer assigned to wrong category</span><span class="path-process-tag" title="From Application Review — Compliance, Merit, Combined Rating">Process 03</span>
+      </div>
+      <div class="path-meta"><strong>Persona:</strong> OST Admin (assignment error) + App Reviewer &nbsp;·&nbsp; <strong>Runs in:</strong> All 6 environments</div>
+      <div class="field-grid">
+        <div class="field-label">Preconditions</div>
+        <div class="field-value"><ol><li>A non-construction expert reviewer is mistakenly assigned to a Construction-type FO</li><li>Reviewer logs in and sees Project Readiness/Benefits criteria they're not qualified to assess</li></ol></div>
+        <div class="field-label">Steps</div>
+        <div class="field-value"><ol><li>Reviewer opens the Compliance Review record</li><li>Realizes the criteria don't match their expertise</li><li>Reviewer adds a Chatter comment flagging the mis-assignment</li><li>Reviewer notifies OST Admin via email</li><li>OST Admin reassigns to a qualified reviewer</li></ol></div>
+        <div class="field-label">Expected</div>
+        <div class="field-value"><ul><li>Original reviewer cannot accidentally submit a partial/inappropriate review (Save Progress only)</li><li>Reassignment is captured in audit history</li><li>New reviewer can pick up where left off (or start fresh per OST Admin direction)</li><li>No double-submission of conflicting reviews for the same application</li></ul></div>
+      </div>
+      <div class="expect-row" style="margin-top:8px"><strong>Defects to log if seen:</strong><ul style="margin:4px 0 0"><li>Reviewer was able to submit a review for criteria they shouldn't have access to</li><li>Reassignment removed prior reviewer's draft without explicit save/discard prompt</li></ul></div>
+    </div>
+<div class="path-block sad" data-path-type="sad" data-path-id="p3-path-2" data-process="p3">
+      <input type="checkbox" class="path-checkbox" data-path-id="p3-path-2" onchange="togglePath(this)" title="Mark this path complete">
+      <div class="path-head">
+        <span class="path-tag sad">🟡 Sad Path</span>
+        <span class="path-title"><span class="path-num-prefix">Sad Path 7:</span> Partial save — session timeout mid-review</span><span class="path-process-tag" title="From Application Review — Compliance, Merit, Combined Rating">Process 03</span>
+      </div>
+      <div class="path-meta"><strong>Persona:</strong> App Reviewer &nbsp;·&nbsp; <strong>Runs in:</strong> All 6 environments</div>
+      <div class="field-grid">
+        <div class="field-label">Preconditions</div>
+        <div class="field-value"><ol><li>Reviewer is mid-review with several criteria rated but not all</li><li>Session times out due to inactivity or browser closes unexpectedly</li></ol></div>
+        <div class="field-label">Steps</div>
+        <div class="field-value"><ol><li>Reviewer rates 5 of 8 criteria</li><li>Clicks Save Progress</li><li>Steps away from desk; session expires</li><li>Reviewer returns 30 min later, refreshes the page</li><li>Logs back in</li></ol></div>
+        <div class="field-label">Expected</div>
+        <div class="field-value"><ul><li>Saved responses (5 criteria) are persisted and visible on reload</li><li>Unrated criteria are still empty (no junk data)</li><li>Reviewer can resume where they left off</li><li>No data loss for the saved portion</li></ul></div>
+      </div>
+      <div class="expect-row" style="margin-top:8px"><strong>Defects to log if seen:</strong><ul style="margin:4px 0 0"><li>All review data lost on session timeout (Save Progress did not persist)</li><li>Some saved responses corrupted/blank after reload</li><li>Reviewer locked out of the record after timeout</li></ul></div>
+    </div>
+<div class="path-block sad" data-path-type="sad" data-path-id="p3-path-3" data-process="p3">
+      <input type="checkbox" class="path-checkbox" data-path-id="p3-path-3" onchange="togglePath(this)" title="Mark this path complete">
+      <div class="path-head">
+        <span class="path-tag sad">🟡 Sad Path</span>
+        <span class="path-title"><span class="path-num-prefix">Sad Path 8:</span> Conflicting dual-reviewer scores</span><span class="path-process-tag" title="From Application Review — Compliance, Merit, Combined Rating">Process 03</span>
+      </div>
+      <div class="path-meta"><strong>Persona:</strong> App Reviewer + Program Office &nbsp;·&nbsp; <strong>Runs in:</strong> All 6 environments</div>
+      <div class="field-grid">
+        <div class="field-label">Preconditions</div>
+        <div class="field-value"><ol><li>Two reviewers are assigned to the same Application Form for redundancy</li><li>Both submit reviews with significantly different ratings (e.g., one Highly Recommend, one Not Recommended)</li></ol></div>
+        <div class="field-label">Steps</div>
+        <div class="field-value"><ol><li>Both reviewers complete and submit their reviews independently</li><li>Program Office views the Combined Rating</li></ol></div>
+        <div class="field-label">Expected</div>
+        <div class="field-value"><ul><li>Combined Rating displays both individual scores AND a flagged variance</li><li>OR Combined Rating triggers a "Reconciliation Required" status</li><li>Program Office can request a Reconciliation discussion or third reviewer</li><li>Audit log captures all individual review submissions intact</li></ul></div>
+      </div>
+      <div class="expect-row" style="margin-top:8px"><strong>Defects to log if seen:</strong><ul style="margin:4px 0 0"><li>Variance not flagged — system silently averaged conflicting scores</li><li>One review overwrote the other in the Combined Rating display</li></ul></div>
+    </div>
+<div class="path-block sad" data-path-type="sad" data-path-id="p4-path-1" data-process="p4">
+      <input type="checkbox" class="path-checkbox" data-path-id="p4-path-1" onchange="togglePath(this)" title="Mark this path complete">
+      <div class="path-head">
+        <span class="path-tag sad">🟡 Sad Path</span>
+        <span class="path-title"><span class="path-num-prefix">Sad Path 9:</span> Notification email bounces / fails delivery</span><span class="path-process-tag" title="From Award Selection & Notification">Process 04</span>
+      </div>
+      <div class="path-meta"><strong>Persona:</strong> Program Office + System &nbsp;·&nbsp; <strong>Runs in:</strong> All 6 environments (especially DTC UAT and Production with live email integration)</div>
+      <div class="field-grid">
+        <div class="field-label">Preconditions</div>
+        <div class="field-value"><ol><li>FO is in <code>Award Selections Approved by S1</code> status</li><li>One applicant has an outdated/invalid email on their Account record</li><li>Email deliverability is configured (Setup → Email → Deliverability per TC requirements)</li></ol></div>
+        <div class="field-label">Steps</div>
+        <div class="field-value"><ol><li>Program Office clicks "Notify Applicants"</li><li>System sends notifications</li><li>One email bounces (hard bounce / mailbox full / domain unreachable)</li></ol></div>
+        <div class="field-label">Expected</div>
+        <div class="field-value"><ul><li>System logs the bounce in Activity history with bounce reason</li><li>Program Office receives an alert/notification listing failed recipients</li><li>Successfully-delivered notifications are NOT re-sent</li><li>Program Office can manually retrigger notification after correcting email on Account</li></ul></div>
+      </div>
+      <div class="expect-row" style="margin-top:8px"><strong>Defects to log if seen:</strong><ul style="margin:4px 0 0"><li>Bounce was silent — no log, no alert</li><li>Successful notifications were re-sent on retry, causing duplicates</li><li>No way to retrigger only failed notifications</li></ul></div>
+    </div>
+<div class="path-block sad" data-path-type="sad" data-path-id="p4-path-2" data-process="p4">
+      <input type="checkbox" class="path-checkbox" data-path-id="p4-path-2" onchange="togglePath(this)" title="Mark this path complete">
+      <div class="path-head">
+        <span class="path-tag sad">🟡 Sad Path</span>
+        <span class="path-title"><span class="path-num-prefix">Sad Path 10:</span> Applicant list filters incorrectly</span><span class="path-process-tag" title="From Award Selection & Notification">Process 04</span>
+      </div>
+      <div class="path-meta"><strong>Persona:</strong> Program Office &nbsp;·&nbsp; <strong>Runs in:</strong> All 6 environments</div>
+      <div class="field-grid">
+        <div class="field-label">Preconditions</div>
+        <div class="field-value"><ol><li>FO has applications in mixed statuses (Submitted, Under Review, Selected, Not Selected, Withdrawn)</li><li>Applicant notification list should include only Selected + Not Selected — exclude Withdrawn</li></ol></div>
+        <div class="field-label">Steps</div>
+        <div class="field-value"><ol><li>Program Office clicks "Notify Applicants"</li><li>Reviews the applicant table</li></ol></div>
+        <div class="field-label">Expected</div>
+        <div class="field-value"><ul><li>Withdrawn applications are excluded from the list</li><li>Only Selected and Not Selected applications appear</li><li>Counts are accurate (matches SRT totals)</li><li>Each applicant row shows their final status, award amount (if selected), and contact email</li></ul></div>
+      </div>
+      <div class="expect-row" style="margin-top:8px"><strong>Defects to log if seen:</strong><ul style="margin:4px 0 0"><li>Withdrawn applicants received notifications</li><li>Counts don't match SRT (e.g., SRT shows 25 selected, table shows 24)</li><li>Filter logic uses wrong status field</li></ul></div>
+    </div>
+<div class="path-block sad" data-path-type="sad" data-path-id="p5-path-2" data-process="p5">
+      <input type="checkbox" class="path-checkbox" data-path-id="p5-path-2" onchange="togglePath(this)" title="Mark this path complete">
+      <div class="path-head">
+        <span class="path-tag sad">🟡 Sad Path</span>
+        <span class="path-title"><span class="path-num-prefix">Sad Path 11:</span> Material Modification on FO with in-flight applications</span><span class="path-process-tag" title="From Special Workflows — Material Modifications, Republish, COI/NDA">Process 05</span>
+      </div>
+      <div class="path-meta"><strong>Persona:</strong> Program Office &nbsp;·&nbsp; <strong>Runs in:</strong> All 6 environments</div>
+      <div class="field-grid">
+        <div class="field-label">Preconditions</div>
+        <div class="field-value"><ol><li>FO is Published</li><li>Several applications are mid-review (Compliance Review in progress)</li><li>Program Office wants to modify Eligibility (a field that affects in-flight applications)</li></ol></div>
+        <div class="field-label">Steps</div>
+        <div class="field-value"><ol><li>Program Office initiates Material Modification</li><li>Attempts to change Eligibility criteria</li></ol></div>
+        <div class="field-label">Expected</div>
+        <div class="field-value"><ul><li>System warns Program Office that in-flight reviews exist</li><li>Confirmation prompt asks whether to invalidate existing reviews or preserve them</li><li>If preserve: existing reviews continue under original criteria with audit flag</li><li>If invalidate: assigned reviewers are notified and asked to re-review</li><li>Modification proceeds only after explicit user confirmation</li></ul></div>
+      </div>
+      <div class="expect-row" style="margin-top:8px"><strong>Defects to log if seen:</strong><ul style="margin:4px 0 0"><li>Material Modification overwrote in-flight reviews silently</li><li>Reviewers not notified of changed criteria</li><li>No audit trail linking the modification to affected reviews</li></ul></div>
+    </div>
+<div class="path-block sad" data-path-type="sad" data-path-id="p5-path-3" data-process="p5">
+      <input type="checkbox" class="path-checkbox" data-path-id="p5-path-3" onchange="togglePath(this)" title="Mark this path complete">
+      <div class="path-head">
+        <span class="path-tag sad">🟡 Sad Path</span>
+        <span class="path-title"><span class="path-num-prefix">Sad Path 12:</span> Republish fails post-modification — version number conflict</span><span class="path-process-tag" title="From Special Workflows — Material Modifications, Republish, COI/NDA">Process 05</span>
+      </div>
+      <div class="path-meta"><strong>Persona:</strong> Program Office &nbsp;·&nbsp; <strong>Runs in:</strong> DTC UAT and Production (most likely surfacing locations)</div>
+      <div class="field-grid">
+        <div class="field-label">Preconditions</div>
+        <div class="field-value"><ol><li>FO has been Material-Modified</li><li>Republish attempted</li><li>Grants.gov has a newer version on file than expected (race condition)</li></ol></div>
+        <div class="field-label">Steps</div>
+        <div class="field-value"><ol><li>Program Office clicks Republish</li><li>Status moves to <code>Pending Publish</code></li><li>Grants.gov returns version conflict error</li></ol></div>
+        <div class="field-label">Expected</div>
+        <div class="field-value"><ul><li>Status stays in <code>Pending Publish</code> until conflict resolved</li><li>Sys Admin receives diagnostic with both version numbers (Salesforce vs Grants.gov)</li><li>Republish can be retried after sync correction</li><li>No data loss on the Salesforce side</li></ul></div>
+      </div>
+      <div class="expect-row" style="margin-top:8px"><strong>Defects to log if seen:</strong><ul style="margin:4px 0 0"><li>Status incorrectly advanced to Published despite version conflict</li><li>No diagnostic captured</li><li>Synopsis Version Number desyncs from Grants.gov</li></ul></div>
+    </div>
+</section>
+<section class="tab-section" data-tab-kind="neg">
+  <div class="tab-section-header">
+    <h2 class="tab-section-title">🔴 All Negative Paths</h2>
+    <p class="tab-section-summary">11 negative path scenarios across all 5 processes.</p>
+  </div>
+  <div class="path-block neg" data-path-type="neg" data-path-id="p1-path-4" data-process="p1">
+      <input type="checkbox" class="path-checkbox" data-path-id="p1-path-4" onchange="togglePath(this)" title="Mark this path complete">
+      <div class="path-head">
+        <span class="path-tag neg">🔴 Negative Path</span>
+        <span class="path-title"><span class="path-num-prefix">Negative Path 1:</span> Wrong persona attempts to advance the FO</span><span class="path-process-tag" title="From NOFO Lifecycle — Create → Approve → Publish">Process 01</span>
+      </div>
+      <div class="path-meta"><strong>Persona:</strong> Read-only or non-privileged user (e.g., OST Admin tries to approve while FO is in Under OA Review) &nbsp;·&nbsp; <strong>Runs in:</strong> All 6 environments</div>
+      <div class="field-grid">
+        <div class="field-label">Preconditions</div>
+        <div class="field-value"><ol><li>FO is in <code>Under OA Review</code> status — should only be advanced by an OA Leadership user once all concurrences are in</li><li>A non-privileged user (read-only or wrong persona) has access to view the FO</li></ol></div>
+        <div class="field-label">Steps</div>
+        <div class="field-value"><ol><li>Read-only user opens the FO</li><li>Attempts to click "OA Review Complete" or "S1 Approval Complete" buttons</li></ol></div>
+        <div class="field-label">Expected</div>
+        <div class="field-value"><ul><li>Buttons are not visible to the unauthorized user, OR</li><li>Buttons are visible but clicking them produces a permission error</li><li>No status transition occurs</li><li>Action is not logged in the Approval History</li></ul></div>
+      </div>
+      <div class="expect-row" style="margin-top:8px"><strong>Defects to log if seen:</strong><ul style="margin:4px 0 0"><li>Read-only user successfully advanced the FO status</li><li>Button visible to unauthorized persona (UI permission leak)</li><li>Permission error message reveals system internals</li></ul></div>
+    </div>
+<div class="path-block neg" data-path-type="neg" data-path-id="p1-path-5" data-process="p1">
+      <input type="checkbox" class="path-checkbox" data-path-id="p1-path-5" onchange="togglePath(this)" title="Mark this path complete">
+      <div class="path-head">
+        <span class="path-tag neg">🔴 Negative Path</span>
+        <span class="path-title"><span class="path-num-prefix">Negative Path 2:</span> Edit attempted on Published FO</span><span class="path-process-tag" title="From NOFO Lifecycle — Create → Approve → Publish">Process 01</span>
+      </div>
+      <div class="path-meta"><strong>Persona:</strong> Program Office (after publication) &nbsp;·&nbsp; <strong>Runs in:</strong> All 6 environments</div>
+      <div class="field-grid">
+        <div class="field-label">Preconditions</div>
+        <div class="field-value"><ol><li>FO is in <code>Published</code> status (TC 201 scenario)</li></ol></div>
+        <div class="field-label">Steps</div>
+        <div class="field-value"><ol><li>Program Office opens the published FO</li><li>Attempts to edit a field on the NOFO Setup tab (e.g., Funding Opportunity Description)</li><li>Attempts to click Save</li></ol></div>
+        <div class="field-label">Expected</div>
+        <div class="field-value"><ul><li>NOFO Setup fields are read-only / locked once published</li><li>Save action does not persist changes — record remains as published</li><li>User receives clear feedback that post-publication changes require a Material Modification workflow</li></ul></div>
+      </div>
+      <div class="expect-row" style="margin-top:8px"><strong>Defects to log if seen:</strong><ul style="margin:4px 0 0"><li>Field accepted edits and Save persisted changes to a Published FO</li><li>No indication that the FO is locked</li><li>Material Modification path was not enforced</li></ul></div>
+    </div>
+<div class="path-block neg" data-path-type="neg" data-path-id="p1-path-6" data-process="p1">
+      <input type="checkbox" class="path-checkbox" data-path-id="p1-path-6" onchange="togglePath(this)" title="Mark this path complete">
+      <div class="path-head">
+        <span class="path-tag neg">🔴 Negative Path</span>
+        <span class="path-title"><span class="path-num-prefix">Negative Path 3:</span> Skipping a concurrence gate</span><span class="path-process-tag" title="From NOFO Lifecycle — Create → Approve → Publish">Process 01</span>
+      </div>
+      <div class="path-meta"><strong>Persona:</strong> Program Office or OA Leadership &nbsp;·&nbsp; <strong>Runs in:</strong> All 6 environments</div>
+      <div class="field-grid">
+        <div class="field-label">Preconditions</div>
+        <div class="field-value"><ol><li>FO is in <code>Under OA Review</code></li><li>Only one of Grant Office / OA Legal / OA CFO has signed off (others pending)</li></ol></div>
+        <div class="field-label">Steps</div>
+        <div class="field-value"><ol><li>OA Leadership attempts to click "OA Review Complete" before all 3 concurrers have signed off</li></ol></div>
+        <div class="field-label">Expected</div>
+        <div class="field-value"><ul><li>Button is disabled OR clicking produces an error: "Cannot advance — pending concurrences"</li><li>FO status does not change</li><li>OA Leadership receives clear feedback identifying which concurrences are still missing</li></ul></div>
+      </div>
+      <div class="expect-row" style="margin-top:8px"><strong>Defects to log if seen:</strong><ul style="margin:4px 0 0"><li>OA Review Complete button enabled despite missing concurrences</li><li>FO advanced to OST-P review with incomplete concurrence record</li></ul></div>
+    </div>
+<div class="path-block neg" data-path-type="neg" data-path-id="p2-path-3" data-process="p2">
+      <input type="checkbox" class="path-checkbox" data-path-id="p2-path-3" onchange="togglePath(this)" title="Mark this path complete">
+      <div class="path-head">
+        <span class="path-tag neg">🔴 Negative Path</span>
+        <span class="path-title"><span class="path-num-prefix">Negative Path 4:</span> Submission attempt without valid UEI</span><span class="path-process-tag" title="From Application Submission & Intake">Process 02</span>
+      </div>
+      <div class="path-meta"><strong>Persona:</strong> Applicant / External &nbsp;·&nbsp; <strong>Runs in:</strong> All 6 environments</div>
+      <div class="field-grid">
+        <div class="field-label">Preconditions</div>
+        <div class="field-value"><ol><li>Applicant has not registered with SAM or has expired SAM registration</li><li>Applicant attempts to submit via Grants.gov anyway</li></ol></div>
+        <div class="field-label">Steps</div>
+        <div class="field-value"><ol><li>Applicant fills out the Application Package</li><li>Submits via Grants.gov Workspace</li></ol></div>
+        <div class="field-label">Expected</div>
+        <div class="field-value"><ul><li>Grants.gov rejects the submission at its own validation layer (no Salesforce intake occurs)</li><li>OR if the submission reaches Salesforce: SAM/UEI validation in DGLMS (GRAN-238 SAM EAPI) fails the submission</li><li>No Application Form record is created in Salesforce</li><li>Applicant receives clear error indicating SAM registration is required</li></ul></div>
+      </div>
+      <div class="expect-row" style="margin-top:8px"><strong>Defects to log if seen:</strong><ul style="margin:4px 0 0"><li>Application Form record was created despite invalid UEI</li><li>SAM EAPI check did not fire</li><li>Error message did not direct applicant to SAM.gov for registration</li></ul></div>
+    </div>
+<div class="path-block neg" data-path-type="neg" data-path-id="p2-path-4" data-process="p2">
+      <input type="checkbox" class="path-checkbox" data-path-id="p2-path-4" onchange="togglePath(this)" title="Mark this path complete">
+      <div class="path-head">
+        <span class="path-tag neg">🔴 Negative Path</span>
+        <span class="path-title"><span class="path-num-prefix">Negative Path 5:</span> Public/external user attempts to access internal Salesforce data</span><span class="path-process-tag" title="From Application Submission & Intake">Process 02</span>
+      </div>
+      <div class="path-meta"><strong>Persona:</strong> Applicant / External (or unauthenticated user) &nbsp;·&nbsp; <strong>Runs in:</strong> All 6 environments</div>
+      <div class="field-grid">
+        <div class="field-label">Preconditions</div>
+        <div class="field-value"><ol><li>Public user attempts to navigate directly to a Salesforce URL (e.g., Application Form record ID, internal report)</li></ol></div>
+        <div class="field-label">Steps</div>
+        <div class="field-value"><ol><li>User attempts to load <code>/lightning/r/Application__c/[id]/view</code> or similar</li></ol></div>
+        <div class="field-label">Expected</div>
+        <div class="field-value"><ul><li>Salesforce login redirect prevents access</li><li>No data leaks via URL parameters or error messages</li><li>If authenticated as a low-privilege Community/Experience Site user, only publicly-shared data is visible (no internal records, no Account Team data)</li></ul></div>
+      </div>
+      <div class="expect-row" style="margin-top:8px"><strong>Defects to log if seen:</strong><ul style="margin:4px 0 0"><li>Internal record visible to unauthenticated user</li><li>Error message reveals internal IDs or schema</li><li>Cross-applicant data exposure (User A sees User B's submission)</li></ul></div>
+    </div>
+<div class="path-block neg" data-path-type="neg" data-path-id="p3-path-4" data-process="p3">
+      <input type="checkbox" class="path-checkbox" data-path-id="p3-path-4" onchange="togglePath(this)" title="Mark this path complete">
+      <div class="path-head">
+        <span class="path-tag neg">🔴 Negative Path</span>
+        <span class="path-title"><span class="path-num-prefix">Negative Path 6:</span> Reviewer attempts to edit after submit</span><span class="path-process-tag" title="From Application Review — Compliance, Merit, Combined Rating">Process 03</span>
+      </div>
+      <div class="path-meta"><strong>Persona:</strong> App Reviewer (after submission) &nbsp;·&nbsp; <strong>Runs in:</strong> All 6 environments</div>
+      <div class="field-grid">
+        <div class="field-label">Preconditions</div>
+        <div class="field-value"><ol><li>Reviewer has already clicked Submit on a review</li><li>Review status is final (no longer Draft)</li></ol></div>
+        <div class="field-label">Steps</div>
+        <div class="field-value"><ol><li>Reviewer reopens the Compliance Review record</li><li>Attempts to change a previous rating or comment</li></ol></div>
+        <div class="field-label">Expected</div>
+        <div class="field-value"><ul><li>All review fields are read-only after submission</li><li>Save and Submit buttons are not visible</li><li>Audit log shows no post-submission modification</li><li>If a change is genuinely needed, only OST Admin can unlock for re-submission</li></ul></div>
+      </div>
+      <div class="expect-row" style="margin-top:8px"><strong>Defects to log if seen:</strong><ul style="margin:4px 0 0"><li>Reviewer was able to modify a submitted review</li><li>Edit modal opened despite submission lock</li><li>Audit log did not capture post-submit access attempts</li></ul></div>
+    </div>
+<div class="path-block neg" data-path-type="neg" data-path-id="p3-path-5" data-process="p3">
+      <input type="checkbox" class="path-checkbox" data-path-id="p3-path-5" onchange="togglePath(this)" title="Mark this path complete">
+      <div class="path-head">
+        <span class="path-tag neg">🔴 Negative Path</span>
+        <span class="path-title"><span class="path-num-prefix">Negative Path 7:</span> Wrong-persona review attempt</span><span class="path-process-tag" title="From Application Review — Compliance, Merit, Combined Rating">Process 03</span>
+      </div>
+      <div class="path-meta"><strong>Persona:</strong> Non-Reviewer persona (e.g., Program Office) attempts to act as Reviewer &nbsp;·&nbsp; <strong>Runs in:</strong> All 6 environments</div>
+      <div class="field-grid">
+        <div class="field-label">Preconditions</div>
+        <div class="field-value"><ol><li>Program Office user does not have GL-Application Reviewer PSG</li><li>Application Form is in <code>Under Review</code> status with assigned Reviewer not yet started</li></ol></div>
+        <div class="field-label">Steps</div>
+        <div class="field-value"><ol><li>Program Office user navigates to the Compliance Review record</li><li>Attempts to rate criteria and submit</li></ol></div>
+        <div class="field-label">Expected</div>
+        <div class="field-value"><ul><li>Compliance Review record is read-only or invisible to non-Reviewer personas</li><li>Save / Submit buttons are not visible</li><li>Permission error if attempt forced via API or URL manipulation</li></ul></div>
+      </div>
+      <div class="expect-row" style="margin-top:8px"><strong>Defects to log if seen:</strong><ul style="margin:4px 0 0"><li>Program Office was able to submit a review</li><li>Reviewer field was overwritten by a non-Reviewer persona</li><li>Audit log shows wrong actor on a review submission</li></ul></div>
+    </div>
+<div class="path-block neg" data-path-type="neg" data-path-id="p4-path-3" data-process="p4">
+      <input type="checkbox" class="path-checkbox" data-path-id="p4-path-3" onchange="togglePath(this)" title="Mark this path complete">
+      <div class="path-head">
+        <span class="path-tag neg">🔴 Negative Path</span>
+        <span class="path-title"><span class="path-num-prefix">Negative Path 8:</span> Notify before S1 approval</span><span class="path-process-tag" title="From Award Selection & Notification">Process 04</span>
+      </div>
+      <div class="path-meta"><strong>Persona:</strong> Program Office &nbsp;·&nbsp; <strong>Runs in:</strong> All 6 environments</div>
+      <div class="field-grid">
+        <div class="field-label">Preconditions</div>
+        <div class="field-value"><ol><li>FO is in <code>Under OA Review</code> or <code>Under OST-P Review</code> — NOT yet S1 approved</li></ol></div>
+        <div class="field-label">Steps</div>
+        <div class="field-value"><ol><li>Program Office attempts to click "Notify Applicants" prematurely</li></ol></div>
+        <div class="field-label">Expected</div>
+        <div class="field-value"><ul><li>"Notify Applicants" button is disabled or hidden until S1 approval</li><li>OR clicking produces an error: "Cannot notify — S1 approval required"</li><li>No notifications sent</li><li>No premature status changes on Application Form records</li></ul></div>
+      </div>
+      <div class="expect-row" style="margin-top:8px"><strong>Defects to log if seen:</strong><ul style="margin:4px 0 0"><li>Notifications fired before S1 approved selections</li><li>Button visible/active in wrong status</li><li>Status manipulated to bypass approval gate</li></ul></div>
+    </div>
+<div class="path-block neg" data-path-type="neg" data-path-id="p4-path-4" data-process="p4">
+      <input type="checkbox" class="path-checkbox" data-path-id="p4-path-4" onchange="togglePath(this)" title="Mark this path complete">
+      <div class="path-head">
+        <span class="path-tag neg">🔴 Negative Path</span>
+        <span class="path-title"><span class="path-num-prefix">Negative Path 9:</span> Wrong persona modifies selections</span><span class="path-process-tag" title="From Award Selection & Notification">Process 04</span>
+      </div>
+      <div class="path-meta"><strong>Persona:</strong> Read-only or non-privileged user &nbsp;·&nbsp; <strong>Runs in:</strong> All 6 environments</div>
+      <div class="field-grid">
+        <div class="field-label">Preconditions</div>
+        <div class="field-value"><ol><li>SRT is populated with proposed selections</li><li>Non-PO/non-OA user has read access to the SRT</li></ol></div>
+        <div class="field-label">Steps</div>
+        <div class="field-value"><ol><li>Read-only user attempts to change a proposed selection (e.g., change applicant from Selected to Not Selected)</li></ol></div>
+        <div class="field-label">Expected</div>
+        <div class="field-value"><ul><li>SRT is read-only to non-PO personas</li><li>Edit attempts fail at the field-level security layer</li><li>No data persisted from the unauthorized edit attempt</li></ul></div>
+      </div>
+      <div class="expect-row" style="margin-top:8px"><strong>Defects to log if seen:</strong><ul style="margin:4px 0 0"><li>Selection modified by unauthorized persona</li><li>Edit silently failed without user feedback</li><li>Field history did not record the attempt</li></ul></div>
+    </div>
+<div class="path-block neg" data-path-type="neg" data-path-id="p5-path-4" data-process="p5">
+      <input type="checkbox" class="path-checkbox" data-path-id="p5-path-4" onchange="togglePath(this)" title="Mark this path complete">
+      <div class="path-head">
+        <span class="path-tag neg">🔴 Negative Path</span>
+        <span class="path-title"><span class="path-num-prefix">Negative Path 10:</span> Reviewer skips COI acknowledgment</span><span class="path-process-tag" title="From Special Workflows — Material Modifications, Republish, COI/NDA">Process 05</span>
+      </div>
+      <div class="path-meta"><strong>Persona:</strong> App Reviewer &nbsp;·&nbsp; <strong>Runs in:</strong> All 6 environments</div>
+      <div class="field-grid">
+        <div class="field-label">Preconditions</div>
+        <div class="field-value"><ol><li>Reviewer is assigned to an Application from an applicant where the reviewer has a known COI (or COI tracking field is empty)</li><li>TC 265 deployed</li></ol></div>
+        <div class="field-label">Steps</div>
+        <div class="field-value"><ol><li>Reviewer attempts to start the Compliance Review without first checking the COI/NDA checkbox</li></ol></div>
+        <div class="field-label">Expected</div>
+        <div class="field-value"><ul><li>Compliance Review form blocks Save/Submit until COI/NDA is acknowledged</li><li>Validation error: "COI/NDA acknowledgment required before review"</li><li>No partial review data persisted while COI check is missing</li></ul></div>
+      </div>
+      <div class="expect-row" style="margin-top:8px"><strong>Defects to log if seen:</strong><ul style="margin:4px 0 0"><li>Reviewer was able to submit review without COI acknowledgment</li><li>COI block was bypassable via API call</li><li>Required-field validation didn't fire on Save</li></ul></div>
+    </div>
+<div class="path-block neg" data-path-type="neg" data-path-id="p5-path-5" data-process="p5">
+      <input type="checkbox" class="path-checkbox" data-path-id="p5-path-5" onchange="togglePath(this)" title="Mark this path complete">
+      <div class="path-head">
+        <span class="path-tag neg">🔴 Negative Path</span>
+        <span class="path-title"><span class="path-num-prefix">Negative Path 11:</span> Material Modification by non-PO persona</span><span class="path-process-tag" title="From Special Workflows — Material Modifications, Republish, COI/NDA">Process 05</span>
+      </div>
+      <div class="path-meta"><strong>Persona:</strong> OA Legal or other read-only persona &nbsp;·&nbsp; <strong>Runs in:</strong> All 6 environments</div>
+      <div class="field-grid">
+        <div class="field-label">Preconditions</div>
+        <div class="field-value"><ol><li>FO is Published</li><li>Non-Program-Office user has access to view the FO</li></ol></div>
+        <div class="field-label">Steps</div>
+        <div class="field-value"><ol><li>Non-PO user attempts to initiate Material Modification (clicks Edit on a locked field, or invokes the Material Modification flow)</li></ol></div>
+        <div class="field-label">Expected</div>
+        <div class="field-value"><ul><li>Material Modification workflow is restricted to Program Office personas</li><li>Edit attempt by other personas is blocked at the field-security or button-visibility layer</li><li>No status change occurs</li></ul></div>
+      </div>
+      <div class="expect-row" style="margin-top:8px"><strong>Defects to log if seen:</strong><ul style="margin:4px 0 0"><li>Non-PO user successfully initiated a Material Modification</li><li>Field permissions inconsistent with workflow permissions</li></ul></div>
+    </div>
+</section>
+
+<footer>
+  <hr style="border:none;border-top:1px solid var(--border);margin:30px 0">
+  <p>This playbook is an admin reference document. Path scenarios are based on the GrantLensE2E UAT Tester Workbook and standard Salesforce/Lightning testing patterns.</p>
+  <p>Treat as <strong>educated draft</strong> — review and adapt before turning into authoritative UAT scripts.</p>
+  <p style="margin-top:20px"><code>DGLMS · Grant Lens · Test Paths Playbook</code></p>
+</footer>
+
+<section class="tab-section" data-tab-kind="runs">
+  <div class="tab-section-header">
+    <h2 class="tab-section-title">📊 Completed Path Runs</h2>
+    <p class="tab-section-summary">All path completion records saved by testers across environments and personas.</p>
+  </div>
+  <div class="runs-toolbar">
+    <div class="runs-filter-group">
+      <label>Filter by env:</label>
+      <select id="runs-filter-env" onchange="reloadRuns()">
+        <option value="">All environments</option>
+        <option value="dotdev">🔷 DOT Dev</option>
+        <option value="dotqa">🔶 DOT QA</option>
+        <option value="dotuat">🟢 DOT UAT</option>
+        <option value="qa">🟡 DTC QA</option>
+        <option value="uat">🔵 DTC UAT</option>
+        <option value="prod">🟣 Production</option>
+      </select>
+    </div>
+    <div class="runs-filter-group">
+      <label>Filter by type:</label>
+      <select id="runs-filter-type" onchange="reloadRuns()">
+        <option value="">All types</option>
+        <option value="happy">🟢 Happy</option>
+        <option value="sad">🟡 Sad</option>
+        <option value="neg">🔴 Negative</option>
+      </select>
+    </div>
+    <button class="nav-btn" onclick="reloadRuns()" style="margin-left:auto">↻ Refresh</button>
+  </div>
+  <div class="runs-table-wrap" id="runs-table-wrap">
+    <div style="padding:40px;text-align:center;color:var(--muted)">Loading runs…</div>
+  </div>
+</section>
+
+<!-- Completion Modal -->
+<div class="modal-backdrop" id="complete-modal" onclick="closeModalIfBackdrop(event)">
+  <div class="modal-content">
+    <div class="modal-head">
+      <h3>Mark Path Complete</h3>
+      <button onclick="closeModal('complete-modal')" class="modal-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-field">
+        <label>Path</label>
+        <div id="complete-modal-path-title" class="modal-readonly">—</div>
+      </div>
+      <div class="modal-field">
+        <label>Environment <span style="color:var(--neg)">*</span></label>
+        <div id="complete-modal-env-display" class="modal-readonly">—</div>
+      </div>
+      <div class="modal-field">
+        <label>Persona <span style="color:var(--neg)">*</span></label>
+        <div id="complete-modal-persona-display" class="modal-readonly">—</div>
+      </div>
+      <div class="modal-field">
+        <label>Tester</label>
+        <div id="complete-modal-tester-display" class="modal-readonly">—</div>
+      </div>
+      <div class="modal-field">
+        <label>Date</label>
+        <input type="date" id="complete-modal-date">
+      </div>
+      <div class="modal-field">
+        <label>Result</label>
+        <select id="complete-modal-result">
+          <option value="passed">✅ Passed (all expected behaviors confirmed)</option>
+          <option value="passed_with_issues">⚠️ Passed with issues (log them separately)</option>
+          <option value="failed">❌ Failed (didn't behave as expected)</option>
+          <option value="blocked">🚫 Blocked (couldn't complete)</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label>Notes (optional)</label>
+        <textarea id="complete-modal-notes" rows="3" placeholder="Anything worth noting for the record…"></textarea>
+      </div>
+      <div id="complete-modal-itemsummary" class="modal-itemsummary"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="nav-btn" onclick="closeModal('complete-modal')">Cancel</button>
+      <button class="nav-btn primary" onclick="submitCompletion()">💾 Save Completion</button>
+    </div>
+  </div>
+</div>
+
+<!-- Issue Modal -->
+<div class="modal-backdrop" id="issue-modal" onclick="closeModalIfBackdrop(event)">
+  <div class="modal-content">
+    <div class="modal-head">
+      <h3>Log Issue from Path</h3>
+      <button onclick="closeModal('issue-modal')" class="modal-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-field">
+        <label>Path</label>
+        <div id="issue-modal-path-title" class="modal-readonly">—</div>
+      </div>
+      <div class="modal-field">
+        <label>Environment / Persona / Tester</label>
+        <div id="issue-modal-context" class="modal-readonly">—</div>
+      </div>
+      <div class="modal-field">
+        <label>Title <span style="color:var(--neg)">*</span></label>
+        <input type="text" id="issue-modal-title" placeholder="Brief description of the issue">
+      </div>
+      <div class="modal-field">
+        <label>Severity</label>
+        <select id="issue-modal-severity">
+          <option value="Low">Low</option>
+          <option value="Medium" selected>Medium</option>
+          <option value="High">High</option>
+          <option value="Critical">Critical</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label>What happened? <span style="color:var(--neg)">*</span></label>
+        <textarea id="issue-modal-behavior" rows="3" placeholder="Describe the actual behavior"></textarea>
+      </div>
+      <div class="modal-field">
+        <label>Expected behavior</label>
+        <textarea id="issue-modal-expected" rows="2" placeholder="What you expected to happen"></textarea>
+      </div>
+      <div class="modal-field">
+        <label>Screenshot link (optional)</label>
+        <input type="text" id="issue-modal-screenshot" placeholder="https://…">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="nav-btn" onclick="closeModal('issue-modal')">Cancel</button>
+      <button class="nav-btn primary" onclick="submitIssue()">🐛 Log Issue</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /.wrap -->
+
+<script>
+// ────────────────────────────────────────────────────────────────
+// PATHS PLAYBOOK — v4 with Supabase persistence and issue tracking
+// ────────────────────────────────────────────────────────────────
+const STORAGE_KEY = 'dglms_paths_playbook_state_v3';
+const DASHBOARD_STORAGE_KEY = 'dglms_e2e_v1';   // shared with index.html
+
+// Supabase config — same project as the dashboard
+const SUPABASE_URL = 'https://jkwqcjvfuocxkxjcoqfx.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_rhOg8FwKPmS3NWffBpr_pQ_40q9r9_H';
+
+const SB = { client: null, online: false };
+
+function loadState() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+  catch (e) { return {}; }
+}
+
+function saveState(state) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  catch (e) { console.warn('Could not persist state:', e); }
+}
+
+// Read tester email from the dashboard's localStorage (shared sign-in)
+function getTesterEmailFromDashboard() {
+  try {
+    const dash = JSON.parse(localStorage.getItem(DASHBOARD_STORAGE_KEY) || '{}');
+    return dash.testerEmail || '';
+  } catch (e) { return ''; }
+}
+
+function setTesterEmailEverywhere(email) {
+  email = (email || '').trim().toLowerCase();
+  // Save to dashboard's localStorage so dashboard sees it next time
+  try {
+    const dash = JSON.parse(localStorage.getItem(DASHBOARD_STORAGE_KEY) || '{}');
+    dash.testerEmail = email;
+    localStorage.setItem(DASHBOARD_STORAGE_KEY, JSON.stringify(dash));
+  } catch (e) {}
+  refreshTesterChip();
+}
+
+function refreshTesterChip() {
+  const email = getTesterEmailFromDashboard();
+  const wrapper = document.getElementById('tester-chip-wrapper');
+  const chipEmail = document.getElementById('tester-chip-email');
+  const chipAvatar = document.getElementById('tester-chip-avatar');
+  const ctxEmail = document.getElementById('run-ctx-email');
+  if (email) {
+    if (wrapper) wrapper.style.display = 'block';
+    if (chipEmail) chipEmail.textContent = email;
+    if (chipAvatar) chipAvatar.textContent = email.substring(0, 2).toUpperCase();
+    if (ctxEmail && !ctxEmail.value) ctxEmail.value = email;
+  } else {
+    if (wrapper) wrapper.style.display = 'none';
+  }
+}
+
+async function initSupabase() {
+  const dot = document.getElementById('run-ctx-conn-dot');
+  const txt = document.getElementById('run-ctx-conn-text');
+  try {
+    if (!window.supabase) {
+      if (dot) dot.classList.add('offline');
+      if (txt) txt.textContent = 'Supabase library missing';
+      return;
+    }
+    SB.client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: false }
+    });
+    // Quick connectivity test
+    const { error } = await SB.client.from('path_runs').select('id', { count: 'exact', head: true });
+    if (error && error.code !== 'PGRST116') {  // PGRST116 = table doesn't exist; treat as offline-ish
+      console.warn('Supabase test query failed:', error);
+      if (dot) dot.classList.add('offline');
+      if (txt) txt.textContent = 'Sync error: ' + (error.message || 'unknown').substring(0, 40);
+      SB.online = false;
+    } else if (error && error.code === 'PGRST116') {
+      if (dot) dot.classList.add('offline');
+      if (txt) txt.innerHTML = '<span style="color:var(--neg)">Table missing</span> — see console';
+      console.warn('path_runs table does not exist. Run the SQL provided to create it.');
+      SB.online = false;
+    } else {
+      SB.online = true;
+      if (dot) dot.classList.add('online');
+      if (txt) txt.textContent = 'Synced';
+    }
+  } catch (e) {
+    console.warn('Supabase init error:', e);
+    if (dot) dot.classList.add('offline');
+    if (txt) txt.textContent = 'Offline';
+  }
+}
+
+// ────────────────────────────────────────────────────────────────
+// TAB SWITCHING
+// ────────────────────────────────────────────────────────────────
+function switchTab(kind) {
+  document.querySelectorAll('.ptt-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.ptt-btn[data-type="' + kind + '"]').classList.add('active');
+  document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
+  const target = document.querySelector('.tab-section[data-tab-kind="' + kind + '"]');
+  if (target) target.classList.add('active');
+  window.scrollTo({top: 0, behavior: 'smooth'});
+  if (kind === 'runs') reloadRuns();
+}
+
+// ────────────────────────────────────────────────────────────────
+// ITEM-LEVEL CHECKBOX INJECTION
+// ────────────────────────────────────────────────────────────────
+function injectItemCheckboxes() {
+  document.querySelectorAll('.path-block').forEach(block => {
+    const pathId = block.dataset.pathId;
+    const grid = block.querySelector('.field-grid');
+    if (!grid) return;
+    
+    const cells = Array.from(grid.children);
+    for (let i = 0; i < cells.length - 1; i += 2) {
+      const labelEl = cells[i];
+      const valueEl = cells[i + 1];
+      if (!labelEl || !valueEl) continue;
+      const sectionLabel = (labelEl.textContent || '').trim().toLowerCase();
+      let flatIdx = 0;
+      const items = valueEl.querySelectorAll('li');
+      items.forEach(li => {
+        if (!li.querySelector(':scope > .item-content')) {
+          const wrapper = document.createElement('span');
+          wrapper.className = 'item-content';
+          const nestedLists = [];
+          Array.from(li.childNodes).forEach(node => {
+            if (node.nodeType === 1 && (node.tagName === 'OL' || node.tagName === 'UL')) {
+              nestedLists.push(node);
+            } else {
+              wrapper.appendChild(node);
+            }
+          });
+          li.appendChild(wrapper);
+          nestedLists.forEach(n => li.appendChild(n));
+        }
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.className = 'item-checkbox';
+        const itemId = pathId + ':' + sectionLabel + ':' + flatIdx;
+        cb.dataset.itemId = itemId;
+        cb.dataset.pathId = pathId;
+        cb.addEventListener('change', () => toggleItem(cb));
+        li.insertBefore(cb, li.firstChild);
+        flatIdx++;
+      });
+    }
+    
+    // Mini progress counter
+    const counter = document.createElement('span');
+    counter.className = 'path-progress-mini';
+    counter.dataset.pathProgress = pathId;
+    counter.textContent = '0/0';
+    block.appendChild(counter);
+    
+    // Path action buttons (Mark Complete + Log Issue) — inserted after the field-grid
+    const actions = document.createElement('div');
+    actions.className = 'path-actions';
+    actions.innerHTML = `
+      <button class="path-action-btn primary" onclick="openCompleteModal('${pathId}')">💾 Mark Complete</button>
+      <button class="path-action-btn" onclick="openIssueModal('${pathId}')">🐛 Log Issue</button>
+    `;
+    block.appendChild(actions);
+  });
+}
+
+function countPathItems(pathId) {
+  const block = document.querySelector('.path-block[data-path-id="' + pathId + '"]');
+  if (!block) return { total: 0, done: 0 };
+  const itemBoxes = block.querySelectorAll('.item-checkbox');
+  let done = 0;
+  itemBoxes.forEach(cb => { if (cb.checked) done++; });
+  return { total: itemBoxes.length, done };
+}
+
+function updatePathMini(pathId) {
+  const { total, done } = countPathItems(pathId);
+  const counter = document.querySelector('[data-path-progress="' + pathId + '"]');
+  if (counter) counter.textContent = done + '/' + total;
+  return { total, done };
+}
+
+function toggleItem(checkbox) {
+  const itemId = checkbox.dataset.itemId;
+  const pathId = checkbox.dataset.pathId;
+  const li = checkbox.closest('li');
+  const state = loadState();
+  state[itemId] = checkbox.checked;
+  saveState(state);
+  if (li) li.classList.toggle('item-done', checkbox.checked);
+  
+  const { total, done } = updatePathMini(pathId);
+  
+  // Auto-check path when all items complete
+  const pathCb = document.querySelector('.path-checkbox[data-path-id="' + pathId + '"]');
+  if (pathCb && total > 0) {
+    if (done === total && !pathCb.checked) {
+      pathCb.checked = true;
+      state[pathId] = true;
+      saveState(state);
+      const block = pathCb.closest('.path-block');
+      if (block) block.classList.add('path-done');
+      updateTabProgress(block.dataset.pathType);
+    } else if (done < total && pathCb.checked) {
+      pathCb.checked = false;
+      delete state[pathId];
+      saveState(state);
+      const block = pathCb.closest('.path-block');
+      if (block) block.classList.remove('path-done');
+      updateTabProgress(block.dataset.pathType);
+    }
+  }
+}
+
+function togglePath(checkbox) {
+  const pathId = checkbox.dataset.pathId;
+  const block = checkbox.closest('.path-block');
+  const kind = block.dataset.pathType;
+  const state = loadState();
+  state[pathId] = checkbox.checked;
+  saveState(state);
+  block.classList.toggle('path-done', checkbox.checked);
+  updateTabProgress(kind);
+}
+
+function updateTabProgress(kind) {
+  const blocks = document.querySelectorAll('.path-block[data-path-type="' + kind + '"]');
+  const total = blocks.length;
+  let done = 0;
+  blocks.forEach(b => {
+    const cb = b.querySelector('.path-checkbox');
+    if (cb && cb.checked) done++;
+  });
+  const el = document.getElementById('ptt-prog-' + kind);
+  if (el) el.textContent = done + '/' + total;
+}
+
+function resetAllPaths() {
+  if (!confirm('Clear ALL local checkbox state (paths, steps, preconditions, expected) for this browser? This does NOT delete saved completion records from Supabase.')) return;
+  document.querySelectorAll('.path-checkbox').forEach(cb => {
+    cb.checked = false;
+    cb.closest('.path-block').classList.remove('path-done');
+  });
+  document.querySelectorAll('.item-checkbox').forEach(cb => {
+    cb.checked = false;
+    const li = cb.closest('li');
+    if (li) li.classList.remove('item-done');
+  });
+  saveState({});
+  ['happy','sad','neg'].forEach(updateTabProgress);
+  document.querySelectorAll('[data-path-progress]').forEach(c => updatePathMini(c.dataset.pathProgress));
+}
+
+// ────────────────────────────────────────────────────────────────
+// MODALS — Mark Complete + Log Issue
+// ────────────────────────────────────────────────────────────────
+let _activePathId = null;
+
+function getPathInfo(pathId) {
+  const block = document.querySelector('.path-block[data-path-id="' + pathId + '"]');
+  if (!block) return null;
+  const titleEl = block.querySelector('.path-title');
+  const procEl = block.querySelector('.path-process-tag');
+  const kind = block.dataset.pathType;
+  return {
+    pathId,
+    pathType: kind,
+    title: titleEl ? titleEl.textContent.trim() : pathId,
+    process: procEl ? procEl.textContent.trim() : ''
+  };
+}
+
+function getRunContext() {
+  const env = document.getElementById('run-ctx-env').value;
+  const persona = document.getElementById('run-ctx-persona').value;
+  const email = (document.getElementById('run-ctx-email').value || '').trim().toLowerCase();
+  return { env, persona, email };
+}
+
+const ENV_LABELS = { dotdev:'🔷 DOT Dev', dotqa:'🔶 DOT QA', dotuat:'🟢 DOT UAT', qa:'🟡 DTC QA', uat:'🔵 DTC UAT', prod:'🟣 Production' };
+const PERSONA_LABELS = { po:'Program Office', rev:'App Reviewer', ost:'OST Admin', nofo:'NOFO Dev Team', go:'Grant Office', legal:'OA Legal', cfo:'OA CFO', oal:'OA Leadership', das:'DAS', s1:'S1', app:'Applicant / External', sys:'Sys Admin / API' };
+
+function openCompleteModal(pathId) {
+  const info = getPathInfo(pathId);
+  if (!info) return;
+  const ctx = getRunContext();
+  if (!ctx.env || !ctx.persona) {
+    alert('Please select an Environment and a Persona at the top of the page before saving a completion.');
+    return;
+  }
+  if (!ctx.email) {
+    alert('Please enter your tester email at the top of the page so we can attribute this run to you.');
+    document.getElementById('run-ctx-email').focus();
+    return;
+  }
+  setTesterEmailEverywhere(ctx.email);
+  
+  _activePathId = pathId;
+  document.getElementById('complete-modal-path-title').textContent = info.title + ' (' + info.process + ')';
+  document.getElementById('complete-modal-env-display').textContent = ENV_LABELS[ctx.env] || ctx.env;
+  document.getElementById('complete-modal-persona-display').textContent = PERSONA_LABELS[ctx.persona] || ctx.persona;
+  document.getElementById('complete-modal-tester-display').textContent = ctx.email;
+  document.getElementById('complete-modal-date').value = new Date().toISOString().substring(0, 10);
+  document.getElementById('complete-modal-result').value = 'passed';
+  document.getElementById('complete-modal-notes').value = '';
+  
+  const { total, done } = countPathItems(pathId);
+  const pct = total > 0 ? Math.round((done/total) * 100) : 0;
+  document.getElementById('complete-modal-itemsummary').innerHTML =
+    '✓ ' + done + ' / ' + total + ' items checked  ·  ' + pct + '% complete';
+  
+  document.getElementById('complete-modal').classList.add('open');
+}
+
+function openIssueModal(pathId) {
+  const info = getPathInfo(pathId);
+  if (!info) return;
+  const ctx = getRunContext();
+  if (!ctx.email) {
+    alert('Please enter your tester email at the top of the page before logging an issue.');
+    document.getElementById('run-ctx-email').focus();
+    return;
+  }
+  setTesterEmailEverywhere(ctx.email);
+  
+  _activePathId = pathId;
+  document.getElementById('issue-modal-path-title').textContent = info.title + ' (' + info.process + ')';
+  const ctxStr = (ENV_LABELS[ctx.env] || ctx.env || 'no env') + '  ·  ' + (PERSONA_LABELS[ctx.persona] || ctx.persona || 'no persona') + '  ·  ' + ctx.email;
+  document.getElementById('issue-modal-context').textContent = ctxStr;
+  document.getElementById('issue-modal-title').value = '';
+  document.getElementById('issue-modal-severity').value = 'Medium';
+  document.getElementById('issue-modal-behavior').value = '';
+  document.getElementById('issue-modal-expected').value = '';
+  document.getElementById('issue-modal-screenshot').value = '';
+  
+  document.getElementById('issue-modal').classList.add('open');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function closeModalIfBackdrop(event) {
+  if (event.target.classList.contains('modal-backdrop')) {
+    event.target.classList.remove('open');
+  }
+}
+
+// ────────────────────────────────────────────────────────────────
+// SAVE PATH COMPLETION
+// ────────────────────────────────────────────────────────────────
+async function submitCompletion() {
+  if (!_activePathId) return;
+  const info = getPathInfo(_activePathId);
+  const ctx = getRunContext();
+  const date = document.getElementById('complete-modal-date').value;
+  const result = document.getElementById('complete-modal-result').value;
+  const notes = document.getElementById('complete-modal-notes').value.trim();
+  
+  if (!ctx.env || !ctx.persona || !ctx.email) {
+    alert('Missing context. Please fill in Environment, Persona, and Tester at the top of the page.');
+    return;
+  }
+  
+  // Capture per-item state
+  const block = document.querySelector('.path-block[data-path-id="' + _activePathId + '"]');
+  const itemsChecked = {};
+  let total = 0, done = 0;
+  block.querySelectorAll('.item-checkbox').forEach(cb => {
+    itemsChecked[cb.dataset.itemId] = cb.checked;
+    total++;
+    if (cb.checked) done++;
+  });
+  
+  const row = {
+    path_id: _activePathId,
+    path_type: info.pathType,
+    path_title: info.title,
+    process_name: info.process,
+    environment: ctx.env,
+    persona: ctx.persona,
+    completed_by_email: ctx.email,
+    completed_at: new Date(date + 'T12:00:00Z').toISOString(),
+    items_checked: itemsChecked,
+    items_total: total,
+    items_done: done,
+    notes: notes || null,
+    result: result
+  };
+  
+  if (!SB.online || !SB.client) {
+    alert('Cannot save: Supabase is not connected. Check the sync status indicator at the top right.');
+    return;
+  }
+  
+  try {
+    const { data, error } = await SB.client.from('path_runs').insert(row).select().maybeSingle();
+    if (error) throw error;
+    closeModal('complete-modal');
+    alert('✅ Path completion saved!');
+    reloadRuns();
+  } catch (e) {
+    console.error('Save failed:', e);
+    alert('❌ Save failed: ' + (e.message || 'unknown error'));
+  }
+}
+
+// ────────────────────────────────────────────────────────────────
+// LOG ISSUE (writes to existing issues table with playbook context)
+// ────────────────────────────────────────────────────────────────
+async function submitIssue() {
+  if (!_activePathId) return;
+  const info = getPathInfo(_activePathId);
+  const ctx = getRunContext();
+  const title = document.getElementById('issue-modal-title').value.trim();
+  const severity = document.getElementById('issue-modal-severity').value;
+  const behavior = document.getElementById('issue-modal-behavior').value.trim();
+  const expected = document.getElementById('issue-modal-expected').value.trim();
+  const screenshot = document.getElementById('issue-modal-screenshot').value.trim();
+  
+  if (!title || !behavior) {
+    alert('Title and "What happened?" are required.');
+    return;
+  }
+  if (!ctx.email) {
+    alert('Tester email is required.');
+    return;
+  }
+  
+  const row = {
+    title: title,
+    test_case_id: _activePathId,        // use path_id as the test_case_id
+    environment: ctx.env || null,
+    persona: ctx.persona || null,
+    tester_email: ctx.email,
+    test_date: new Date().toISOString().substring(0, 10),
+    behavior: behavior,
+    expected_behavior: expected || null,
+    screenshot_link: screenshot || null,
+    severity: severity,
+    status: 'Open',
+    logged_at: new Date().toISOString(),
+    context: {
+      source: 'playbook',
+      path_id: _activePathId,
+      path_type: info.pathType,
+      path_title: info.title,
+      process_name: info.process
+    }
+  };
+  
+  if (!SB.online || !SB.client) {
+    alert('Cannot save: Supabase is not connected.');
+    return;
+  }
+  
+  try {
+    const { data, error } = await SB.client.from('issues').insert(row).select().maybeSingle();
+    if (error) throw error;
+    closeModal('issue-modal');
+    const issueNum = data && data.issue_number ? 'ISS-' + String(data.issue_number).padStart(3, '0') : 'logged';
+    alert('🐛 Issue ' + issueNum + ' logged from this path.');
+  } catch (e) {
+    console.error('Issue save failed:', e);
+    alert('❌ Could not log issue: ' + (e.message || 'unknown error'));
+  }
+}
+
+// ────────────────────────────────────────────────────────────────
+// COMPLETED RUNS TABLE
+// ────────────────────────────────────────────────────────────────
+async function reloadRuns() {
+  const wrap = document.getElementById('runs-table-wrap');
+  if (!wrap) return;
+  wrap.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">Loading runs…</div>';
+  
+  if (!SB.online || !SB.client) {
+    wrap.innerHTML = '<div class="runs-empty">⚠️ Supabase not connected. Path runs cannot be loaded.</div>';
+    return;
+  }
+  
+  try {
+    const envFilter = document.getElementById('runs-filter-env').value;
+    const typeFilter = document.getElementById('runs-filter-type').value;
+    let query = SB.client.from('path_runs').select('*').order('completed_at', { ascending: false }).limit(500);
+    if (envFilter) query = query.eq('environment', envFilter);
+    if (typeFilter) query = query.eq('path_type', typeFilter);
+    const { data, error } = await query;
+    if (error) throw error;
+    
+    const countEl = document.getElementById('runs-count');
+    if (countEl) countEl.textContent = (data || []).length;
+    
+    if (!data || data.length === 0) {
+      wrap.innerHTML = '<div class="runs-empty">No completed runs yet. Mark a path complete to record one.</div>';
+      return;
+    }
+    
+    let html = '<table class="runs-table"><thead><tr>';
+    html += '<th>Date</th><th>Path</th><th>Type</th><th>Env</th><th>Persona</th><th>Tester</th><th>Result</th><th>Items</th><th>Notes</th>';
+    html += '</tr></thead><tbody>';
+    for (const r of data) {
+      const date = r.completed_at ? new Date(r.completed_at).toISOString().substring(0, 10) : '—';
+      const typeEmoji = { happy:'🟢', sad:'🟡', neg:'🔴' }[r.path_type] || '';
+      const envLabel = ENV_LABELS[r.environment] || r.environment || '—';
+      const personaLabel = PERSONA_LABELS[r.persona] || r.persona || '—';
+      const itemsTxt = (r.items_done || 0) + '/' + (r.items_total || 0);
+      const notesShort = r.notes ? (r.notes.length > 60 ? r.notes.substring(0, 60) + '…' : r.notes) : '';
+      html += '<tr>';
+      html += '<td>' + date + '</td>';
+      html += '<td>' + (r.path_title || r.path_id) + '<br><span style="font-size:10px;color:var(--muted);font-family:JetBrains Mono,monospace">' + r.path_id + '  ·  ' + (r.process_name || '') + '</span></td>';
+      html += '<td>' + typeEmoji + ' ' + (r.path_type || '') + '</td>';
+      html += '<td>' + envLabel + '</td>';
+      html += '<td>' + personaLabel + '</td>';
+      html += '<td style="font-family:JetBrains Mono,monospace;font-size:11.5px">' + (r.completed_by_email || '—') + '</td>';
+      html += '<td><span class="run-result ' + (r.result || 'passed') + '">' + (r.result || 'passed').replace(/_/g,' ') + '</span></td>';
+      html += '<td style="font-family:JetBrains Mono,monospace">' + itemsTxt + '</td>';
+      html += '<td style="font-size:11.5px;color:var(--muted)">' + (notesShort || '—') + '</td>';
+      html += '</tr>';
+    }
+    html += '</tbody></table>';
+    wrap.innerHTML = html;
+  } catch (e) {
+    console.error('Load runs failed:', e);
+    wrap.innerHTML = '<div class="runs-empty">❌ Could not load runs: ' + (e.message || 'unknown') + '</div>';
+  }
+}
+
+// ────────────────────────────────────────────────────────────────
+// INIT
+// ────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  injectItemCheckboxes();
+  
+  // Restore item-level state
+  const state = loadState();
+  document.querySelectorAll('.item-checkbox').forEach(cb => {
+    if (state[cb.dataset.itemId]) {
+      cb.checked = true;
+      const li = cb.closest('li');
+      if (li) li.classList.add('item-done');
+    }
+  });
+  
+  // Restore path-level state
+  document.querySelectorAll('.path-checkbox').forEach(cb => {
+    if (state[cb.dataset.pathId]) {
+      cb.checked = true;
+      cb.closest('.path-block').classList.add('path-done');
+    }
+  });
+  
+  document.querySelectorAll('.path-block').forEach(block => updatePathMini(block.dataset.pathId));
+  ['happy','sad','neg'].forEach(updateTabProgress);
+  
+  // Tester sign-in detection
+  refreshTesterChip();
+  const ctxEmail = document.getElementById('run-ctx-email');
+  if (ctxEmail) {
+    ctxEmail.addEventListener('change', () => setTesterEmailEverywhere(ctxEmail.value));
+    ctxEmail.addEventListener('blur', () => setTesterEmailEverywhere(ctxEmail.value));
+  }
+  
+  // Init Supabase async
+  await initSupabase();
+});
+</script>
+
+</body>
+</html>
