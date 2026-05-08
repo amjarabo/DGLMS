@@ -1486,6 +1486,26 @@
 .side-subtab-btn .ico {
   font-size: 14px;
 }
+
+/* ── Role badges in sidebar footer ── */
+.user-info .user-role { display: flex; gap: 4px; align-items: center; }
+.role-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-family: 'JetBrains Mono', 'DM Mono', monospace;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  line-height: 1.4;
+}
+.role-badge.role-admin { background: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
+.role-badge.role-tester { background: #dbeafe; color: #1e40af; border: 1px solid #3b82f6; }
+.role-badge.role-guest { background: #f3f4f6; color: #6b7280; border: 1px solid #d1d5db; }
+[data-theme="dark"] .role-badge.role-admin { background: rgba(245,158,11,0.15); color: #fbbf24; border-color: rgba(245,158,11,0.3); }
+[data-theme="dark"] .role-badge.role-tester { background: rgba(59,130,246,0.15); color: #60a5fa; border-color: rgba(59,130,246,0.3); }
+[data-theme="dark"] .role-badge.role-guest { background: rgba(156,163,175,0.15); color: #9ca3af; border-color: rgba(156,163,175,0.25); }
 </style>
 </head>
 <body>
@@ -1660,9 +1680,6 @@
     <button class="nav-item" onclick="showView('issue-tracker', this)">
       <span class="nav-icon">🐛</span> Issue Tracker
     </button>
-    <button class="nav-item" onclick="showView('resolved-issues', this)">
-      <span class="nav-icon">✅</span> Resolved Issues
-    </button>
     <button class="nav-item" onclick="showView('resources', this)">
       <span class="nav-icon">📁</span> Resources & Links
     </button>
@@ -1670,10 +1687,12 @@
 
   <div class="sidebar-footer">
     <div class="sidebar-user">
-      <div class="user-avatar">QA</div>
+      <div class="user-avatar" id="footer-user-avatar">G</div>
       <div class="user-info">
-        <div class="user-name">E2E Tester</div>
-        <div class="user-role">SUAT Team · DTC</div>
+        <div class="user-name" id="footer-user-name">Guest</div>
+        <div class="user-role" id="footer-user-role">
+          <span class="role-badge role-guest" id="footer-role-badge">Guest</span>
+        </div>
       </div>
     </div>
   </div>
@@ -1778,7 +1797,7 @@
             <div class="card-title">✅ Recently Resolved <span id="dash-resolved-count" style="font-family:'DM Mono',monospace;color:#16a34a;">0</span></div>
             <div class="card-subtitle">Latest 5 issues marked Fixed or Won't Fix</div>
           </div>
-          <button class="topbar-btn" onclick="showView('resolved-issues', document.querySelector('[onclick*=resolved-issues]'))" style="margin-left:auto;font-size:12px;">View all →</button>
+          <button class="topbar-btn" onclick="showView('issue-tracker', document.querySelector('[onclick*=issue-tracker]')); setTimeout(()=>setIssueFilter('resolved'),50);" style="margin-left:auto;font-size:12px;">View resolved →</button>
         </div>
         <div class="card-body">
           <div id="dash-recently-resolved" style="display:flex;flex-direction:column;gap:8px;">
@@ -2937,7 +2956,7 @@
     <div id="view-issue-tracker" class="view">
       <div class="page-header">
         <h1>Issue Tracker</h1>
-        <p>All issues logged across DTC QA, DTC UAT, and Production. Use the <strong>🐛 Log Issue</strong> button on any test case to file a new one — the test case context (TC#, persona, environment, your email, date) auto-populates.</p>
+        <p>All issues across all environments — Open and Resolved. Toggle the filter buttons to switch views. Use the <strong>🐛 Log Issue</strong> button on any test case to file a new one — the test case context (TC#, persona, environment, your email, date) auto-populates.</p>
       </div>
 
       <div class="card">
@@ -3124,7 +3143,6 @@ const viewTitles = {
   'e2e-dotuat': ['DOT Side — DOT UAT', 'DOT-side user acceptance — by persona'],
   'admin-view': ['Admin View', 'All testers · all environments · master table'],
   'issue-tracker': ['Issue Tracker', 'Log and track defects'],
-  'resolved-issues': ['Resolved Issues', 'All issues marked Fixed or Won\'t Fix'],
   'resources': ['Resources & Links', 'Credentials, mock data, sign-off'],
 };
 
@@ -3448,6 +3466,7 @@ async function sbBootstrap() {
       }
 
       if (SB_STATE.isAdmin) document.body.classList.add('is-admin');
+      refreshSidebarFooter();
       if (SB_STATE.isGuest) document.body.classList.add('is-guest');
 
       SB_STATE.online = true;
@@ -3817,6 +3836,49 @@ function refreshTesterChip() {
   } else {
     chip.style.display = 'none';
   }
+  refreshSidebarFooter();
+}
+
+// ════════════════════════════════════════════════
+// SIDEBAR FOOTER — name + role badge
+// ════════════════════════════════════════════════
+function refreshSidebarFooter() {
+  const email = (typeof getTesterEmail === 'function') ? getTesterEmail() : '';
+  const isAdmin = (typeof SB_STATE !== 'undefined' && SB_STATE.isAdmin) || (typeof SP_STATE !== 'undefined' && SP_STATE.isAdmin) || false;
+  const isGuest = (typeof SB_STATE !== 'undefined' && SB_STATE.isGuest) || (typeof SP_STATE !== 'undefined' && SP_STATE.isGuest) || false;
+  
+  const avatarEl = document.getElementById('footer-user-avatar');
+  const nameEl = document.getElementById('footer-user-name');
+  const badgeEl = document.getElementById('footer-role-badge');
+  if (!avatarEl || !nameEl || !badgeEl) return;
+  
+  // Determine display name (left of @, capitalized)
+  let displayName = 'Guest';
+  let avatarText = 'G';
+  if (email) {
+    const local = email.split('@')[0] || email;
+    // Title-case the username portion: "ana.jarabo" -> "Ana Jarabo", "anajarabo" -> "Anajarabo"
+    displayName = local
+      .replace(/[._-]+/g, ' ')
+      .split(' ')
+      .map(s => s ? s[0].toUpperCase() + s.slice(1).toLowerCase() : '')
+      .join(' ')
+      .trim() || email;
+    // Avatar: initials from displayName, max 2 chars
+    const parts = displayName.split(/\s+/);
+    avatarText = parts.length >= 2 ? (parts[0][0] + parts[1][0]).toUpperCase() : email.substring(0, 2).toUpperCase();
+  }
+  
+  // Determine role
+  let role, roleClass;
+  if (isAdmin) { role = 'Admin'; roleClass = 'role-admin'; }
+  else if (!email || isGuest) { role = 'Guest'; roleClass = 'role-guest'; }
+  else { role = 'E2E Tester'; roleClass = 'role-tester'; }
+  
+  avatarEl.textContent = avatarText;
+  nameEl.textContent = displayName;
+  badgeEl.className = 'role-badge ' + roleClass;
+  badgeEl.textContent = role;
 }
 function showEmailGate() {
   document.getElementById('email-gate').style.display = 'flex';
