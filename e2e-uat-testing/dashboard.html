@@ -221,14 +221,14 @@ table.data tfoot td{padding:10px 12px;background:#f1f5f9;font-weight:700;border-
 .sub-role-pill.active:hover{background:linear-gradient(135deg,#1e40af,#4338ca);color:#fff}
 
 /* Sub-pill picker (shown when a combined pill is clicked — step 1 of the drill-down) */
-.sub-pill-picker{padding:4px 0}
-.sub-pill-picker .sub-pill-prompt{font-size:11.5px;font-weight:600;color:var(--text-secondary);margin-bottom:8px;text-align:center}
-.sub-pill-picker .sub-pill-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
-.sub-pill-big{flex:1 1 140px;max-width:200px;background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;cursor:pointer;transition:.15s;font-family:inherit;text-align:center;display:flex;flex-direction:column;align-items:center;gap:3px}
-.sub-pill-big:hover{border-color:var(--blue-500);box-shadow:0 3px 10px rgba(59,130,246,.1);transform:translateY(-1px)}
-.sub-pill-big .sub-pill-icon{font-size:20px;line-height:1}
-.sub-pill-big .sub-pill-name{font-size:12.5px;font-weight:700;color:var(--text-primary);letter-spacing:-.1px}
-.sub-pill-big .sub-pill-meta{font-size:9.5px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.sub-pill-picker{padding:2px 0}
+.sub-pill-picker .sub-pill-prompt{font-size:10.5px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;text-align:center}
+.sub-pill-picker .sub-pill-row{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.sub-pill-big{flex:0 1 auto;background:#fff;border:1px solid var(--border);border-radius:8px;padding:5px 12px;cursor:pointer;transition:.15s;font-family:inherit;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.sub-pill-big:hover{border-color:var(--blue-500);background:var(--blue-50)}
+.sub-pill-big .sub-pill-icon{font-size:14px;line-height:1}
+.sub-pill-big .sub-pill-name{font-size:11.5px;font-weight:700;color:var(--text-primary);letter-spacing:-.1px}
+.sub-pill-big .sub-pill-meta{font-size:9.5px;color:var(--text-muted);font-weight:500}
 .tester-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:14px;background:#fff;border:1px solid #cbd5e1;font-size:11px;font-weight:600;color:var(--text-primary);transition:.15s}
 .tester-chip:hover{border-color:var(--blue-400);background:var(--blue-50)}
 .tester-chip.primary{background:linear-gradient(135deg,#d1fae5,#a7f3d0);border-color:#6ee7b7;color:#065f46}
@@ -1175,6 +1175,36 @@ code,.mono{font-family:'DM Mono',monospace;font-size:11.5px}
     <div class="modal-footer">
       <button class="btn" onclick="closeAdminSignOffModal()">Cancel</button>
       <button class="btn primary" onclick="confirmAdminSignOff()">🔒 Sign Off</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     PERSONA + USER PICKER (for group actions)
+════════════════════════════════════════════ -->
+<div id="group-action-modal" class="modal-backdrop" style="display:none;">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-header" style="background:linear-gradient(135deg,#1d4ed8,#4f46e5);">
+      <h2 id="gap-title">⚖️ Pick persona &amp; tester</h2>
+      <button class="modal-close" onclick="closeGroupActionPicker()">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="margin:0 0 14px;font-size:12px;color:var(--text-secondary);">
+        <span id="gap-intro">This test case is shared across three roles. Pick which role this action applies to, and which tester is recording the result.</span>
+      </p>
+      <div class="field full">
+        <label>Persona *</label>
+        <select id="gap-persona"></select>
+      </div>
+      <div class="field full">
+        <label>Tester *</label>
+        <select id="gap-tester"></select>
+        <div style="font-size:10.5px;color:var(--text-muted);margin-top:3px;">Defaults to you. Pick another tester to log on their behalf.</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeGroupActionPicker()">Cancel</button>
+      <button class="btn primary" id="gap-confirm-btn" onclick="confirmGroupActionPicker()">✓ Confirm</button>
     </div>
   </div>
 </div>
@@ -2741,19 +2771,38 @@ function saveLocal(){
 function tcKey(persona, tcUid){ return persona + '|' + tcUid; }
 function userResultKey(persona, tcUid, email){ return persona + '|' + tcUid + '|' + (email||'').toLowerCase(); }
 function getAllUserResults(persona, tcUid){
-  // Returns array of {email, name, status, date, signed_off_by_email, signed_off_date}
-  const prefix = persona + '|' + tcUid + '|';
-  return Object.keys(ST.results).filter(k => k.startsWith(prefix)).map(k => ST.results[k]);
+  // Returns array of {email, name, status, date, signed_off_by_email, signed_off_date, _sourcePersona}
+  // If `persona` is a group key, results across ALL member personas are returned.
+  const personas = PERSONA_GROUPS[persona] ? PERSONA_GROUPS[persona].members : [persona];
+  const out = [];
+  personas.forEach(pk => {
+    const prefix = pk + '|' + tcUid + '|';
+    Object.keys(ST.results).forEach(k => {
+      if(k.startsWith(prefix)){
+        out.push({ ...ST.results[k], _sourcePersona: pk });
+      }
+    });
+  });
+  return out;
 }
 function myTCStatus(persona, tcUid){
   if(!ST.email) return 'Pending';
+  // For groups, aggregate my own results across the 3 members (worst-case status wins, same priority as overall)
+  if(PERSONA_GROUPS[persona]){
+    const mine = getAllUserResults(persona, tcUid).filter(r => (r.tester_email||'').toLowerCase() === ST.email.toLowerCase());
+    if(mine.length === 0) return 'Pending';
+    if(mine.some(r => r.status === 'SignedOff')) return 'SignedOff';
+    if(mine.some(r => r.status === 'Failed')) return 'Failed';
+    if(mine.some(r => r.status === 'Inconclusive')) return 'Inconclusive';
+    if(mine.some(r => r.status === 'Passed')) return 'Passed';
+    return 'Pending';
+  }
   const r = ST.results[userResultKey(persona, tcUid, ST.email)];
   return r ? r.status : 'Pending';
 }
 function aggregatedTCStatus(persona, tcUid){
-  // For UI badge on the TC card header: choose the "most representative" status across all testers.
+  // For UI badge on the TC card header: most-representative status across all testers (and all members if group).
   // Priority: SignedOff > Failed > Inconclusive > Passed > Pending
-  // (if at least one user has signed off, count it as signed off; if any failed, it's failed; etc.)
   const all = getAllUserResults(persona, tcUid);
   if(all.length === 0) return 'Pending';
   if(all.some(r => r.status === 'SignedOff')) return 'SignedOff';
@@ -3349,13 +3398,12 @@ function renderTestCases(){
       btn.dataset.anchor = t.anchor;
       btn.onclick = () => {
         if(t.kind === 'group'){
-          // Step 1: clicking the combined pill shows the sub-pill picker (TCs hidden until a sub-pill is chosen)
-          ST.groupChoicePending = t.key;
-          ST.currentPersona = t.anchor;  // anchor so the active highlight works
+          // Use the group key itself as the "current persona" value
+          ST.currentPersona = t.key;
         } else {
-          ST.groupChoicePending = null;
           ST.currentPersona = t.anchor;
         }
+        ST.groupChoicePending = null;  // legacy field, no longer used
         renderTestCases();
       };
       const tcCount = (PERSONA_DATA[t.anchor] || []).length;
@@ -3363,64 +3411,30 @@ function renderTestCases(){
       tabs.appendChild(btn);
     });
   }
-  // Mark active — a group tab is active if currentPersona is ANY of its members OR groupChoicePending matches
+  // Mark active
   tabs.querySelectorAll('.persona-tab').forEach(b => {
     const isGroup = b.dataset.kind === 'group';
     if(isGroup){
-      const g = PERSONA_GROUPS[b.dataset.groupKey];
-      const matchesPending = ST.groupChoicePending === b.dataset.groupKey;
-      const matchesMember = g && g.members.includes(ST.currentPersona);
-      b.classList.toggle('active', matchesPending || matchesMember);
+      b.classList.toggle('active', ST.currentPersona === b.dataset.groupKey);
     } else {
-      b.classList.toggle('active', b.dataset.anchor === ST.currentPersona && !ST.groupChoicePending);
+      b.classList.toggle('active', b.dataset.anchor === ST.currentPersona);
     }
   });
 
-  // ─── STEP 1 STATE: Group pill clicked, no sub-pill picked yet ───
-  if(ST.groupChoicePending){
-    const g = PERSONA_GROUPS[ST.groupChoicePending];
-    // Banner: show group label + description, no testers, prompt to pick a sub-role
+  // Determine if current selection is a group
+  const isGroupSel = !!PERSONA_GROUPS[ST.currentPersona];
+  let displayPersona = ST.currentPersona;
+  let tcListPersona = ST.currentPersona;  // which persona's TCs we render
+  if(isGroupSel){
+    const g = PERSONA_GROUPS[ST.currentPersona];
+    tcListPersona = g.members[0];  // anchor — use its TC array
     document.getElementById('persona-banner-title').innerHTML = `<span class="label-icon">${g.icon}</span> ${escapeHtml(g.label)}`;
     document.getElementById('persona-banner-desc').textContent = g.desc;
-    // Sub-pill picker fills the banner's testers slot
-    const el = document.getElementById('persona-banner-testers');
-    if(el){
-      el.innerHTML = `
-        <div class="sub-pill-picker">
-          <div class="sub-pill-prompt">👇 Pick a sub-role to view its testers and test cases</div>
-          <div class="sub-pill-row">
-            ${g.members.map(mk => {
-              const m = PERSONA_META[mk];
-              const testerCount = (ST.assignments[mk] || []).filter(t => !t.is_si).length;
-              return `<button class="sub-pill-big" onclick="pickSubPersona('${escapeAttr(mk)}')">
-                <div class="sub-pill-icon">${m.icon}</div>
-                <div class="sub-pill-name">${escapeHtml(m.label)}</div>
-                <div class="sub-pill-meta">${testerCount} tester${testerCount===1?'':'s'} · ${(PERSONA_DATA[mk]||[]).length} TCs</div>
-              </button>`;
-            }).join('')}
-          </div>
-        </div>`;
-    }
-    // Hide the TC list — show a placeholder
-    document.getElementById('tc-summary-chip').textContent = '';
-    document.getElementById('testcases-list').innerHTML = `<div class="empty-state">
-      <div class="icon">⚖️</div>
-      <h3>Choose a sub-role above</h3>
-      <p>Grant Office, OA Legal, and OA CFO share the same test cases — but each has its own assigned testers and tracks results independently. Pick one to continue.</p>
-    </div>`;
-    return;
-  }
-
-  // ─── STEP 2 STATE: A specific persona is active (either ungrouped, or a sub-pill was picked) ───
-  const meta = PERSONA_META[ST.currentPersona];
-  const groupKey = PERSONA_TO_GROUP[ST.currentPersona];
-  if(groupKey){
-    const g = PERSONA_GROUPS[groupKey];
-    document.getElementById('persona-banner-title').innerHTML = `<span class="label-icon">${meta.icon}</span> ${escapeHtml(meta.label)} <button class="btn ghost sm" style="margin-left:10px;font-size:11px;padding:3px 10px;vertical-align:middle;" onclick="backToSubPicker('${escapeAttr(groupKey)}')">← ${escapeHtml(g.label)}</button>`;
   } else {
+    const meta = PERSONA_META[ST.currentPersona];
     document.getElementById('persona-banner-title').innerHTML = `<span class="label-icon">${meta.icon}</span> Persona: ${escapeHtml(meta.label)}`;
+    document.getElementById('persona-banner-desc').textContent = meta.desc;
   }
-  document.getElementById('persona-banner-desc').textContent = meta.desc;
   renderPersonaBannerTesters();
 
   // Filter
@@ -3428,7 +3442,8 @@ function renderTestCases(){
   const bFilter = document.getElementById('tc-bug-filter').value;
   const q = (document.getElementById('tc-search').value || '').toLowerCase().trim();
 
-  let list = (PERSONA_DATA[ST.currentPersona] || []).map((tc,ix) => ({
+  // TC list — for groups, use the anchor's TC data and tag each TC with the group key for display
+  let list = (PERSONA_DATA[tcListPersona] || []).map((tc,ix) => ({
     ...tc, persona: ST.currentPersona, uid: tc.uid || tc.tc, _index: ix
   }));
 
@@ -3492,9 +3507,13 @@ function renderTestCases(){
             <button class="result-btn fail ${myTCStatus(t.persona,t.uid)==='Failed'?'active':''}" onclick="event.stopPropagation();markTCResult('${t.persona}','${escapeAttr(t.uid)}','Failed')">✗ Fail</button>
             <button class="result-btn inc ${myTCStatus(t.persona,t.uid)==='Inconclusive'?'active':''}" onclick="event.stopPropagation();markTCResult('${t.persona}','${escapeAttr(t.uid)}','Inconclusive')">~ Inconclusive</button>
             <button class="btn danger sm" onclick="event.stopPropagation();openLogIssueModal('${t.persona}','${escapeAttr(t.uid)}','${escapeAttr(t.tc)}')">🐛 Log Bug</button>
-            ${canSignOffOwn(t.persona,t.uid)?`<button class="result-btn sign ${myTCStatus(t.persona,t.uid)==='SignedOff'?'active':''}" onclick="event.stopPropagation();markTCResult('${t.persona}','${escapeAttr(t.uid)}','SignedOff')">🔒 Sign Off (mine)</button>`:''}
-            ${ST.isAdmin?`<button class="result-btn sign" onclick="event.stopPropagation();openAdminSignOffModal('${t.persona}','${escapeAttr(t.uid)}','${escapeAttr(t.tc)}')" title="Sign off another tester's result">🔒 Sign Off (admin)</button>`:''}
-            ${myTCStatus(t.persona,t.uid)!=='Pending'?`<button class="result-btn reset" onclick="event.stopPropagation();markTCResult('${t.persona}','${escapeAttr(t.uid)}','Pending')">↺ Reset mine</button>`:''}
+            ${PERSONA_GROUPS[t.persona]
+              ? (ST.isAdmin ? `<button class="result-btn sign" onclick="event.stopPropagation();markTCResult('${t.persona}','${escapeAttr(t.uid)}','SignedOff')" title="Sign off — you'll pick the persona and tester">🔒 Sign Off</button>` : '')
+              : `${canSignOffOwn(t.persona,t.uid)?`<button class="result-btn sign ${myTCStatus(t.persona,t.uid)==='SignedOff'?'active':''}" onclick="event.stopPropagation();markTCResult('${t.persona}','${escapeAttr(t.uid)}','SignedOff')">🔒 Sign Off (mine)</button>`:''}
+                 ${ST.isAdmin?`<button class="result-btn sign" onclick="event.stopPropagation();openAdminSignOffModal('${t.persona}','${escapeAttr(t.uid)}','${escapeAttr(t.tc)}')" title="Sign off another tester's result">🔒 Sign Off (admin)</button>`:''}`}
+            ${PERSONA_GROUPS[t.persona]
+              ? `<button class="result-btn reset" onclick="event.stopPropagation();markTCResult('${t.persona}','${escapeAttr(t.uid)}','Pending')" title="Reset — you'll pick the persona and tester">↺ Reset</button>`
+              : `${myTCStatus(t.persona,t.uid)!=='Pending'?`<button class="result-btn reset" onclick="event.stopPropagation();markTCResult('${t.persona}','${escapeAttr(t.uid)}','Pending')">↺ Reset mine</button>`:''}`}
           </div>
           ${renderUserResultsStrip(t.persona, t.uid)}
         </div>
@@ -3518,6 +3537,49 @@ function renderPersonaBannerTesters(){
   const el = document.getElementById('persona-banner-testers');
   if(!el) return;
 
+  // Helper: render one read-only strip for a persona key
+  const renderStrip = (personaKey) => {
+    const testers = (ST.assignments[personaKey] || []).slice();
+    testers.sort((a,b) => {
+      if(a.is_primary !== b.is_primary) return a.is_primary ? -1 : 1;
+      if(a.is_si !== b.is_si) return a.is_si ? 1 : -1;
+      return (a.name||'').localeCompare(b.name||'');
+    });
+    const real = testers.filter(t => !t.is_si);
+    const si   = testers.filter(t => t.is_si);
+    const meta = PERSONA_META[personaKey];
+    const label = `${meta.icon} ${meta.short}`;
+    if(testers.length === 0){
+      return `<div class="tester-strip">
+        <span class="label">${escapeHtml(label)} (0):</span>
+        <span style="font-size:11.5px;color:var(--text-muted);font-style:italic;">none assigned</span>
+      </div>`;
+    }
+    const realChips = real.map(t => {
+      const cls = t.is_primary ? 'primary' : t._added ? 'added' : '';
+      return `<span class="tester-chip ${cls}" title="${escapeAttr(t.email)}${t.is_primary?' · Primary':t.is_backup?' · Backup':''}">${escapeHtml(shortName(t.name))} <span class="agency">${escapeHtml(t.agency||'')}</span></span>`;
+    }).join('');
+    const siChip = si.length > 0
+      ? `<span class="tester-chip si" title="${si.map(t=>t.name).join(', ')}">SI Proxies (${si.length})</span>`
+      : '';
+    return `<div class="tester-strip">
+      <span class="label">${escapeHtml(label)} (${real.length}):</span>
+      ${realChips}${siChip}
+    </div>`;
+  };
+
+  const manageBtn = ST.isAdmin
+    ? `<div style="margin-top:8px;text-align:right;"><button class="btn ghost sm" onclick="showView('assignments',document.querySelector('.nav-item[onclick*=assignments]'))">⚙ Manage assignments</button></div>`
+    : '';
+
+  // Is the current persona a group?
+  if(PERSONA_GROUPS[pk]){
+    const g = PERSONA_GROUPS[pk];
+    el.innerHTML = g.members.map(mk => renderStrip(mk)).join('') + manageBtn;
+    return;
+  }
+
+  // Single persona — original behavior
   const testers = (ST.assignments[pk] || []).slice();
   testers.sort((a,b) => {
     if(a.is_primary !== b.is_primary) return a.is_primary ? -1 : 1;
@@ -3526,11 +3588,6 @@ function renderPersonaBannerTesters(){
   });
   const real = testers.filter(t => !t.is_si);
   const si   = testers.filter(t => t.is_si);
-
-  const manageBtn = ST.isAdmin
-    ? `<button class="btn ghost sm" style="margin-left:auto;" onclick="showView('assignments',document.querySelector('.nav-item[onclick*=assignments]'))">⚙ Manage</button>`
-    : '';
-
   if(testers.length === 0){
     el.innerHTML = `<div class="tester-strip">
       <span class="label">Assigned Testers:</span>
@@ -3558,19 +3615,112 @@ function shortName(full){
   return full.replace(/\s*\(.+?\)\s*$/,'').trim();
 }
 function pickSubPersona(memberKey){
-  // User clicked one of the sub-pills inside the combined-pill picker — drill into that persona
+  // Legacy helper — kept for backward compat with any leftover handlers; just snap to that persona.
   ST.groupChoicePending = null;
   ST.currentPersona = memberKey;
   renderTestCases();
 }
 function backToSubPicker(groupKey){
-  // User clicked the back-link in the banner — return to the sub-pill picker for the group
-  const g = PERSONA_GROUPS[groupKey];
-  if(!g) return;
-  ST.groupChoicePending = groupKey;
-  ST.currentPersona = g.members[0];  // anchor — used only for active-pill highlight
+  // Legacy helper — kept for backward compat; snap back to the group key
+  ST.groupChoicePending = null;
+  ST.currentPersona = groupKey;
   renderTestCases();
 }
+
+// ═══════════════════════════════════════════
+// GROUP ACTION PICKER (persona + user) — opens before any Pass/Fail/Log Bug action inside a group
+// Persona defaults to the first member each time (no memory) so the user always confirms which role applies.
+// Tester defaults to the signed-in user.
+// ═══════════════════════════════════════════
+let _GAP_CTX = null;
+function openGroupActionPicker(opts){
+  // opts: { groupKey, tcUid, status?, tcLabel?, mode: 'result'|'bug', onConfirm }
+  const g = PERSONA_GROUPS[opts.groupKey];
+  if(!g){ if(opts.onConfirm) opts.onConfirm({ chosenPersona: opts.groupKey, chosenEmail: ST.email, chosenName: guessTesterName(ST.email) }); return; }
+  _GAP_CTX = opts;
+
+  // Title and intro
+  const statusVerb = opts.mode === 'bug' ? 'log a bug'
+                    : opts.status === 'SignedOff' ? 'sign off'
+                    : opts.status === 'Pending'   ? 'reset the result'
+                    : `mark as ${opts.status}`;
+  document.getElementById('gap-title').innerHTML = `${g.icon} ${escapeHtml(g.label)}`;
+  document.getElementById('gap-intro').textContent =
+    `You're about to ${statusVerb} on a shared test case. Pick which role this applies to and which tester is recording it.`;
+  document.getElementById('gap-confirm-btn').textContent = opts.mode === 'bug' ? 'Next → Bug details' : '✓ Confirm';
+
+  // Persona dropdown — only the 3 group members. Always defaults to the first member (no memory).
+  const pSel = document.getElementById('gap-persona');
+  pSel.innerHTML = g.members.map(mk => {
+    const m = PERSONA_META[mk];
+    return `<option value="${escapeAttr(mk)}">${m.icon} ${escapeHtml(m.label)}</option>`;
+  }).join('');
+  pSel.value = g.members[0];
+  // When persona changes, refresh tester list so this persona's assigned testers float to the top
+  pSel.onchange = () => populateGAPTesters(pSel.value);
+  populateGAPTesters(pSel.value);
+
+  document.getElementById('group-action-modal').style.display = 'flex';
+}
+function populateGAPTesters(personaKey){
+  const sel = document.getElementById('gap-tester');
+  if(!sel) return;
+  const signedInEmail = (ST.email || '').toLowerCase();
+  // Build options: full 40-tester list, with this persona's assigned testers first
+  const all = {};
+  TESTERS.forEach(t => {
+    const k = (t.email||'').toLowerCase(); if(!k) return;
+    all[k] = { email:t.email, name:t.name, agency:t.agency||'', _assigned:false, _primary:false, _si:false };
+  });
+  (ST.assignments[personaKey] || []).forEach(a => {
+    const k = (a.email||'').toLowerCase(); if(!k) return;
+    if(!all[k]) all[k] = { email:a.email, name:a.name||a.email, agency:a.agency||'', _assigned:true, _primary:!!a.is_primary, _si:!!a.is_si };
+    else { all[k]._assigned = true; all[k]._primary = !!a.is_primary; all[k]._si = !!a.is_si; }
+  });
+  if(signedInEmail && !all[signedInEmail]){
+    all[signedInEmail] = { email:ST.email, name:guessTesterName(ST.email), agency:'', _assigned:false, _primary:false, _si:false };
+  }
+  const arr = Object.values(all).sort((a,b) => {
+    const aMe = (a.email||'').toLowerCase() === signedInEmail;
+    const bMe = (b.email||'').toLowerCase() === signedInEmail;
+    if(aMe !== bMe) return aMe ? -1 : 1;
+    if(a._primary !== b._primary) return a._primary ? -1 : 1;
+    if(a._assigned !== b._assigned) return a._assigned ? -1 : 1;
+    if(a._si !== b._si) return a._si ? -1 : 1;
+    return (a.name||'').localeCompare(b.name||'');
+  });
+  let opts = '';
+  let inOther = false;
+  arr.forEach(t => {
+    const isMe = (t.email||'').toLowerCase() === signedInEmail;
+    if(!inOther && !t._assigned && !isMe){
+      opts += `<option disabled>──────── Other testers ────────</option>`;
+      inOther = true;
+    }
+    const role = t._primary ? '★ Primary' : t._si ? 'SI Proxy' : t._assigned ? 'Assigned' : '';
+    opts += `<option value="${escapeAttr(t.email)}" data-name="${escapeAttr(t.name)}" ${isMe?'selected':''}>
+      ${escapeHtml(shortName(t.name))}${t.agency?' · '+escapeHtml(t.agency):''}${role?' · '+escapeHtml(role):''}${isMe?' (you)':''}
+    </option>`;
+  });
+  sel.innerHTML = opts || `<option value="${escapeAttr(signedInEmail)}">${escapeHtml(guessTesterName(signedInEmail))}</option>`;
+}
+function closeGroupActionPicker(){
+  document.getElementById('group-action-modal').style.display = 'none';
+  _GAP_CTX = null;
+}
+function confirmGroupActionPicker(){
+  if(!_GAP_CTX) return;
+  const pSel = document.getElementById('gap-persona');
+  const tSel = document.getElementById('gap-tester');
+  const chosenPersona = pSel.value;
+  const chosenEmail   = tSel.value;
+  const chosenName    = tSel.selectedOptions[0] ? (tSel.selectedOptions[0].getAttribute('data-name') || guessTesterName(chosenEmail)) : guessTesterName(chosenEmail);
+  if(!chosenPersona || !chosenEmail){ toast('Pick both a persona and a tester.','error'); return; }
+  const cb = _GAP_CTX.onConfirm;
+  closeGroupActionPicker();
+  if(cb) cb({ chosenPersona, chosenEmail, chosenName });
+}
+
 
 function tcStatusPill(s){
   const labels = { Passed:'✓ Passed', Failed:'✗ Failed', Inconclusive:'~ Inconclusive', Pending:'⏳ Pending', SignedOff:'🔒 Signed Off' };
@@ -3593,6 +3743,7 @@ function renderTCTeamLine(persona, tcUid){
 function renderUserResultsStrip(persona, tcUid){
   const all = getAllUserResults(persona, tcUid);
   if(all.length === 0) return '';
+  const isGroup = !!PERSONA_GROUPS[persona];
   // Sort: my own first, then by date desc
   const me = (ST.email||'').toLowerCase();
   all.sort((a,b) => {
@@ -3607,7 +3758,10 @@ function renderUserResultsStrip(persona, tcUid){
     const tip = r.status==='SignedOff' && r.signed_off_by_email
       ? `Signed off by ${r.signed_off_by_email} on ${r.signed_off_date||r.date||''}`
       : `${r.status} on ${r.date||'—'}`;
-    return `<span class="ur ${r.status}" title="${escapeAttr(tip)}">${icon[r.status]||'•'} ${escapeHtml(name)}${isMe?' (you)':''}</span>`;
+    const roleSuffix = isGroup && r._sourcePersona
+      ? ` <span style="font-size:9.5px;opacity:.75;font-weight:500;">· ${escapeHtml(PERSONA_META[r._sourcePersona]?.short || r._sourcePersona)}</span>`
+      : '';
+    return `<span class="ur ${r.status}" title="${escapeAttr(tip)}${isGroup && r._sourcePersona ? ' · '+escapeAttr(PERSONA_META[r._sourcePersona]?.label || '') : ''}">${icon[r.status]||'•'} ${escapeHtml(name)}${isMe?' (you)':''}${roleSuffix}</span>`;
   }).join('');
   return `<div class="tc-user-results">${items}</div>`;
 }
@@ -3725,8 +3879,39 @@ function toggleTC(card, ev){
 }
 function markTCResult(persona, tcUid, status){
   if(!ST.email){ document.getElementById('email-gate').style.display='flex'; return; }
+
+  // If persona is a group key, prompt for which sub-persona + which user before applying
+  if(PERSONA_GROUPS[persona]){
+    openGroupActionPicker({
+      groupKey: persona, tcUid, status,
+      mode: 'result',
+      onConfirm: ({ chosenPersona, chosenEmail, chosenName }) => {
+        if(status === 'SignedOff'){
+          // Sign-off via the group picker is always treated as on-behalf-of (admin path)
+          if(!ST.isAdmin){ toast('Sign-off requires admin within this group view.','error'); return; }
+          setTCStatus(chosenPersona, tcUid, 'SignedOff', {
+            onBehalfOfEmail: chosenEmail,
+            onBehalfOfName:  chosenName,
+            signedOffByEmail: ST.email
+          });
+        } else {
+          // For Pass/Fail/Inconclusive, log it under the chosen persona + user
+          setTCStatus(chosenPersona, tcUid, status, {
+            onBehalfOfEmail: chosenEmail,
+            onBehalfOfName:  chosenName
+          });
+        }
+        const m = PERSONA_META[chosenPersona];
+        toast(`Marked as ${status} for ${shortName(chosenName)} (${m.short}).`,'success');
+        renderTestCases();
+        if(document.getElementById('view-dashboard').classList.contains('active')) renderDashboard();
+      }
+    });
+    return;
+  }
+
+  // Original behavior — non-grouped persona
   if(status === 'SignedOff'){
-    // Self sign-off: only allowed if tester has already logged a result
     if(!canSignOffOwn(persona, tcUid)){
       toast('Log a Pass/Fail/Inconclusive result first, then you can sign off.','error');
       return;
@@ -3875,13 +4060,35 @@ function labelStatus(s){ return s==='InProgress'?'In Progress':s==='WontFix'?"Wo
 let EDITING_ID = null;
 function openLogIssueModal(persona, tcUid, tcLabel){
   if(!ST.email){ document.getElementById('email-gate').style.display='flex'; return; }
+
+  // If persona is a group key, prompt for which sub-persona + which user first
+  if(PERSONA_GROUPS[persona]){
+    openGroupActionPicker({
+      groupKey: persona, tcUid, tcLabel,
+      mode: 'bug',
+      onConfirm: ({ chosenPersona, chosenEmail, chosenName }) => {
+        _GROUP_BUG_DEFAULT_LOGGEDBY = { email: chosenEmail, name: chosenName };
+        _openLogIssueModalRaw(chosenPersona, tcUid, tcLabel);
+      }
+    });
+    return;
+  }
+  _openLogIssueModalRaw(persona, tcUid, tcLabel);
+}
+let _GROUP_BUG_DEFAULT_LOGGEDBY = null;
+function _openLogIssueModalRaw(persona, tcUid, tcLabel){
   EDITING_ID = null;
   document.getElementById('log-modal-title').textContent = '🐛 Log Bug';
   document.getElementById('submit-issue-btn').textContent = '🐛 Create Bug';
   const ps = document.getElementById('issue-persona-select');
   ps.innerHTML = Object.keys(PERSONA_META).map(pk => `<option value="${pk}">${PERSONA_META[pk].icon} ${PERSONA_META[pk].label}</option>`).join('');
   if(persona) ps.value = persona;
+  // populate TC + LoggedBy. If we have a group-picker-supplied default, use it as the LoggedBy preselect.
   populateTCSelectForPersona(ps.value, tcUid);
+  if(_GROUP_BUG_DEFAULT_LOGGEDBY && _GROUP_BUG_DEFAULT_LOGGEDBY.email){
+    populateLoggedBySelectForPersona(ps.value, _GROUP_BUG_DEFAULT_LOGGEDBY.email);
+    _GROUP_BUG_DEFAULT_LOGGEDBY = null;
+  }
   ps.onchange = () => populateTCSelectForPersona(ps.value, null);
   refreshDevSelect();
   document.getElementById('issue-title-input').value = '';
