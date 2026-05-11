@@ -213,22 +213,26 @@ table.data tfoot td{padding:10px 12px;background:#f1f5f9;font-weight:700;border-
 .tester-chip.added .agency{color:#3730a3}
 
 /* ════ TEST CASE NUMBERED CARDS ════ */
-.tc-card{display:flex;align-items:stretch;background:#fff;border:1.5px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden;transition:all .15s;cursor:pointer}
+/* Card is a vertical container: header row on top, body below when expanded */
+.tc-card{display:flex;flex-direction:column;background:#fff;border:1.5px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden;transition:all .15s;cursor:pointer;position:relative}
 .tc-card:hover{border-color:var(--blue-400);box-shadow:0 4px 16px rgba(59,130,246,.1)}
 .tc-card.expanded{box-shadow:var(--shadow-md);border-color:var(--blue-500)}
+/* Status: a thin colored stripe on the left, drawn as pseudo-element so it doesn't disturb flex layout */
 .tc-card.status-Passed{border-left:4px solid #10b981}
 .tc-card.status-Failed{border-left:4px solid #ef4444}
 .tc-card.status-Inconclusive{border-left:4px solid #f59e0b}
 .tc-card.status-SignedOff{border-left:4px solid #3b82f6}
+/* The header row: number column + main + right pills */
+.tc-header{display:flex;align-items:stretch;min-width:0}
 .tc-num{width:54px;flex-shrink:0;display:flex;align-items:flex-start;justify-content:center;padding-top:16px;font-family:'DM Mono',monospace;font-weight:700;font-size:14px;color:#fff;background:linear-gradient(180deg,#1d4ed8,#4338ca)}
 .tc-card.status-Passed .tc-num{background:linear-gradient(180deg,#10b981,#059669)}
 .tc-card.status-Failed .tc-num{background:linear-gradient(180deg,#ef4444,#dc2626)}
 .tc-card.status-Inconclusive .tc-num{background:linear-gradient(180deg,#f59e0b,#d97706)}
 .tc-card.status-SignedOff .tc-num{background:linear-gradient(180deg,#3b82f6,#2563eb)}
 .tc-num span{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.2);font-size:13px}
-.tc-main{flex:1;padding:14px 18px;display:flex;align-items:center;gap:14px;min-width:0}
-.tc-meta{flex:1;min-width:0}
-.tc-title{font-weight:600;font-size:14px;color:var(--text-primary);margin-bottom:5px;letter-spacing:-.1px}
+.tc-main{flex:1 1 auto;padding:14px 18px;display:flex;align-items:center;gap:14px;min-width:0}
+.tc-meta{flex:1 1 auto;min-width:0}
+.tc-title{font-weight:600;font-size:14px;color:var(--text-primary);margin-bottom:5px;letter-spacing:-.1px;word-wrap:break-word;overflow-wrap:anywhere}
 .tc-card.expanded .tc-title{color:var(--blue-700)}
 .tc-info{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:11.5px;color:var(--text-muted)}
 .tc-info .tc-id{font-family:'DM Mono',monospace;font-weight:600;color:var(--text-secondary)}
@@ -237,12 +241,23 @@ table.data tfoot td{padding:10px 12px;background:#f1f5f9;font-weight:700;border-
 .tc-info .tag.integ{background:#ede9fe;color:#5b21b6}
 .tc-info .tag.mono{background:#f1f5f9;color:var(--text-secondary);font-family:'DM Mono',monospace;font-size:10px}
 .tc-info .bug-pill{padding:2px 8px;border-radius:8px;background:var(--red-light);color:#991b1b;font-weight:700;font-size:10.5px}
-.tc-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.tc-right{display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
 .tc-chevron{color:var(--text-muted);font-size:13px;transition:transform .2s;width:18px;text-align:center}
 .tc-card.expanded .tc-chevron{transform:rotate(180deg);color:var(--blue-500)}
-.tc-body{display:none;padding:0 18px 18px 72px;background:linear-gradient(180deg,#fafbfc 0%,#fff 60%);border-top:1px dashed var(--border)}
+/* Body sits BELOW the header. When expanded the body uses full width (no left indent) so text flows naturally to the top-left. */
+.tc-body{display:none;padding:14px 22px 18px 22px;background:linear-gradient(180deg,#fafbfc 0%,#fff 60%);border-top:1px dashed var(--border)}
 .tc-card.expanded .tc-body{display:block;animation:slide .25s ease}
 @keyframes slide{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+
+/* TC card responsive — under 760px: number bar gets thinner, body indents less */
+@media (max-width:760px){
+  .tc-num{width:44px;padding-top:12px}
+  .tc-num span{width:26px;height:26px;font-size:12px}
+  .tc-main{flex-direction:column;align-items:flex-start;gap:8px;padding:12px 14px}
+  .tc-right{align-self:flex-start;width:100%;justify-content:flex-start;gap:6px}
+  .tc-body{padding:12px 14px 14px 14px}
+  .tc-title{font-size:13.5px}
+}
 .tc-section{margin-top:14px}
 .tc-section-label{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;display:flex;align-items:center;gap:6px}
 .tc-section-body{font-size:12.5px;color:var(--text-primary);background:#fff;padding:11px 14px;border-radius:8px;border:1px solid var(--border)}
@@ -285,6 +300,54 @@ table.data tfoot td{padding:10px 12px;background:#f1f5f9;font-weight:700;border-
 /* ════ MODAL ════ */
 .modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px;animation:fadeIn .15s ease}
 .modal{background:#fff;border-radius:14px;max-width:600px;width:100%;max-height:92vh;overflow:auto;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;animation:scaleIn .15s ease}
+.modal.wide{max-width:740px}
+
+/* ════ MULTI-SELECT CHIP PICKER ════ */
+.chip-picker{border:1px solid var(--border);border-radius:8px;padding:8px;background:#fff;min-height:42px;display:flex;flex-wrap:wrap;gap:5px;align-items:flex-start}
+.chip-picker:focus-within{border-color:var(--blue-400);box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+.chip-picker .selected-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 8px 3px 10px;background:linear-gradient(135deg,#1d4ed8,#4f46e5);color:#fff;border-radius:12px;font-size:11.5px;font-weight:600;line-height:1.4}
+.chip-picker .selected-chip.dev{background:linear-gradient(135deg,#0891b2,#0e7490)}
+.chip-picker .selected-chip.pm{background:linear-gradient(135deg,#7c3aed,#6d28d9)}
+.chip-picker .selected-chip .x{background:rgba(255,255,255,.25);border:none;color:#fff;width:14px;height:14px;border-radius:50%;font-size:9px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;line-height:1}
+.chip-picker .selected-chip .x:hover{background:rgba(255,255,255,.4)}
+.chip-picker .picker-input{flex:1;min-width:120px;border:none;outline:none;font-family:inherit;font-size:12.5px;padding:4px 6px;background:transparent}
+.chip-picker-wrap{position:relative}
+.chip-picker-dropdown{position:absolute;left:0;right:0;top:100%;background:#fff;border:1px solid var(--border);border-radius:8px;margin-top:4px;box-shadow:var(--shadow-md);z-index:10;max-height:200px;overflow:auto;display:none}
+.chip-picker-dropdown.open{display:block}
+.chip-picker-dropdown .opt{padding:7px 11px;font-size:12.5px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:background .1s}
+.chip-picker-dropdown .opt:hover{background:var(--blue-50)}
+.chip-picker-dropdown .opt.empty{color:var(--text-muted);font-style:italic;cursor:default}
+.chip-picker-dropdown .opt.empty:hover{background:transparent}
+.chip-picker-dropdown .opt .role{font-size:10.5px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.chip-picker-mini{display:flex;flex-wrap:wrap;gap:4px}
+.chip-mini{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:#f1f5f9;color:#475569;border-radius:10px;font-size:10.5px;font-weight:600;cursor:default;border:1px solid var(--border)}
+.chip-mini.dev{background:#cffafe;color:#0e7490;border-color:#a5f3fc}
+.chip-mini.pm{background:#ede9fe;color:#5b21b6;border-color:#ddd6fe}
+
+/* ════ SCREENSHOT UPLOAD ════ */
+.shot-dropzone{border:2px dashed #cbd5e1;border-radius:10px;padding:18px 14px;text-align:center;background:#fafbfc;cursor:pointer;transition:.15s;position:relative}
+.shot-dropzone:hover,.shot-dropzone.is-drag{border-color:var(--blue-500);background:var(--blue-50);color:var(--blue-700)}
+.shot-dropzone input[type=file]{display:none}
+.shot-dropzone .icon{font-size:24px;margin-bottom:4px;display:block}
+.shot-dropzone .hint{font-size:11.5px;color:var(--text-muted);margin-top:3px}
+.shot-dropzone .url{font-size:11px;margin-top:4px}
+.shot-preview{margin-top:10px;display:none;position:relative;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:#f8fafc}
+.shot-preview.has-image{display:block}
+.shot-preview img{display:block;max-width:100%;max-height:240px;margin:0 auto}
+.shot-preview .preview-remove{position:absolute;top:6px;right:6px;background:rgba(15,23,42,.75);color:#fff;border:none;width:24px;height:24px;border-radius:50%;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.shot-preview .preview-remove:hover{background:rgba(15,23,42,.9)}
+.shot-preview .preview-status{position:absolute;bottom:6px;left:6px;background:rgba(15,23,42,.75);color:#fff;font-size:10.5px;padding:3px 8px;border-radius:10px;font-weight:600}
+.shot-preview .preview-status.uploading{background:rgba(245,158,11,.9)}
+.shot-preview .preview-status.success{background:rgba(16,185,129,.9)}
+.shot-preview .preview-status.error{background:rgba(239,68,68,.9)}
+
+/* ════ PER-TC RESULTS PER USER STRIP ════ */
+.tc-user-results{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.tc-user-results .ur{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:10.5px;font-weight:600;background:#f1f5f9;color:#475569}
+.tc-user-results .ur.Passed{background:#d1fae5;color:#065f46}
+.tc-user-results .ur.Failed{background:#fee2e2;color:#7f1d1d}
+.tc-user-results .ur.Inconclusive{background:#fef3c7;color:#854d0e}
+.tc-user-results .ur.SignedOff{background:#dbeafe;color:#1e3a8a}
 @keyframes scaleIn{from{transform:scale(.95);opacity:0}to{transform:none;opacity:1}}
 .modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0}
 .modal-header h2{margin:0;font-size:16px;font-weight:700;letter-spacing:-.2px;color:#fff}
@@ -385,7 +448,7 @@ code,.mono{font-family:'DM Mono',monospace;font-size:11.5px}
       <span id="nav-issue-count" class="nav-badge" style="display:none;">0</span>
     </button>
     <button class="nav-item" onclick="showView('developers',this)">
-      <span class="nav-icon">👨‍💻</span> Developers
+      <span class="nav-icon">👨‍💻</span> Team Roster
     </button>
     <button class="nav-item admin-only" onclick="showView('assignments',this)" style="display:none;">
       <span class="nav-icon">🔗</span> Persona Assignments
@@ -663,14 +726,14 @@ code,.mono{font-family:'DM Mono',monospace;font-size:11.5px}
       </div>
     </section>
 
-    <!-- ═══════ DEVELOPERS ═══════ -->
+    <!-- ═══════ TEAM ROSTER (DEVS + PMs) ═══════ -->
     <section id="view-developers" class="view">
       <div class="view-header">
         <div>
-          <h1><span class="h-icon">👨‍💻</span> Developers</h1>
-          <p>Manage the developer roster used for bug assignment. Add, edit, or remove devs at any time.</p>
+          <h1><span class="h-icon">👨‍💻</span> Team Roster</h1>
+          <p>Developers and PMs used for bug assignment and per-test-case team attribution. Add, edit, or remove at any time.</p>
         </div>
-        <button class="btn primary" onclick="openAddDevModal()">+ Add Developer</button>
+        <button class="btn primary" onclick="openAddDevModal()">+ Add Team Member</button>
       </div>
       <div class="card">
         <div id="devs-list"></div>
@@ -791,7 +854,7 @@ code,.mono{font-family:'DM Mono',monospace;font-size:11.5px}
      LOG / EDIT BUG MODAL
 ════════════════════════════════════════════ -->
 <div id="log-issue-modal" class="modal-backdrop" style="display:none;">
-  <div class="modal" style="max-width:680px;">
+  <div class="modal wide" style="max-width:740px;">
     <div class="modal-header" style="background:linear-gradient(135deg,#dc2626,#b91c1c);">
       <h2 id="log-modal-title">🐛 Log Bug</h2>
       <button class="modal-close" onclick="closeLogIssueModal()">×</button>
@@ -803,15 +866,15 @@ code,.mono{font-family:'DM Mono',monospace;font-size:11.5px}
         <div style="grid-column:span 2;"><strong>Environment:</strong> DTC UAT</div>
       </div>
 
-      <div class="grid-2">
-        <div class="field">
-          <label>Persona *</label>
-          <select id="issue-persona-select"></select>
-        </div>
-        <div class="field">
-          <label>Test Case *</label>
-          <select id="issue-tc-select"><option value="">— Select persona first —</option></select>
-        </div>
+      <div class="field full">
+        <label>Persona *</label>
+        <select id="issue-persona-select"></select>
+      </div>
+
+      <div class="field full">
+        <label>Test Case (or pick "Other")</label>
+        <select id="issue-tc-select" style="font-family:'DM Mono',monospace;font-size:12.5px;"><option value="__other__">— Other / Not test-case specific —</option></select>
+        <div style="font-size:10.5px;color:var(--text-muted);margin-top:3px;">Long titles may be truncated visually but are stored in full.</div>
       </div>
 
       <div class="field full">
@@ -876,8 +939,22 @@ code,.mono{font-family:'DM Mono',monospace;font-size:11.5px}
       </div>
 
       <div class="field full">
-        <label>Evidence / Screenshot URL</label>
-        <input id="issue-screenshot" type="text" placeholder="https://… (optional)">
+        <label>Screenshot / Evidence</label>
+        <div class="shot-dropzone" id="shot-drop" onclick="document.getElementById('shot-file').click()"
+             ondragover="event.preventDefault();this.classList.add('is-drag');"
+             ondragleave="this.classList.remove('is-drag');"
+             ondrop="handleShotDrop(event)">
+          <span class="icon">📎</span>
+          <strong>Drop file, paste image (Ctrl/⌘+V), or click to browse</strong>
+          <div class="hint">PNG, JPG, GIF — uploaded to Supabase Storage</div>
+          <input type="file" id="shot-file" accept="image/*" onchange="handleShotFile(this.files[0])">
+        </div>
+        <div class="shot-preview" id="shot-preview">
+          <button type="button" class="preview-remove" onclick="clearShot()" title="Remove">×</button>
+          <span class="preview-status" id="shot-status">Uploading…</span>
+          <img id="shot-img" alt="screenshot preview">
+        </div>
+        <input id="issue-screenshot" type="text" placeholder="…or paste a URL here" style="margin-top:6px;font-size:12px;">
       </div>
 
       <div class="field full">
@@ -913,6 +990,14 @@ code,.mono{font-family:'DM Mono',monospace;font-size:11.5px}
       <div class="field full">
         <label>Team / Vendor</label>
         <input id="dev-team" type="text" placeholder="e.g., ICF, OST, Vendor">
+      </div>
+      <div class="field full">
+        <label>Role</label>
+        <select id="dev-role">
+          <option value="dev">Developer</option>
+          <option value="pm">Product Manager</option>
+          <option value="both">Both</option>
+        </select>
       </div>
     </div>
     <div class="modal-footer">
@@ -969,6 +1054,66 @@ code,.mono{font-family:'DM Mono',monospace;font-size:11.5px}
   </div>
 </div>
 
+<!-- ════════════════════════════════════════════
+     EDIT TC TEAM MODAL (devs + PMs)
+════════════════════════════════════════════ -->
+<div id="edit-tc-team-modal" class="modal-backdrop" style="display:none;">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-header" style="background:linear-gradient(135deg,#0891b2,#7c3aed);">
+      <h2 id="ett-title">👥 Edit Team for TC</h2>
+      <button class="modal-close" onclick="closeEditTCTeamModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="margin:0 0 14px;font-size:12.5px;color:var(--text-secondary);">
+        Assign the developers and product managers who built or own this test case. These are independent of the bug assignment — though when you log a bug, you can pick the same person if it's accurate.
+      </p>
+      <div class="field full">
+        <label>Developers (multi-select)</label>
+        <div id="ett-devs-picker"></div>
+        <div style="font-size:10.5px;color:var(--text-muted);margin-top:4px;">Type to filter the roster or to add a new name. Names not yet in the roster will be added to it.</div>
+      </div>
+      <div class="field full" style="margin-top:14px;">
+        <label>PMs (multi-select)</label>
+        <div id="ett-pms-picker"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeEditTCTeamModal()">Cancel</button>
+      <button class="btn primary" onclick="saveTCTeam()">💾 Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     ADMIN SIGN-OFF MODAL
+════════════════════════════════════════════ -->
+<div id="admin-signoff-modal" class="modal-backdrop" style="display:none;">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8);">
+      <h2>🔒 Admin Sign-Off</h2>
+      <button class="modal-close" onclick="closeAdminSignOffModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="margin:0 0 14px;font-size:12.5px;color:var(--text-secondary);">
+        Sign off a test case on behalf of a tester. Their existing result is preserved as the history; the sign-off marks the TC as locked for that tester.
+      </p>
+      <div class="context-bar" style="margin-bottom:14px;">
+        <div><strong>Test Case:</strong> <span id="aso-tc">—</span></div>
+        <div><strong>Persona:</strong> <span id="aso-persona">—</span></div>
+      </div>
+      <div class="field full">
+        <label>Sign off on behalf of *</label>
+        <select id="aso-tester"></select>
+        <div style="font-size:10.5px;color:var(--text-muted);margin-top:4px;">Only testers who have logged a result for this TC can be signed off (or assigned testers if no result exists yet).</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeAdminSignOffModal()">Cancel</button>
+      <button class="btn primary" onclick="confirmAdminSignOff()">🔒 Sign Off</button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div id="toast"></div>
 
@@ -980,7 +1125,7 @@ const SUPABASE_URL = 'https://jkwqcjvfuocxkxjcoqfx.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_rhOg8FwKPmS3NWffBpr_pQ_40q9r9_H';
 const ADMIN_EMAILS_FALLBACK = ['ana.jarabo.ctr@dot.gov'];
 const ALLOWED_EMAIL_PATTERNS = [/@dot\.gov$/i, /@dot\.gov\..+$/i];
-const STORAGE_KEY = 'e2e_uat_state_v3';
+const STORAGE_KEY = 'e2e_uat_state_v4';
 const ENV_TAG = 'uat';  // DTC UAT only
 
 // Supabase table names — completely separate from the main DGLMS portal
@@ -988,12 +1133,14 @@ const TBL_ISSUES      = 'e2e_uat_issues';
 const TBL_RESULTS     = 'e2e_uat_results';
 const TBL_ASSIGNMENTS = 'e2e_uat_assignments';
 const TBL_DEVELOPERS  = 'e2e_uat_developers';
+const TBL_TC_TEAM     = 'e2e_uat_tc_team';   // devs/PMs per test case
 
 const ST = {
   email: null, isAdmin: false, sb: null, online: false,
   issues: [], developers: [], bulkParsed: [],
-  results: {},  // key: persona|tc_uid -> {status, tester_email, date}
+  results: {},   // key: persona|tc_uid|tester_email -> {status, ..., signed_off_by, signed_off_date}
   assignments: {},  // persona -> [{email, name, agency, is_primary, is_backup, is_si}]
+  tcTeam: {},    // key: persona|tc_uid -> { devs:[name,...], pms:[name,...] }
   currentPersona: 'nofo-dev'
 };
 
@@ -1057,8 +1204,8 @@ const TESTERS = [
 ];
 
 const DEFAULT_DEVS = [
-  { name:'Erdene Mendsaikhan', email:'erdene.mendsaikhan.ctr@dot.gov', team:'ICF · Dev' },
-  { name:'Zachary Kratsas',    email:'zachary.kratsas.ctr@dot.gov',    team:'OST' }
+  { name:'Erdene Mendsaikhan', email:'erdene.mendsaikhan.ctr@dot.gov', team:'ICF · Dev',  role:'dev' },
+  { name:'Zachary Kratsas',    email:'zachary.kratsas.ctr@dot.gov',    team:'OST',         role:'dev' }
 ];
 
 // ═══════════════════════════════════════════
@@ -2480,27 +2627,86 @@ function saveLocal(){
   try{
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
       email: ST.email, developers: ST.developers, issues: ST.issues,
-      results: ST.results, assignments: ST.assignments
+      results: ST.results, assignments: ST.assignments, tcTeam: ST.tcTeam
     }));
   }catch(e){}
 }
 function tcKey(persona, tcUid){ return persona + '|' + tcUid; }
-function getTCStatus(persona, tcUid){
-  const r = ST.results[tcKey(persona, tcUid)];
+function userResultKey(persona, tcUid, email){ return persona + '|' + tcUid + '|' + (email||'').toLowerCase(); }
+function getAllUserResults(persona, tcUid){
+  // Returns array of {email, name, status, date, signed_off_by_email, signed_off_date}
+  const prefix = persona + '|' + tcUid + '|';
+  return Object.keys(ST.results).filter(k => k.startsWith(prefix)).map(k => ST.results[k]);
+}
+function myTCStatus(persona, tcUid){
+  if(!ST.email) return 'Pending';
+  const r = ST.results[userResultKey(persona, tcUid, ST.email)];
   return r ? r.status : 'Pending';
 }
-function setTCStatus(persona, tcUid, status){
-  const k = tcKey(persona, tcUid);
-  if(status === 'Pending'){ delete ST.results[k]; }
-  else {
-    ST.results[k] = {
-      status, tester_email: ST.email,
-      tester_name: guessTesterName(ST.email),
-      date: todayISO()
-    };
+function aggregatedTCStatus(persona, tcUid){
+  // For UI badge on the TC card header: choose the "most representative" status across all testers.
+  // Priority: SignedOff > Failed > Inconclusive > Passed > Pending
+  // (if at least one user has signed off, count it as signed off; if any failed, it's failed; etc.)
+  const all = getAllUserResults(persona, tcUid);
+  if(all.length === 0) return 'Pending';
+  if(all.some(r => r.status === 'SignedOff')) return 'SignedOff';
+  if(all.some(r => r.status === 'Failed')) return 'Failed';
+  if(all.some(r => r.status === 'Inconclusive')) return 'Inconclusive';
+  if(all.some(r => r.status === 'Passed')) return 'Passed';
+  return 'Pending';
+}
+// Back-compat: old code may call getTCStatus — return aggregated status
+function getTCStatus(persona, tcUid){ return aggregatedTCStatus(persona, tcUid); }
+function setTCStatus(persona, tcUid, status, opts){
+  // opts = { onBehalfOfEmail, onBehalfOfName, signedOffByEmail }
+  opts = opts || {};
+  const targetEmail = (opts.onBehalfOfEmail || ST.email || '').toLowerCase();
+  const targetName  = opts.onBehalfOfName || guessTesterName(targetEmail);
+  const k = userResultKey(persona, tcUid, targetEmail);
+  if(status === 'Pending'){
+    delete ST.results[k];
+    saveLocal();
+    pushResultToSupabase(persona, tcUid, status, targetEmail, targetName);
+    return;
   }
+  const existing = ST.results[k] || {};
+  ST.results[k] = {
+    persona, tc_uid: tcUid,
+    status,
+    tester_email: targetEmail,
+    tester_name: targetName,
+    date: todayISO(),
+    signed_off_by_email: status === 'SignedOff'
+      ? (opts.signedOffByEmail || ST.email)
+      : (existing.signed_off_by_email || ''),
+    signed_off_date: status === 'SignedOff'
+      ? todayISO()
+      : (existing.signed_off_date || '')
+  };
   saveLocal();
-  pushResultToSupabase(persona, tcUid, status);
+  pushResultToSupabase(persona, tcUid, status, targetEmail, targetName, opts.signedOffByEmail || ST.email);
+}
+function canSignOffOwn(persona, tcUid){
+  if(!ST.email) return false;
+  const me = ST.results[userResultKey(persona, tcUid, ST.email)];
+  // You can sign off only if you've already logged a result other than Pending
+  return me && ['Passed','Failed','Inconclusive'].includes(me.status);
+}
+function getTCTeam(persona, tcUid){
+  const k = tcKey(persona, tcUid);
+  return ST.tcTeam[k] || { devs: [], pms: [] };
+}
+function setTCTeamList(persona, tcUid, role, names){
+  const k = tcKey(persona, tcUid);
+  if(!ST.tcTeam[k]) ST.tcTeam[k] = { devs:[], pms:[] };
+  const before = (ST.tcTeam[k][role] || []).slice();
+  const after  = (names || []).slice();
+  ST.tcTeam[k][role] = after;
+  saveLocal();
+  const added   = after.filter(n => !before.includes(n));
+  const removed = before.filter(n => !after.includes(n));
+  added.forEach(n => pushTCTeamToSupabase(persona, tcUid, role, n, 'upsert'));
+  removed.forEach(n => pushTCTeamToSupabase(persona, tcUid, role, n, 'delete'));
 }
 
 // ═══════════════════════════════════════════
@@ -2611,22 +2817,26 @@ async function hydrateFromSupabase(){
       console.warn('Issues hydrate:', error.message);
     }
 
-    // Results (TC pass/fail)
-    const { data: rdata, error: rerr } = await ST.sb.from(TBL_RESULTS).select('*').limit(5000);
+    // Results (TC pass/fail) — per (persona,tc_uid,tester_email)
+    const { data: rdata, error: rerr } = await ST.sb.from(TBL_RESULTS).select('*').limit(10000);
     if(!rerr && rdata){
+      const map = {};
       rdata.forEach(r => {
-        const k = (r.persona||'') + '|' + (r.tc_uid||'');
+        const email = (r.tester_email||'').toLowerCase();
+        const k = (r.persona||'') + '|' + (r.tc_uid||'') + '|' + email;
         if(r.status && r.status !== 'Pending'){
-          // Keep most recent per (persona,tc) — table has unique on (persona,tc,tester) so we overlay
-          const existing = ST.results[k];
-          if(!existing || (r.result_date||'') >= (existing.date||'')){
-            ST.results[k] = {
-              status: r.status, tester_email: r.tester_email || '',
-              tester_name: r.tester_name || '', date: r.result_date || ''
-            };
-          }
+          map[k] = {
+            persona: r.persona, tc_uid: r.tc_uid,
+            status: r.status,
+            tester_email: email,
+            tester_name: r.tester_name || '',
+            date: r.result_date || '',
+            signed_off_by_email: r.signed_off_by_email || '',
+            signed_off_date: r.signed_off_date || ''
+          };
         }
       });
+      ST.results = map;  // remote is source of truth
       saveLocal();
     }
 
@@ -2655,7 +2865,22 @@ async function hydrateFromSupabase(){
     // Developers
     const { data: ddata, error: derr } = await ST.sb.from(TBL_DEVELOPERS).select('*').order('name');
     if(!derr && ddata && ddata.length){
-      ST.developers = ddata.map(d => ({ name: d.name, email: d.email || '', team: d.team || '' }));
+      ST.developers = ddata.map(d => ({ name: d.name, email: d.email || '', team: d.team || '', role: d.role || 'dev' }));
+      saveLocal();
+    }
+
+    // TC team (devs/PMs per test case)
+    const { data: tdata, error: terr } = await ST.sb.from(TBL_TC_TEAM).select('*').limit(5000);
+    if(!terr && tdata){
+      const map = {};
+      tdata.forEach(r => {
+        const k = (r.persona||'') + '|' + (r.tc_uid||'');
+        if(!map[k]) map[k] = { devs:[], pms:[] };
+        if(r.role === 'dev' && r.name && !map[k].devs.includes(r.name)) map[k].devs.push(r.name);
+        if(r.role === 'pm'  && r.name && !map[k].pms.includes(r.name))  map[k].pms.push(r.name);
+      });
+      // Merge with local (remote wins per key)
+      ST.tcTeam = Object.assign({}, ST.tcTeam, map);
       saveLocal();
     }
   }catch(e){ console.warn('hydrate failed', e); }
@@ -2699,20 +2924,25 @@ async function pushIssueToSupabase(issue){
     await ST.sb.from(TBL_ISSUES).upsert(row, { onConflict:'issue_id' });
   }catch(e){ console.warn('push issue failed', e); }
 }
-async function pushResultToSupabase(persona, tcUid, status){
+async function pushResultToSupabase(persona, tcUid, status, testerEmail, testerName, signedOffByEmail){
   if(!ST.sb || !ST.online) return;
+  testerEmail = (testerEmail || ST.email || '').toLowerCase();
+  testerName  = testerName  || guessTesterName(testerEmail);
   try{
     if(status === 'Pending'){
-      // Reset: delete this tester's row for (persona,tc)
       await ST.sb.from(TBL_RESULTS).delete()
-        .eq('persona', persona).eq('tc_uid', tcUid).eq('tester_email', ST.email);
+        .eq('persona', persona).eq('tc_uid', tcUid).eq('tester_email', testerEmail);
       return;
     }
     const row = {
       persona, tc_uid: tcUid, status,
-      tester_email: ST.email, tester_name: guessTesterName(ST.email),
+      tester_email: testerEmail, tester_name: testerName,
       result_date: todayISO()
     };
+    if(status === 'SignedOff'){
+      row.signed_off_by_email = signedOffByEmail || ST.email;
+      row.signed_off_date = todayISO();
+    }
     await ST.sb.from(TBL_RESULTS).upsert(row, { onConflict:'persona,tc_uid,tester_email' });
   }catch(e){ console.warn('push result failed', e); }
 }
@@ -2737,10 +2967,24 @@ async function pushDeveloperToSupabase(dev, action){
       await ST.sb.from(TBL_DEVELOPERS).delete().eq('name', dev.name);
     } else {
       await ST.sb.from(TBL_DEVELOPERS).upsert({
-        name: dev.name, email: dev.email || '', team: dev.team || ''
+        name: dev.name, email: dev.email || '', team: dev.team || '', role: dev.role || 'dev'
       }, { onConflict: 'name' });
     }
   }catch(e){ console.warn('push dev failed', e); }
+}
+
+async function pushTCTeamToSupabase(persona, tcUid, role, name, action){
+  if(!ST.sb || !ST.online) return;
+  try{
+    if(action === 'delete'){
+      await ST.sb.from(TBL_TC_TEAM).delete()
+        .eq('persona', persona).eq('tc_uid', tcUid).eq('role', role).eq('name', name);
+    } else {
+      await ST.sb.from(TBL_TC_TEAM).upsert({
+        persona, tc_uid: tcUid, role, name
+      }, { onConflict: 'persona,tc_uid,role,name' });
+    }
+  }catch(e){ console.warn('push tc-team failed', e); }
 }
 
 // ═══════════════════════════════════════════
@@ -2753,7 +2997,7 @@ function showView(name, btn){
   document.querySelectorAll('#sidebar .nav-item').forEach(el => el.classList.remove('active'));
   if(btn) btn.classList.add('active');
   const titles = { dashboard:'Dashboard', testcases:'Test Cases', testers:'Testers',
-                   issues:'Issue Tracker', developers:'Developers', assignments:'Persona Assignments', import:'Bulk Import' };
+                   issues:'Issue Tracker', developers:'Team Roster', assignments:'Persona Assignments', import:'Bulk Import' };
   document.getElementById('topbar-sub').textContent = titles[name] || name;
   if(name==='dashboard') renderDashboard();
   if(name==='testcases') renderTestCases();
@@ -2772,7 +3016,7 @@ function personaSummary(pk){
   const total = data.length;
   let passed=0, failed=0, inconc=0, signed=0;
   data.forEach(t => {
-    const s = getTCStatus(pk, t.uid || t.tc);
+    const s = aggregatedTCStatus(pk, t.uid || t.tc);
     if(s==='Passed') passed++;
     else if(s==='Failed') failed++;
     else if(s==='Inconclusive') inconc++;
@@ -2923,7 +3167,7 @@ function renderDashboard(){
     : `<div style="overflow-x:auto;"><table class="data"><thead><tr><th>ID</th><th>TC</th><th>Persona</th><th>Title</th><th>Severity</th><th>Status</th><th>Date</th></tr></thead><tbody>${
       recent.map(i => `<tr style="cursor:pointer;" onclick="openIssueDetail('${i.id}')">
         <td class="mono"><strong>${i.id}</strong></td>
-        <td class="mono">TC-${i.tc}</td>
+        <td class="mono">${i.tc ? 'TC-'+escapeHtml(i.tc) : '<span style="color:var(--text-muted);font-style:italic;">Other</span>'}</td>
         <td>${personaTag(i.persona)}</td>
         <td>${escapeHtml(i.title)}</td>
         <td><span class="sev-tag sev-${i.severity}">${i.severity}</span></td>
@@ -3037,20 +3281,22 @@ function renderTestCases(){
     const bugs = bugsForTC(t.persona, t.uid);
     const statusClass = status !== 'Pending' ? 'status-'+status : '';
     return `<div class="tc-card ${statusClass}" data-persona="${t.persona}" data-uid="${escapeAttr(t.uid)}" onclick="toggleTC(this,event)">
-      <div class="tc-num"><span>${ix+1}</span></div>
-      <div class="tc-main">
-        <div class="tc-meta">
-          <div class="tc-title">${escapeHtml(t.title)}</div>
-          <div class="tc-info">
-            <span class="tc-id">TC-${escapeHtml(t.tc)}</span>
-            <span class="tag ${t.type==='Functional'?'func':t.type==='Integration'?'integ':''}">${escapeHtml(t.type||'Functional')}</span>
-            ${t.story?`<span class="tag mono">${escapeHtml(t.story)}</span>`:''}
-            ${bugs.length>0?`<span class="bug-pill">🐛 ${bugs.length}</span>`:''}
+      <div class="tc-header">
+        <div class="tc-num"><span>${ix+1}</span></div>
+        <div class="tc-main">
+          <div class="tc-meta">
+            <div class="tc-title">${escapeHtml(t.title)}</div>
+            <div class="tc-info">
+              <span class="tc-id">TC-${escapeHtml(t.tc)}</span>
+              <span class="tag ${t.type==='Functional'?'func':t.type==='Integration'?'integ':''}">${escapeHtml(t.type||'Functional')}</span>
+              ${t.story?`<span class="tag mono">${escapeHtml(t.story)}</span>`:''}
+              ${bugs.length>0?`<span class="bug-pill">🐛 ${bugs.length}</span>`:''}
+            </div>
           </div>
-        </div>
-        <div class="tc-right">
-          ${tcStatusPill(status)}
-          <span class="tc-chevron">▼</span>
+          <div class="tc-right">
+            ${tcStatusPill(status)}
+            <span class="tc-chevron">▼</span>
+          </div>
         </div>
       </div>
       <div class="tc-body">
@@ -3060,15 +3306,25 @@ function renderTestCases(){
         ${t.negative?`<div class="tc-section"><div class="tc-section-label">❌ Negative Scenario</div><div class="tc-section-body">${t.negative}</div></div>`:''}
 
         <div class="tc-section">
+          <div class="tc-section-label">👥 Built By (Devs &amp; PMs)</div>
+          <div class="tc-section-body" style="padding:10px 12px;">
+            ${renderTCTeamLine(t.persona, t.uid)}
+            ${ST.isAdmin?`<button class="btn sm" style="margin-top:8px;" onclick="event.stopPropagation();openEditTCTeamModal('${t.persona}','${escapeAttr(t.uid)}','${escapeAttr(t.tc)}')">✏️ Edit team</button>`:''}
+          </div>
+        </div>
+
+        <div class="tc-section">
           <div class="tc-section-label">📝 Log Your Result</div>
           <div class="result-row">
-            <button class="result-btn pass ${status==='Passed'?'active':''}" onclick="event.stopPropagation();markTCResult('${t.persona}','${escapeAttr(t.uid)}','Passed')">✓ Pass</button>
-            <button class="result-btn fail ${status==='Failed'?'active':''}" onclick="event.stopPropagation();markTCResult('${t.persona}','${escapeAttr(t.uid)}','Failed')">✗ Fail</button>
-            <button class="result-btn inc ${status==='Inconclusive'?'active':''}" onclick="event.stopPropagation();markTCResult('${t.persona}','${escapeAttr(t.uid)}','Inconclusive')">~ Inconclusive</button>
+            <button class="result-btn pass ${myTCStatus(t.persona,t.uid)==='Passed'?'active':''}" onclick="event.stopPropagation();markTCResult('${t.persona}','${escapeAttr(t.uid)}','Passed')">✓ Pass</button>
+            <button class="result-btn fail ${myTCStatus(t.persona,t.uid)==='Failed'?'active':''}" onclick="event.stopPropagation();markTCResult('${t.persona}','${escapeAttr(t.uid)}','Failed')">✗ Fail</button>
+            <button class="result-btn inc ${myTCStatus(t.persona,t.uid)==='Inconclusive'?'active':''}" onclick="event.stopPropagation();markTCResult('${t.persona}','${escapeAttr(t.uid)}','Inconclusive')">~ Inconclusive</button>
             <button class="btn danger sm" onclick="event.stopPropagation();openLogIssueModal('${t.persona}','${escapeAttr(t.uid)}','${escapeAttr(t.tc)}')">🐛 Log Bug</button>
-            ${ST.isAdmin?`<button class="result-btn sign ${status==='SignedOff'?'active':''}" onclick="event.stopPropagation();markTCResult('${t.persona}','${escapeAttr(t.uid)}','SignedOff')">🔒 Sign Off</button>`:''}
-            ${status!=='Pending'?`<button class="result-btn reset" onclick="event.stopPropagation();markTCResult('${t.persona}','${escapeAttr(t.uid)}','Pending')">↺ Reset</button>`:''}
+            ${canSignOffOwn(t.persona,t.uid)?`<button class="result-btn sign ${myTCStatus(t.persona,t.uid)==='SignedOff'?'active':''}" onclick="event.stopPropagation();markTCResult('${t.persona}','${escapeAttr(t.uid)}','SignedOff')">🔒 Sign Off (mine)</button>`:''}
+            ${ST.isAdmin?`<button class="result-btn sign" onclick="event.stopPropagation();openAdminSignOffModal('${t.persona}','${escapeAttr(t.uid)}','${escapeAttr(t.tc)}')" title="Sign off another tester's result">🔒 Sign Off (admin)</button>`:''}
+            ${myTCStatus(t.persona,t.uid)!=='Pending'?`<button class="result-btn reset" onclick="event.stopPropagation();markTCResult('${t.persona}','${escapeAttr(t.uid)}','Pending')">↺ Reset mine</button>`:''}
           </div>
+          ${renderUserResultsStrip(t.persona, t.uid)}
         </div>
 
         <div class="tc-section">
@@ -3128,17 +3384,165 @@ function tcStatusPill(s){
   const labels = { Passed:'✓ Passed', Failed:'✗ Failed', Inconclusive:'~ Inconclusive', Pending:'⏳ Pending', SignedOff:'🔒 Signed Off' };
   return `<span class="tc-status-pill tc-status-${s}">${labels[s]||s}</span>`;
 }
+function renderTCTeamLine(persona, tcUid){
+  const team = getTCTeam(persona, tcUid);
+  const devs = (team.devs || []);
+  const pms = (team.pms || []);
+  if(devs.length === 0 && pms.length === 0){
+    return `<span style="color:var(--text-muted);font-style:italic;font-size:12px;">No devs or PMs assigned to this test case.</span>`;
+  }
+  const devChips = devs.map(n => `<span class="chip-mini dev" title="Developer">👨‍💻 ${escapeHtml(n)}</span>`).join('');
+  const pmChips  = pms.map(n => `<span class="chip-mini pm" title="Product Manager">📋 ${escapeHtml(n)}</span>`).join('');
+  return `<div class="chip-picker-mini">
+    ${devs.length>0 ? `<span style="font-size:10.5px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-right:4px;">Devs:</span>${devChips}` : ''}
+    ${pms.length>0  ? `<span style="font-size:10.5px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin:0 4px 0 ${devs.length>0?'10':'0'}px;">PMs:</span>${pmChips}` : ''}
+  </div>`;
+}
+function renderUserResultsStrip(persona, tcUid){
+  const all = getAllUserResults(persona, tcUid);
+  if(all.length === 0) return '';
+  // Sort: my own first, then by date desc
+  const me = (ST.email||'').toLowerCase();
+  all.sort((a,b) => {
+    if(a.tester_email === me && b.tester_email !== me) return -1;
+    if(a.tester_email !== me && b.tester_email === me) return 1;
+    return (b.date||'').localeCompare(a.date||'');
+  });
+  const icon = { Passed:'✓', Failed:'✗', Inconclusive:'~', SignedOff:'🔒' };
+  const items = all.map(r => {
+    const name = shortName(r.tester_name || r.tester_email || '');
+    const isMe = r.tester_email === me;
+    const tip = r.status==='SignedOff' && r.signed_off_by_email
+      ? `Signed off by ${r.signed_off_by_email} on ${r.signed_off_date||r.date||''}`
+      : `${r.status} on ${r.date||'—'}`;
+    return `<span class="ur ${r.status}" title="${escapeAttr(tip)}">${icon[r.status]||'•'} ${escapeHtml(name)}${isMe?' (you)':''}</span>`;
+  }).join('');
+  return `<div class="tc-user-results">${items}</div>`;
+}
+
+// ═══════════════════════════════════════════
+// EDIT TC TEAM MODAL
+// ═══════════════════════════════════════════
+let ETT_CTX = null;
+let ETT_DEV_PICKER = null;
+let ETT_PM_PICKER  = null;
+function openEditTCTeamModal(persona, tcUid, tcDisplay){
+  if(!ST.isAdmin){ toast('Admin only.','error'); return; }
+  ETT_CTX = { persona, tcUid, tcDisplay };
+  document.getElementById('ett-title').textContent = `👥 Edit Team — TC-${tcDisplay} (${PERSONA_META[persona].label})`;
+  const team = getTCTeam(persona, tcUid);
+  const devOptions = ST.developers.filter(d => (d.role||'dev') === 'dev' || (d.role||'dev') === 'both').map(d => ({ name:d.name, team:d.team||'', role:'Dev' }));
+  const pmOptions  = ST.developers.filter(d => (d.role||'dev') === 'pm'  || (d.role||'dev') === 'both').map(d => ({ name:d.name, team:d.team||'', role:'PM' }));
+  ETT_DEV_PICKER = createChipPicker(document.getElementById('ett-devs-picker'), {
+    selected: team.devs, options: devOptions, kind:'dev', placeholder:'Type a developer name…'
+  });
+  ETT_PM_PICKER = createChipPicker(document.getElementById('ett-pms-picker'), {
+    selected: team.pms, options: pmOptions, kind:'pm', placeholder:'Type a PM name…'
+  });
+  document.getElementById('edit-tc-team-modal').style.display = 'flex';
+}
+function closeEditTCTeamModal(){
+  document.getElementById('edit-tc-team-modal').style.display = 'none';
+  ETT_CTX = null; ETT_DEV_PICKER = null; ETT_PM_PICKER = null;
+}
+function saveTCTeam(){
+  if(!ETT_CTX){ closeEditTCTeamModal(); return; }
+  const devs = ETT_DEV_PICKER ? ETT_DEV_PICKER.getValue() : [];
+  const pms  = ETT_PM_PICKER  ? ETT_PM_PICKER.getValue()  : [];
+  const ensureInRoster = (name, role) => {
+    if(!name) return;
+    const existing = ST.developers.find(d => d.name.toLowerCase() === name.toLowerCase());
+    if(!existing){
+      const newDev = { name, email:'', team:'', role };
+      ST.developers.push(newDev);
+      pushDeveloperToSupabase(newDev, 'upsert');
+    } else if(existing.role && existing.role !== role && existing.role !== 'both'){
+      existing.role = 'both';
+      pushDeveloperToSupabase(existing, 'upsert');
+    }
+  };
+  devs.forEach(n => ensureInRoster(n, 'dev'));
+  pms.forEach(n => ensureInRoster(n, 'pm'));
+  setTCTeamList(ETT_CTX.persona, ETT_CTX.tcUid, 'devs', devs);
+  setTCTeamList(ETT_CTX.persona, ETT_CTX.tcUid, 'pms', pms);
+  toast('TC team saved.','success');
+  closeEditTCTeamModal();
+  renderTestCases();
+}
+
+// ═══════════════════════════════════════════
+// ADMIN SIGN-OFF MODAL
+// ═══════════════════════════════════════════
+let ASO_CTX = null;
+function openAdminSignOffModal(persona, tcUid, tcDisplay){
+  if(!ST.isAdmin){ toast('Admin only.','error'); return; }
+  ASO_CTX = { persona, tcUid, tcDisplay };
+  document.getElementById('aso-tc').textContent = 'TC-' + tcDisplay;
+  document.getElementById('aso-persona').textContent = PERSONA_META[persona].label;
+  const all = getAllUserResults(persona, tcUid);
+  const candidates = {};
+  all.forEach(r => {
+    candidates[(r.tester_email||'').toLowerCase()] = {
+      email: r.tester_email, name: r.tester_name || r.tester_email,
+      status: r.status, has_result: true
+    };
+  });
+  (ST.assignments[persona] || []).filter(t => !t.is_si).forEach(t => {
+    const e = (t.email||'').toLowerCase();
+    if(!candidates[e]){
+      candidates[e] = { email: t.email, name: t.name, status: 'Pending', has_result: false };
+    } else if(!candidates[e].name){
+      candidates[e].name = t.name;
+    }
+  });
+  const arr = Object.values(candidates).sort((a,b) => (a.name||'').localeCompare(b.name||''));
+  const sel = document.getElementById('aso-tester');
+  if(arr.length === 0){
+    sel.innerHTML = '<option value="">— No testers available —</option>';
+  } else {
+    sel.innerHTML = arr.map(c => `<option value="${escapeAttr(c.email)}" data-name="${escapeAttr(c.name)}">
+      ${escapeHtml(shortName(c.name))} · ${c.has_result ? c.status : 'no result yet'}
+    </option>`).join('');
+  }
+  document.getElementById('admin-signoff-modal').style.display = 'flex';
+}
+function closeAdminSignOffModal(){
+  document.getElementById('admin-signoff-modal').style.display = 'none';
+  ASO_CTX = null;
+}
+function confirmAdminSignOff(){
+  if(!ASO_CTX) return;
+  const sel = document.getElementById('aso-tester');
+  if(!sel.value){ toast('Pick a tester.','error'); return; }
+  const targetEmail = sel.value;
+  const targetName  = sel.selectedOptions[0].getAttribute('data-name') || guessTesterName(targetEmail);
+  setTCStatus(ASO_CTX.persona, ASO_CTX.tcUid, 'SignedOff', {
+    onBehalfOfEmail: targetEmail,
+    onBehalfOfName: targetName,
+    signedOffByEmail: ST.email
+  });
+  toast(`Signed off TC-${ASO_CTX.tcDisplay} for ${shortName(targetName)}.`,'success');
+  closeAdminSignOffModal();
+  renderTestCases();
+  if(document.getElementById('view-dashboard').classList.contains('active')) renderDashboard();
+}
+
 function toggleTC(card, ev){
   if(ev.target.closest('button')) return;
   card.classList.toggle('expanded');
 }
 function markTCResult(persona, tcUid, status){
   if(!ST.email){ document.getElementById('email-gate').style.display='flex'; return; }
-  if(status === 'SignedOff' && !ST.isAdmin){ toast('Only admins can sign off.','error'); return; }
+  if(status === 'SignedOff'){
+    // Self sign-off: only allowed if tester has already logged a result
+    if(!canSignOffOwn(persona, tcUid)){
+      toast('Log a Pass/Fail/Inconclusive result first, then you can sign off.','error');
+      return;
+    }
+  }
   setTCStatus(persona, tcUid, status);
   toast(`Marked as ${status==='Pending'?'Pending (cleared)':status}.`, 'success');
   renderTestCases();
-  // Also update dashboard counts (in case it's loaded)
   if(document.getElementById('view-dashboard').classList.contains('active')) renderDashboard();
 }
 function bugsForTC(persona, tcUid){
@@ -3255,7 +3659,7 @@ function renderIssues(){
     const onBehalf = i.logged_for_email && submittedBy && i.logged_for_email.toLowerCase() !== submittedBy.toLowerCase();
     return `<tr style="cursor:pointer;" onclick="openIssueDetail('${i.id}')">
       <td class="mono"><strong>${i.id}</strong></td>
-      <td class="mono">TC-${escapeHtml(i.tc)}</td>
+      <td class="mono">${i.tc ? 'TC-'+escapeHtml(i.tc) : '<span style="color:var(--text-muted);font-style:italic;">Other</span>'}</td>
       <td>${personaTag(i.persona)}</td>
       <td><strong>${escapeHtml(i.title)}</strong></td>
       <td><span class="sev-tag sev-${i.severity}">${i.severity}</span></td>
@@ -3298,6 +3702,8 @@ function openLogIssueModal(persona, tcUid, tcLabel){
   document.getElementById('issue-date-fixed').value = '';
   document.getElementById('issue-screenshot').value = '';
   document.getElementById('issue-comments').value = '';
+  clearShot();
+  setupShotPasteHandler();
   document.getElementById('issue-tester').textContent = ST.email;
   document.getElementById('issue-date').textContent = todayISO();
   document.getElementById('log-issue-modal').style.display = 'flex';
@@ -3305,7 +3711,9 @@ function openLogIssueModal(persona, tcUid, tcLabel){
 function populateTCSelectForPersona(persona, preselect){
   const arr = PERSONA_DATA[persona] || [];
   const ts = document.getElementById('issue-tc-select');
-  ts.innerHTML = `<option value="">— Select TC —</option>` + arr.map(t => `<option value="${escapeAttr(t.uid||t.tc)}">TC-${escapeHtml(t.tc)} · ${escapeHtml(t.title)}</option>`).join('');
+  const trunc = s => { s = String(s||''); return s.length > 110 ? s.slice(0,110) + '…' : s; };
+  ts.innerHTML = `<option value="__other__">— Other / Not test-case specific —</option>`
+    + arr.map(t => `<option value="${escapeAttr(t.uid||t.tc)}" title="TC-${escapeHtml(t.tc)} · ${escapeHtml(t.title)}">TC-${escapeHtml(t.tc)} · ${escapeHtml(trunc(t.title))}</option>`).join('');
   if(preselect) ts.value = preselect;
   populateLoggedBySelectForPersona(persona);
 }
@@ -3341,7 +3749,7 @@ function refreshDevSelect(){
 function closeLogIssueModal(){ document.getElementById('log-issue-modal').style.display='none'; }
 async function submitIssue(){
   const persona = document.getElementById('issue-persona-select').value;
-  const tcUid = document.getElementById('issue-tc-select').value;
+  let tcUid = document.getElementById('issue-tc-select').value;
   const title = document.getElementById('issue-title-input').value.trim();
   const severity = document.getElementById('issue-severity').value;
   const status = document.getElementById('issue-status').value;
@@ -3359,7 +3767,9 @@ async function submitIssue(){
     ? (lbSel.selectedOptions[0].getAttribute('data-name') || guessTesterName(loggedForEmail))
     : guessTesterName(loggedForEmail);
 
-  if(!persona || !tcUid){ toast('Pick a persona and a test case.','error'); return; }
+  if(!persona){ toast('Pick a persona.','error'); return; }
+  // TC is optional — "__other__" means a general/non-TC-specific bug
+  if(tcUid === '__other__') tcUid = '';
   if(!title){ toast('Title is required.','error'); return; }
   if(!behavior){ toast('Actual behavior is required.','error'); return; }
   if(EDITING_ID){
@@ -3419,7 +3829,7 @@ function openIssueDetail(id){
   const sameAsSubmitter = !loggedFor || loggedFor.toLowerCase() === (i.tester_email||'').toLowerCase();
   document.getElementById('issue-detail-body').innerHTML = `
     <div class="context-bar" style="grid-template-columns:1fr 1fr 1fr;">
-      <div><strong>TC:</strong> TC-${escapeHtml(i.tc)}</div>
+      <div><strong>TC:</strong> ${i.tc ? 'TC-'+escapeHtml(i.tc) : '<span style="color:var(--text-muted);font-style:italic;">Not test-case specific</span>'}</div>
       <div><strong>Persona:</strong> ${meta.icon} ${escapeHtml(meta.label)}</div>
       <div><strong>Env:</strong> DTC UAT</div>
       <div><strong>Severity:</strong> <span class="sev-tag sev-${i.severity}">${i.severity}</span></div>
@@ -3449,7 +3859,8 @@ function editIssueFromDetail(){
   const ps = document.getElementById('issue-persona-select');
   ps.innerHTML = Object.keys(PERSONA_META).map(pk => `<option value="${pk}">${PERSONA_META[pk].icon} ${PERSONA_META[pk].label}</option>`).join('');
   ps.value = i.persona;
-  populateTCSelectForPersona(i.persona, i.tc);
+  // If the bug had no TC, preselect "Other"
+  populateTCSelectForPersona(i.persona, i.tc || '__other__');
   populateLoggedBySelectForPersona(i.persona, i.logged_for_email || i.tester_email);
   ps.onchange = () => populateTCSelectForPersona(ps.value, null);
   refreshDevSelect();
@@ -3463,6 +3874,14 @@ function editIssueFromDetail(){
   document.getElementById('issue-date-fixed').value = i.date_fixed || '';
   document.getElementById('issue-screenshot').value = i.screenshot || '';
   document.getElementById('issue-comments').value = i.comments || '';
+  // Restore screenshot preview if there is a URL
+  clearShot();
+  setupShotPasteHandler();
+  if(i.screenshot && /^https?:\/\//i.test(i.screenshot)){
+    document.getElementById('shot-img').src = i.screenshot;
+    document.getElementById('shot-preview').classList.add('has-image');
+    setShotStatus('Existing','success');
+  }
   document.getElementById('issue-tester').textContent = i.tester_email || ST.email;
   document.getElementById('issue-date').textContent = i.date_opened;
   document.getElementById('log-issue-modal').style.display='flex';
@@ -3473,17 +3892,19 @@ function editIssueFromDetail(){
 // ═══════════════════════════════════════════
 function renderDevelopers(){
   if(ST.developers.length === 0){
-    document.getElementById('devs-list').innerHTML = `<div class="empty-state"><div class="icon">👨‍💻</div><h3>No developers added yet</h3><p>Click "+ Add Developer" to start your roster.</p></div>`;
+    document.getElementById('devs-list').innerHTML = `<div class="empty-state"><div class="icon">👨‍💻</div><h3>No team members added yet</h3><p>Click "+ Add Team Member" to start your roster (devs and PMs).</p></div>`;
     return;
   }
   document.getElementById('devs-list').innerHTML = `
     <table class="data">
-      <thead><tr><th>Name</th><th>Email</th><th>Team / Vendor</th><th class="t-right">Bugs Assigned</th><th></th></tr></thead>
+      <thead><tr><th>Name</th><th>Role</th><th>Email</th><th>Team / Vendor</th><th class="t-right">Bugs Assigned</th><th></th></tr></thead>
       <tbody>${ST.developers.map((d,ix) => {
         const assigned = ST.issues.filter(i => i.developer === d.name).length;
         const open = ST.issues.filter(i => i.developer === d.name && !['Closed','WontFix','Fixed','Verified'].includes(i.status)).length;
+        const roleLabel = d.role==='pm' ? '<span class="chip-mini pm">📋 PM</span>' : d.role==='both' ? '<span class="chip-mini dev">👨‍💻 Dev</span> <span class="chip-mini pm">📋 PM</span>' : '<span class="chip-mini dev">👨‍💻 Dev</span>';
         return `<tr>
           <td><strong>${escapeHtml(d.name)}</strong></td>
+          <td>${roleLabel}</td>
           <td class="mono">${escapeHtml(d.email||'—')}</td>
           <td>${escapeHtml(d.team||'—')}</td>
           <td class="t-right">${assigned > 0 ? `<span class="chip blue">${assigned} total · ${open} open</span>` : '<span style="color:var(--text-muted);">0</span>'}</td>
@@ -3498,45 +3919,46 @@ function renderDevelopers(){
 let EDITING_DEV_IX = null;
 function openAddDevModal(){
   EDITING_DEV_IX = null;
-  document.getElementById('dev-modal-title').textContent = '👨‍💻 Add Developer';
+  document.getElementById('dev-modal-title').textContent = '👨‍💻 Add Team Member';
   document.getElementById('dev-name').value = '';
   document.getElementById('dev-email').value = '';
   document.getElementById('dev-team').value = '';
+  document.getElementById('dev-role').value = 'dev';
   document.getElementById('add-dev-modal').style.display='flex';
 }
 function closeAddDevModal(){ document.getElementById('add-dev-modal').style.display='none'; }
 function editDev(ix){
   EDITING_DEV_IX = ix;
   const d = ST.developers[ix];
-  document.getElementById('dev-modal-title').textContent = '✏️ Edit Developer';
+  document.getElementById('dev-modal-title').textContent = '✏️ Edit Team Member';
   document.getElementById('dev-name').value = d.name;
   document.getElementById('dev-email').value = d.email || '';
   document.getElementById('dev-team').value = d.team || '';
+  document.getElementById('dev-role').value = d.role || 'dev';
   document.getElementById('add-dev-modal').style.display='flex';
 }
 function saveDeveloper(){
   const name = document.getElementById('dev-name').value.trim();
   const email = document.getElementById('dev-email').value.trim();
   const team = document.getElementById('dev-team').value.trim();
+  const role = document.getElementById('dev-role').value || 'dev';
   if(!name){ toast('Name is required.','error'); return; }
   if(EDITING_DEV_IX !== null){
     const oldName = ST.developers[EDITING_DEV_IX].name;
-    ST.developers[EDITING_DEV_IX] = { name, email, team };
+    ST.developers[EDITING_DEV_IX] = { name, email, team, role };
     if(oldName !== name){
-      // Cascade rename across local issues
       ST.issues.forEach(i => { if(i.developer === oldName) i.developer = name; });
-      // Also push the rename to Supabase by deleting old and inserting new
       pushDeveloperToSupabase({ name: oldName }, 'delete');
     }
-    pushDeveloperToSupabase({ name, email, team }, 'upsert');
-    toast('Developer updated.','success');
+    pushDeveloperToSupabase({ name, email, team, role }, 'upsert');
+    toast('Team member updated.','success');
   } else {
     if(ST.developers.find(d => d.name.toLowerCase() === name.toLowerCase())){
-      toast('A developer with that name already exists.','error'); return;
+      toast('A team member with that name already exists.','error'); return;
     }
-    ST.developers.push({ name, email, team });
-    pushDeveloperToSupabase({ name, email, team }, 'upsert');
-    toast('Developer added.','success');
+    ST.developers.push({ name, email, team, role });
+    pushDeveloperToSupabase({ name, email, team, role }, 'upsert');
+    toast('Team member added.','success');
   }
   saveLocal(); closeAddDevModal(); renderAll();
 }
@@ -3688,6 +4110,167 @@ function resetAssignmentsToAuto(){
   renderAssignments();
   renderPersonaBannerTesters();
   toast('Assignments reset to auto-map.','success');
+}
+
+
+// ═══════════════════════════════════════════
+// SCREENSHOT UPLOAD (Supabase Storage)
+// ═══════════════════════════════════════════
+const STORAGE_BUCKET = 'e2e-uat-screenshots';
+let SHOT_PASTE_HOOKED = false;
+
+function setupShotPasteHandler(){
+  if(SHOT_PASTE_HOOKED) return;
+  SHOT_PASTE_HOOKED = true;
+  document.addEventListener('paste', (ev) => {
+    const modal = document.getElementById('log-issue-modal');
+    if(!modal || modal.style.display !== 'flex') return;
+    const items = (ev.clipboardData || ev.originalEvent.clipboardData || {}).items;
+    if(!items) return;
+    for(const it of items){
+      if(it.kind === 'file' && (it.type||'').startsWith('image/')){
+        const f = it.getAsFile();
+        if(f){ ev.preventDefault(); handleShotFile(f); break; }
+      }
+    }
+  });
+}
+
+function handleShotDrop(ev){
+  ev.preventDefault();
+  ev.currentTarget.classList.remove('is-drag');
+  const f = ev.dataTransfer.files && ev.dataTransfer.files[0];
+  if(f) handleShotFile(f);
+}
+
+function showShotPreview(dataUrl){
+  document.getElementById('shot-img').src = dataUrl;
+  document.getElementById('shot-preview').classList.add('has-image');
+}
+function setShotStatus(label, kind){
+  const el = document.getElementById('shot-status');
+  if(!el) return;
+  el.textContent = label;
+  el.className = 'preview-status ' + (kind || '');
+}
+function clearShot(){
+  document.getElementById('shot-img').src = '';
+  document.getElementById('shot-preview').classList.remove('has-image');
+  document.getElementById('shot-file').value = '';
+  document.getElementById('issue-screenshot').value = '';
+}
+
+async function handleShotFile(file){
+  if(!file) return;
+  if(!file.type || !file.type.startsWith('image/')){
+    toast('Please choose an image file.','error'); return;
+  }
+  if(file.size > 6 * 1024 * 1024){
+    toast('Image too large (>6 MB).','error'); return;
+  }
+  // Show local preview immediately
+  const reader = new FileReader();
+  reader.onload = e => showShotPreview(e.target.result);
+  reader.readAsDataURL(file);
+  // Upload to Supabase storage
+  if(!ST.sb || !ST.online){
+    setShotStatus('Local only — not uploaded','error');
+    // Still allow saving the bug with no URL; the data: URL is too big to store in a row.
+    document.getElementById('issue-screenshot').value = '';
+    toast('Storage offline — screenshot won\'t persist. Use a URL field instead.','warning');
+    return;
+  }
+  setShotStatus('Uploading…','uploading');
+  try{
+    const ext = (file.name.match(/\.([a-z0-9]+)$/i) || [,'png'])[1].toLowerCase();
+    const stamp = todayISO().replace(/-/g,'') + '_' + Date.now();
+    const safeUser = (ST.email||'anon').replace(/[^a-z0-9]/gi,'_').toLowerCase();
+    const path = `${safeUser}/${stamp}.${ext}`;
+    const { data, error } = await ST.sb.storage.from(STORAGE_BUCKET).upload(path, file, {
+      cacheControl: '3600', upsert: false, contentType: file.type
+    });
+    if(error) throw error;
+    // Get public URL
+    const { data: pub } = ST.sb.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+    const url = pub && pub.publicUrl ? pub.publicUrl : '';
+    document.getElementById('issue-screenshot').value = url;
+    setShotStatus('Uploaded ✓','success');
+  }catch(e){
+    console.warn('Screenshot upload failed:', e);
+    setShotStatus('Upload failed','error');
+    toast('Screenshot upload failed: ' + (e.message || 'check bucket policy'),'error');
+  }
+}
+
+// ═══════════════════════════════════════════
+// MULTI-SELECT CHIP PICKER (devs / PMs per TC)
+// ═══════════════════════════════════════════
+// Builds a chip picker bound to a hidden array container.
+// Usage: createChipPicker(rootEl, { selected:[], options:[{name,role}], kind:'dev', onChange:(arr)=>{} })
+function createChipPicker(root, opts){
+  const state = {
+    selected: (opts.selected || []).slice(),
+    options: opts.options || [],
+    kind: opts.kind || 'dev',
+    onChange: opts.onChange || (()=>{}),
+    placeholder: opts.placeholder || 'Type or pick…',
+    open: false,
+    typed: ''
+  };
+  function render(){
+    const dropdownId = 'cp_dd_' + Math.random().toString(36).slice(2,8);
+    const chips = state.selected.map((name,ix) => `<span class="selected-chip ${state.kind}">${escapeHtml(name)}<button type="button" class="x" data-ix="${ix}" title="Remove">×</button></span>`).join('');
+    const filtered = state.options.filter(o => !state.selected.includes(o.name) && (state.typed === '' || o.name.toLowerCase().includes(state.typed.toLowerCase())));
+    const ddOpts = filtered.length === 0
+      ? '<div class="opt empty">No matches</div>'
+      : filtered.map(o => `<div class="opt" data-name="${escapeAttr(o.name)}"><span>${escapeHtml(o.name)}${o.team?'<span style="color:var(--text-muted);font-weight:500;font-size:11px;"> · '+escapeHtml(o.team)+'</span>':''}</span><span class="role">${escapeHtml(o.role||state.kind)}</span></div>`).join('');
+    root.innerHTML = `
+      <div class="chip-picker-wrap">
+        <div class="chip-picker">${chips}<input class="picker-input" placeholder="${escapeAttr(state.placeholder)}" value="${escapeAttr(state.typed)}"></div>
+        <div class="chip-picker-dropdown ${state.open?'open':''}" id="${dropdownId}">${ddOpts}</div>
+      </div>`;
+    const input = root.querySelector('.picker-input');
+    const dd = root.querySelector('.chip-picker-dropdown');
+    input.addEventListener('focus', ()=>{ state.open = true; dd.classList.add('open'); });
+    input.addEventListener('blur',  ()=>{ setTimeout(()=>{ state.open = false; dd.classList.remove('open'); }, 150); });
+    input.addEventListener('input', e => { state.typed = e.target.value; render(); requestAnimationFrame(()=>{ const i2 = root.querySelector('.picker-input'); if(i2){ i2.focus(); i2.setSelectionRange(state.typed.length, state.typed.length); }}); });
+    input.addEventListener('keydown', e => {
+      if(e.key === 'Enter' && state.typed.trim()){
+        e.preventDefault();
+        addPick(state.typed.trim());
+      }
+    });
+    root.querySelectorAll('.selected-chip .x').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const ix = parseInt(btn.getAttribute('data-ix'),10);
+        state.selected.splice(ix,1);
+        state.onChange(state.selected.slice());
+        render();
+      });
+    });
+    root.querySelectorAll('.chip-picker-dropdown .opt[data-name]').forEach(opt => {
+      opt.addEventListener('mousedown', e => {
+        e.preventDefault();
+        addPick(opt.getAttribute('data-name'));
+      });
+    });
+  }
+  function addPick(name){
+    if(!state.selected.includes(name)){
+      state.selected.push(name);
+      state.onChange(state.selected.slice());
+    }
+    state.typed = '';
+    render();
+    setTimeout(()=>{ const i = root.querySelector('.picker-input'); if(i) i.focus(); }, 30);
+  }
+  render();
+  return {
+    getValue: () => state.selected.slice(),
+    setValue: (arr) => { state.selected = (arr||[]).slice(); render(); },
+    setOptions: (arr) => { state.options = arr || []; render(); }
+  };
 }
 
 
@@ -3956,6 +4539,7 @@ window.addEventListener('DOMContentLoaded', () => {
     ST.developers = local.developers || [];
     ST.results = local.results || {};
     ST.assignments = local.assignments || {};
+    ST.tcTeam = local.tcTeam || {};
   }
   // Seed assignments from auto-map if empty
   if(!ST.assignments || Object.keys(ST.assignments).length === 0){
