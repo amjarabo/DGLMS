@@ -107,6 +107,19 @@ body{display:flex;min-height:100vh}
 
 /* ════ STAT CARDS — hero strip ════ */
 .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:20px}
+/* Compact 8-card variant for the dashboard hero row — fits 8 stat cards on one row at standard widths */
+.stat-grid.compact{grid-template-columns:repeat(8,1fr);gap:10px}
+.stat-grid.compact .stat-card{padding:14px 14px 14px 14px}
+.stat-grid.compact .stat-icon{font-size:18px;top:10px;right:10px}
+.stat-grid.compact .stat-label{font-size:9.5px;letter-spacing:.06em;margin-bottom:6px;padding-right:24px}
+.stat-grid.compact .stat-value{font-size:26px;letter-spacing:-.6px}
+.stat-grid.compact .stat-sub{font-size:10.5px;margin-top:6px}
+@media (max-width:1300px){
+  .stat-grid.compact{grid-template-columns:repeat(4,1fr)}
+}
+@media (max-width:680px){
+  .stat-grid.compact{grid-template-columns:repeat(2,1fr)}
+}
 .stat-card{position:relative;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:18px;overflow:hidden;transition:.2s;cursor:default}
 .stat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
 .stat-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#3b82f6,#6366f1)}
@@ -502,7 +515,7 @@ code,.mono{font-family:'DM Mono',monospace;font-size:11.5px}
       </div>
 
       <!-- Hero stats -->
-      <div class="stat-grid" id="dash-stats"></div>
+      <div class="stat-grid compact" id="dash-stats"></div>
 
       <!-- Pass rate -->
       <div class="card">
