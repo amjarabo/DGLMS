@@ -929,7 +929,7 @@ code,.mono{font-family:'DM Mono',monospace;font-size:11.5px}
       <div class="field full">
         <label>Logged By (tester who found the bug) *</label>
         <select id="issue-loggedby-select"></select>
-        <div style="font-size:10.5px;color:var(--text-muted);margin-top:3px;">Defaults to you. Pick another tester to log on their behalf.</div>
+        <div style="font-size:10.5px;color:var(--text-muted);margin-top:3px;">Defaults to you. All 40 testers are available — primaries and assigned testers for the picked persona appear first.</div>
       </div>
 
       <div class="field full">
@@ -3895,26 +3895,83 @@ document.addEventListener('click', (ev) => {
 function populateLoggedBySelectForPersona(persona, preselectEmail){
   const sel = document.getElementById('issue-loggedby-select');
   if(!sel) return;
-  const testers = (ST.assignments[persona] || []).slice().sort((a,b) => {
-    if(a.is_primary !== b.is_primary) return a.is_primary ? -1 : 1;
-    if(a.is_si !== b.is_si) return a.is_si ? 1 : -1;
-    return (a.name||'').localeCompare(b.name||'');
-  });
-  // Make sure the signed-in user is always selectable, even if not assigned
+
   const signedInEmail = (ST.email || '').toLowerCase();
-  const signedInPresent = testers.some(t => (t.email||'').toLowerCase() === signedInEmail);
-  let opts = '';
-  if(signedInEmail && !signedInPresent){
-    opts += `<option value="${escapeAttr(signedInEmail)}" data-name="${escapeAttr(guessTesterName(signedInEmail))}" selected>👤 ${escapeHtml(guessTesterName(signedInEmail))} (you, not assigned)</option>`;
+
+  // 1. Start with the full master TESTERS roster (40 from workbook)
+  const all = {};  // email-lowercase -> { email, name, agency, role, _assignedToPersona, _isPrimary, _isSi }
+  TESTERS.forEach(t => {
+    const k = (t.email || '').toLowerCase();
+    if(!k) return;
+    all[k] = {
+      email: t.email, name: t.name, agency: t.agency || '',
+      gl_role: t.role || '',
+      _assignedToPersona: false, _isPrimary: false, _isSi: false, _added: false
+    };
+  });
+
+  // 2. Layer on assignments — both for the current persona (mark as assigned) AND for any other persona (so we pick up names added manually anywhere)
+  Object.keys(ST.assignments || {}).forEach(pk => {
+    (ST.assignments[pk] || []).forEach(a => {
+      const k = (a.email || '').toLowerCase();
+      if(!k) return;
+      if(!all[k]){
+        all[k] = {
+          email: a.email, name: a.name || a.email, agency: a.agency || '',
+          gl_role: '', _assignedToPersona: false, _isPrimary: false, _isSi: false, _added: true
+        };
+      }
+      if(pk === persona){
+        all[k]._assignedToPersona = true;
+        all[k]._isPrimary = !!a.is_primary;
+        all[k]._isSi = !!a.is_si;
+      }
+    });
+  });
+
+  // 3. Always include the signed-in user even if they're not in any list
+  if(signedInEmail && !all[signedInEmail]){
+    all[signedInEmail] = {
+      email: ST.email, name: guessTesterName(ST.email), agency: '',
+      gl_role: '', _assignedToPersona: false, _isPrimary: false, _isSi: false, _added: true
+    };
   }
-  opts += testers.map(t => {
-    const role = t.is_primary ? '★ Primary' : t.is_backup ? 'Backup' : t.is_si ? 'SI Proxy' : '';
+
+  // 4. Sort: signed-in user first, then primary testers for this persona, then SI proxies,
+  //    then other testers assigned to this persona, then everyone else (alphabetical).
+  const arr = Object.values(all).sort((a, b) => {
+    const aMe = (a.email||'').toLowerCase() === signedInEmail;
+    const bMe = (b.email||'').toLowerCase() === signedInEmail;
+    if(aMe !== bMe) return aMe ? -1 : 1;
+    if(a._isPrimary !== b._isPrimary) return a._isPrimary ? -1 : 1;
+    if(a._assignedToPersona !== b._assignedToPersona) return a._assignedToPersona ? -1 : 1;
+    if(a._isSi !== b._isSi) return a._isSi ? -1 : 1;
+    return (a.name || '').localeCompare(b.name || '');
+  });
+
+  // 5. Build options with a separator between "assigned to persona" and "other testers"
+  let opts = '';
+  let inOtherGroup = false;
+  arr.forEach(t => {
     const isMe = (t.email||'').toLowerCase() === signedInEmail;
-    return `<option value="${escapeAttr(t.email)}" data-name="${escapeAttr(t.name)}" ${(preselectEmail && t.email===preselectEmail) || (!preselectEmail && isMe) ? 'selected' : ''}>
+    const isAssigned = t._assignedToPersona;
+    // Insert a divider when we transition from assigned → other
+    if(!inOtherGroup && !isAssigned && !isMe){
+      opts += `<option disabled>──────── Other testers ────────</option>`;
+      inOtherGroup = true;
+    }
+    const role = t._isPrimary ? '★ Primary'
+               : t._isSi ? 'SI Proxy'
+               : isAssigned ? 'Assigned'
+               : '';
+    const selected = (preselectEmail && t.email === preselectEmail)
+                  || (!preselectEmail && isMe);
+    opts += `<option value="${escapeAttr(t.email)}" data-name="${escapeAttr(t.name)}" ${selected?'selected':''}>
       ${escapeHtml(shortName(t.name))}${t.agency?' · '+escapeHtml(t.agency):''}${role?' · '+escapeHtml(role):''}${isMe?' (you)':''}
     </option>`;
-  }).join('');
-  if(!opts) opts = `<option value="${escapeAttr(signedInEmail)}">${escapeHtml(guessTesterName(signedInEmail))} (no testers assigned)</option>`;
+  });
+
+  if(!opts) opts = `<option value="${escapeAttr(signedInEmail)}">${escapeHtml(guessTesterName(signedInEmail))}</option>`;
   sel.innerHTML = opts;
 }
 function refreshDevSelect(){
