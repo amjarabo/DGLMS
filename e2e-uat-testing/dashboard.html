@@ -333,6 +333,31 @@ table.data tfoot td{padding:10px 12px;background:#f1f5f9;font-weight:700;border-
 .chip-picker-dropdown .opt.empty:hover{background:transparent}
 .chip-picker-dropdown .opt .role{font-size:10.5px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
 .chip-picker-mini{display:flex;flex-wrap:wrap;gap:4px}
+
+/* ════ TC COMBOBOX (custom dropdown for long TC titles) ════ */
+.tc-combo{position:relative;width:100%}
+.tc-combo-trigger{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-family:'DM Mono',monospace;font-size:12.5px;color:var(--text-primary);cursor:pointer;text-align:left;line-height:1.4;transition:.15s;min-height:42px}
+.tc-combo-trigger:hover{border-color:var(--blue-400)}
+.tc-combo-trigger:focus,.tc-combo.open .tc-combo-trigger{outline:none;border-color:var(--blue-500);box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+.tc-combo-label{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.tc-combo-label.placeholder{color:var(--text-muted);font-style:italic}
+.tc-combo-caret{color:var(--text-muted);font-size:11px;flex-shrink:0;transition:transform .15s}
+.tc-combo.open .tc-combo-caret{transform:rotate(180deg);color:var(--blue-500)}
+.tc-combo-panel{display:none;position:absolute;top:100%;left:0;right:0;margin-top:4px;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow-lg);z-index:60;max-height:340px;overflow:hidden;flex-direction:column}
+.tc-combo.open .tc-combo-panel{display:flex}
+.tc-combo-search{width:100%;padding:10px 12px;border:none;border-bottom:1px solid var(--border);font-family:inherit;font-size:12.5px;outline:none;box-sizing:border-box;background:#f8fafc;flex-shrink:0}
+.tc-combo-search:focus{background:#fff}
+.tc-combo-list{flex:1;overflow-y:auto;max-height:280px}
+.tc-combo-option{padding:9px 12px;font-size:12.5px;cursor:pointer;border-bottom:1px solid #f1f5f9;line-height:1.5;white-space:normal;word-wrap:break-word;overflow-wrap:anywhere;transition:background .1s}
+.tc-combo-option:last-child{border-bottom:none}
+.tc-combo-option:hover,.tc-combo-option.kb-focus{background:var(--blue-50)}
+.tc-combo-option.selected{background:linear-gradient(90deg,#dbeafe,#eff6ff);font-weight:600}
+.tc-combo-option .tc-uid{font-family:'DM Mono',monospace;font-weight:700;color:var(--blue-700);font-size:11.5px;margin-right:6px;background:#eff6ff;padding:1px 6px;border-radius:4px;display:inline-block;margin-bottom:2px}
+.tc-combo-option .tc-title-line{display:block;color:var(--text-primary);font-weight:500;margin-top:2px}
+.tc-combo-option .tc-meta-line{display:block;font-size:10.5px;color:var(--text-muted);margin-top:2px}
+.tc-combo-option.other{background:#fefce8;border-bottom:2px solid #fde68a}
+.tc-combo-option.other:hover{background:#fef9c3}
+.tc-combo-empty{padding:20px;text-align:center;color:var(--text-muted);font-size:12px;font-style:italic}
 .chip-mini{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:#f1f5f9;color:#475569;border-radius:10px;font-size:10.5px;font-weight:600;cursor:default;border:1px solid var(--border)}
 .chip-mini.dev{background:#cffafe;color:#0e7490;border-color:#a5f3fc}
 .chip-mini.pm{background:#ede9fe;color:#5b21b6;border-color:#ddd6fe}
@@ -886,8 +911,19 @@ code,.mono{font-family:'DM Mono',monospace;font-size:11.5px}
 
       <div class="field full">
         <label>Test Case (or pick "Other")</label>
-        <select id="issue-tc-select" style="font-family:'DM Mono',monospace;font-size:12.5px;"><option value="__other__">— Other / Not test-case specific —</option></select>
-        <div style="font-size:10.5px;color:var(--text-muted);margin-top:3px;">Long titles may be truncated visually but are stored in full.</div>
+        <div class="tc-combo" id="issue-tc-combo">
+          <button type="button" class="tc-combo-trigger" id="issue-tc-trigger" onclick="toggleTCCombo(event)">
+            <span class="tc-combo-label" id="issue-tc-label">— Other / Not test-case specific —</span>
+            <span class="tc-combo-caret">▾</span>
+          </button>
+          <div class="tc-combo-panel" id="issue-tc-panel">
+            <input type="text" class="tc-combo-search" id="issue-tc-search" placeholder="🔍 Search TC#, title, or story…" oninput="filterTCCombo()" onkeydown="onTCComboKey(event)">
+            <div class="tc-combo-list" id="issue-tc-list"></div>
+          </div>
+        </div>
+        <!-- Hidden input stores the selected value so existing form code keeps working -->
+        <input type="hidden" id="issue-tc-select" value="__other__">
+        <div style="font-size:10.5px;color:var(--text-muted);margin-top:3px;">Type to search. Long TC titles display in full.</div>
       </div>
 
       <div class="field full">
@@ -3721,15 +3757,141 @@ function openLogIssueModal(persona, tcUid, tcLabel){
   document.getElementById('issue-date').textContent = todayISO();
   document.getElementById('log-issue-modal').style.display = 'flex';
 }
+// ═══════════════════════════════════════════
+// TEST CASE COMBOBOX (custom dropdown so long titles aren't cut off)
+// ═══════════════════════════════════════════
+let TC_COMBO_CTX = { persona: 'nofo-dev', options: [], selectedValue: '__other__', filteredIxs: [] };
+
 function populateTCSelectForPersona(persona, preselect){
+  // Backed by hidden input #issue-tc-select. Visual UI is the combo.
   const arr = PERSONA_DATA[persona] || [];
-  const ts = document.getElementById('issue-tc-select');
-  const trunc = s => { s = String(s||''); return s.length > 110 ? s.slice(0,110) + '…' : s; };
-  ts.innerHTML = `<option value="__other__">— Other / Not test-case specific —</option>`
-    + arr.map(t => `<option value="${escapeAttr(t.uid||t.tc)}" title="TC-${escapeHtml(t.tc)} · ${escapeHtml(t.title)}">TC-${escapeHtml(t.tc)} · ${escapeHtml(trunc(t.title))}</option>`).join('');
-  if(preselect) ts.value = preselect;
+  TC_COMBO_CTX.persona = persona;
+  TC_COMBO_CTX.options = arr.map(t => ({
+    value: t.uid || t.tc,
+    tc: t.tc,
+    title: t.title || '',
+    story: t.story || '',
+    type: t.type || ''
+  }));
+  // Reset selection
+  const pre = preselect || '__other__';
+  setTCComboValue(pre);
+  // Reset search and rebuild list
+  const searchEl = document.getElementById('issue-tc-search');
+  if(searchEl) searchEl.value = '';
+  renderTCComboList('');
   populateLoggedBySelectForPersona(persona);
 }
+
+function setTCComboValue(value){
+  TC_COMBO_CTX.selectedValue = value;
+  const hidden = document.getElementById('issue-tc-select');
+  if(hidden) hidden.value = value;
+  const labelEl = document.getElementById('issue-tc-label');
+  if(!labelEl) return;
+  if(value === '__other__' || !value){
+    labelEl.textContent = '— Other / Not test-case specific —';
+    labelEl.classList.add('placeholder');
+  } else {
+    const found = TC_COMBO_CTX.options.find(o => o.value === value);
+    if(found){
+      labelEl.textContent = 'TC-' + found.tc + ' · ' + found.title;
+      labelEl.classList.remove('placeholder');
+    } else {
+      labelEl.textContent = value;
+      labelEl.classList.remove('placeholder');
+    }
+  }
+}
+
+function renderTCComboList(searchQuery){
+  const list = document.getElementById('issue-tc-list');
+  if(!list) return;
+  const q = (searchQuery || '').toLowerCase().trim();
+  const sel = TC_COMBO_CTX.selectedValue;
+  // Build option HTML — always include "Other" pinned at top
+  const otherHtml = `<div class="tc-combo-option other ${sel==='__other__'?'selected':''}" data-value="__other__" onclick="pickTCComboOption('__other__')">
+    <span class="tc-uid" style="background:#fde68a;color:#854d0e;">⚠ OTHER</span>
+    <span class="tc-title-line">Not test-case specific — general or environmental bug</span>
+  </div>`;
+  let filtered = TC_COMBO_CTX.options;
+  if(q){
+    filtered = filtered.filter(o => {
+      const hay = ('tc-' + o.tc + ' ' + o.title + ' ' + o.story + ' ' + o.type).toLowerCase();
+      return hay.includes(q);
+    });
+  }
+  TC_COMBO_CTX.filteredIxs = filtered.map((o,i) => i);
+  if(filtered.length === 0 && q){
+    list.innerHTML = otherHtml + `<div class="tc-combo-empty">No test cases match "${escapeHtml(q)}"</div>`;
+    return;
+  }
+  const itemsHtml = filtered.map(o => `<div class="tc-combo-option ${sel===o.value?'selected':''}" data-value="${escapeAttr(o.value)}" onclick="pickTCComboOption('${escapeAttr(o.value)}')">
+    <span class="tc-uid">TC-${escapeHtml(o.tc)}</span>${o.story?'<span class="tc-uid" style="background:#f1f5f9;color:#475569;">'+escapeHtml(o.story)+'</span>':''}
+    <span class="tc-title-line">${escapeHtml(o.title || '(no title)')}</span>
+    ${o.type?`<span class="tc-meta-line">${escapeHtml(o.type)}</span>`:''}
+  </div>`).join('');
+  list.innerHTML = otherHtml + itemsHtml;
+}
+
+function toggleTCCombo(ev){
+  if(ev) ev.stopPropagation();
+  const combo = document.getElementById('issue-tc-combo');
+  if(!combo) return;
+  const willOpen = !combo.classList.contains('open');
+  combo.classList.toggle('open');
+  if(willOpen){
+    renderTCComboList('');
+    setTimeout(() => {
+      const search = document.getElementById('issue-tc-search');
+      if(search){ search.value = ''; search.focus(); }
+      // Scroll selected into view
+      const selectedEl = document.querySelector('#issue-tc-list .tc-combo-option.selected');
+      if(selectedEl) selectedEl.scrollIntoView({ block:'center' });
+    }, 30);
+  }
+}
+
+function closeTCCombo(){
+  const combo = document.getElementById('issue-tc-combo');
+  if(combo) combo.classList.remove('open');
+}
+
+function pickTCComboOption(value){
+  setTCComboValue(value);
+  closeTCCombo();
+}
+
+function filterTCCombo(){
+  const search = document.getElementById('issue-tc-search');
+  renderTCComboList(search ? search.value : '');
+}
+
+function onTCComboKey(ev){
+  // Enter picks the first match; Escape closes
+  if(ev.key === 'Escape'){
+    ev.preventDefault();
+    closeTCCombo();
+    document.getElementById('issue-tc-trigger').focus();
+  } else if(ev.key === 'Enter'){
+    ev.preventDefault();
+    const firstOpt = document.querySelector('#issue-tc-list .tc-combo-option:not(.other)');
+    if(firstOpt){ pickTCComboOption(firstOpt.getAttribute('data-value')); }
+  } else if(ev.key === 'ArrowDown'){
+    ev.preventDefault();
+    const firstOpt = document.querySelector('#issue-tc-list .tc-combo-option');
+    if(firstOpt) firstOpt.scrollIntoView({ block:'center' });
+  }
+}
+
+// Close combo when clicking outside it
+document.addEventListener('click', (ev) => {
+  const combo = document.getElementById('issue-tc-combo');
+  if(!combo) return;
+  if(!combo.classList.contains('open')) return;
+  if(!combo.contains(ev.target)) closeTCCombo();
+});
+
 function populateLoggedBySelectForPersona(persona, preselectEmail){
   const sel = document.getElementById('issue-loggedby-select');
   if(!sel) return;
