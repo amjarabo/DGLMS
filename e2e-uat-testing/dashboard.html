@@ -219,6 +219,16 @@ table.data tfoot td{padding:10px 12px;background:#f1f5f9;font-weight:700;border-
 .sub-role-pill:hover{border-color:var(--blue-400);color:var(--blue-700);background:var(--blue-50)}
 .sub-role-pill.active{background:linear-gradient(135deg,#1d4ed8,#4f46e5);border-color:transparent;color:#fff;box-shadow:0 2px 6px rgba(29,78,216,.25)}
 .sub-role-pill.active:hover{background:linear-gradient(135deg,#1e40af,#4338ca);color:#fff}
+
+/* Sub-pill picker (shown when a combined pill is clicked — step 1 of the drill-down) */
+.sub-pill-picker{padding:4px 0}
+.sub-pill-picker .sub-pill-prompt{font-size:11.5px;font-weight:600;color:var(--text-secondary);margin-bottom:8px;text-align:center}
+.sub-pill-picker .sub-pill-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.sub-pill-big{flex:1 1 140px;max-width:200px;background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;cursor:pointer;transition:.15s;font-family:inherit;text-align:center;display:flex;flex-direction:column;align-items:center;gap:3px}
+.sub-pill-big:hover{border-color:var(--blue-500);box-shadow:0 3px 10px rgba(59,130,246,.1);transform:translateY(-1px)}
+.sub-pill-big .sub-pill-icon{font-size:20px;line-height:1}
+.sub-pill-big .sub-pill-name{font-size:12.5px;font-weight:700;color:var(--text-primary);letter-spacing:-.1px}
+.sub-pill-big .sub-pill-meta{font-size:9.5px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
 .tester-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:14px;background:#fff;border:1px solid #cbd5e1;font-size:11px;font-weight:600;color:var(--text-primary);transition:.15s}
 .tester-chip:hover{border-color:var(--blue-400);background:var(--blue-50)}
 .tester-chip.primary{background:linear-gradient(135deg,#d1fae5,#a7f3d0);border-color:#6ee7b7;color:#065f46}
@@ -1197,7 +1207,8 @@ const ST = {
   assignments: {},  // persona -> [{email, name, agency, is_primary, is_backup, is_si}]
   tcTeam: {},    // key: persona|tc_uid -> { devs:[name,...], pms:[name,...] }
   currentPersona: 'nofo-dev',
-  currentSubRole: null   // when current persona is a group, which member sub-role is "active" for logging results
+  currentSubRole: null,           // legacy field, unused now
+  groupChoicePending: null        // when set to a group key, render the sub-pill picker instead of TCs
 };
 
 // ═══════════════════════════════════════════
@@ -1215,17 +1226,17 @@ const PERSONA_META = {
   'das':            { label:'DAS',               short:'DAS',          icon:'⭐', tag:'das',  desc:'Deputy Assistant Secretary providing senior departmental review and approval on funding opportunities and significant award decisions.' }
 };
 
-// Persona groups — when a persona is in a group, the Test Cases view collapses the group's personas into a single pill.
-// Each member persona keeps its own tester assignments AND its own result tracking (so a tester can independently mark
-// TC-1 as Pass for Grant Office and Pass for OA Legal — separate rows, separate metadata).
-// The Test Cases view shows a sub-role picker so the tester selects which sub-persona they're currently testing under.
+// Persona groups — the Test Cases view shows ONE combined pill for these personas.
+// Clicking the combined pill reveals a sub-pill picker; you must pick a sub-persona before TCs and testers render.
+// Each member persona keeps its own tester assignments and per-tester results — picking a sub-pill snaps currentPersona
+// to that member so results/bugs from that point on are stored under that member's key.
 const PERSONA_GROUPS = {
   'grant-group': {
     label: 'Grant Office / OA Legal / OA CFO',
     short: 'Grant + OA Legal + OA CFO',
     icon: '⚖️',
     tag:  'go',
-    desc: 'Grant Office, OA Legal, and OA CFO all share the same set of test cases. Pick your sub-role below — each role tracks results separately so the same tester can mark a TC under multiple roles if needed.',
+    desc: 'Grant Office, OA Legal, and OA CFO share the same set of test cases. Pick a sub-role below to see its assigned testers and start testing.',
     members: ['grant-office','oa-legal','oa-cfo']
   }
 };
@@ -1234,11 +1245,8 @@ const PERSONA_TO_GROUP = {};
 Object.entries(PERSONA_GROUPS).forEach(([gk, g]) => {
   g.members.forEach(pk => { PERSONA_TO_GROUP[pk] = gk; });
 });
-// Helper: when given a persona key, return the canonical key for results storage.
-// NOTE: results are stored PER sub-persona (Joan can mark TC-1 once for grant-office, again for oa-legal, etc.)
-// so canonicalPersona is intentionally identity. Kept as a function for future flexibility.
 function canonicalPersona(pk){ return pk; }
-// Helper: ordered list of "tabs" to show in the Test Cases view (groups + ungrouped personas)
+// Helper: ordered list of "tabs" — groups collapse 3 personas into 1 pill
 function personaTabs(){
   const tabs = [];
   const seenGroups = new Set();
@@ -1248,7 +1256,6 @@ function personaTabs(){
       if(!seenGroups.has(g)){
         seenGroups.add(g);
         const gm = PERSONA_GROUPS[g];
-        // For the group tab, use the FIRST member as the "anchor" persona (so clicking the tab snaps currentPersona to it)
         tabs.push({ kind:'group', key:g, label:gm.label, short:gm.short, icon:gm.icon, tag:gm.tag, anchor:gm.members[0], members:gm.members });
       }
     } else {
@@ -3329,7 +3336,7 @@ function donut(segments, total, centerLabel){
 // TEST CASES VIEW
 // ═══════════════════════════════════════════
 function renderTestCases(){
-  // Build persona pill tabs (groups + individual personas)
+  // Build persona pill tabs
   const tabs = document.getElementById('persona-tabs');
   const tabList = personaTabs();
   if(tabs.children.length === 0 || tabs.children.length !== tabList.length){
@@ -3341,13 +3348,13 @@ function renderTestCases(){
       btn.dataset.groupKey = t.kind === 'group' ? t.key : '';
       btn.dataset.anchor = t.anchor;
       btn.onclick = () => {
-        // For a group tab: snap currentPersona to the anchor member and default sub-role to that member
         if(t.kind === 'group'){
-          ST.currentPersona = t.anchor;
-          ST.currentSubRole = t.anchor;
+          // Step 1: clicking the combined pill shows the sub-pill picker (TCs hidden until a sub-pill is chosen)
+          ST.groupChoicePending = t.key;
+          ST.currentPersona = t.anchor;  // anchor so the active highlight works
         } else {
+          ST.groupChoicePending = null;
           ST.currentPersona = t.anchor;
-          ST.currentSubRole = null;
         }
         renderTestCases();
       };
@@ -3356,32 +3363,64 @@ function renderTestCases(){
       tabs.appendChild(btn);
     });
   }
-  // Mark active — a group tab is active if currentPersona is ANY of its members
+  // Mark active — a group tab is active if currentPersona is ANY of its members OR groupChoicePending matches
   tabs.querySelectorAll('.persona-tab').forEach(b => {
     const isGroup = b.dataset.kind === 'group';
     if(isGroup){
       const g = PERSONA_GROUPS[b.dataset.groupKey];
-      b.classList.toggle('active', g && g.members.includes(ST.currentPersona));
+      const matchesPending = ST.groupChoicePending === b.dataset.groupKey;
+      const matchesMember = g && g.members.includes(ST.currentPersona);
+      b.classList.toggle('active', matchesPending || matchesMember);
     } else {
-      b.classList.toggle('active', b.dataset.anchor === ST.currentPersona);
+      b.classList.toggle('active', b.dataset.anchor === ST.currentPersona && !ST.groupChoicePending);
     }
   });
 
-  // Persona banner — handle group vs solo
+  // ─── STEP 1 STATE: Group pill clicked, no sub-pill picked yet ───
+  if(ST.groupChoicePending){
+    const g = PERSONA_GROUPS[ST.groupChoicePending];
+    // Banner: show group label + description, no testers, prompt to pick a sub-role
+    document.getElementById('persona-banner-title').innerHTML = `<span class="label-icon">${g.icon}</span> ${escapeHtml(g.label)}`;
+    document.getElementById('persona-banner-desc').textContent = g.desc;
+    // Sub-pill picker fills the banner's testers slot
+    const el = document.getElementById('persona-banner-testers');
+    if(el){
+      el.innerHTML = `
+        <div class="sub-pill-picker">
+          <div class="sub-pill-prompt">👇 Pick a sub-role to view its testers and test cases</div>
+          <div class="sub-pill-row">
+            ${g.members.map(mk => {
+              const m = PERSONA_META[mk];
+              const testerCount = (ST.assignments[mk] || []).filter(t => !t.is_si).length;
+              return `<button class="sub-pill-big" onclick="pickSubPersona('${escapeAttr(mk)}')">
+                <div class="sub-pill-icon">${m.icon}</div>
+                <div class="sub-pill-name">${escapeHtml(m.label)}</div>
+                <div class="sub-pill-meta">${testerCount} tester${testerCount===1?'':'s'} · ${(PERSONA_DATA[mk]||[]).length} TCs</div>
+              </button>`;
+            }).join('')}
+          </div>
+        </div>`;
+    }
+    // Hide the TC list — show a placeholder
+    document.getElementById('tc-summary-chip').textContent = '';
+    document.getElementById('testcases-list').innerHTML = `<div class="empty-state">
+      <div class="icon">⚖️</div>
+      <h3>Choose a sub-role above</h3>
+      <p>Grant Office, OA Legal, and OA CFO share the same test cases — but each has its own assigned testers and tracks results independently. Pick one to continue.</p>
+    </div>`;
+    return;
+  }
+
+  // ─── STEP 2 STATE: A specific persona is active (either ungrouped, or a sub-pill was picked) ───
+  const meta = PERSONA_META[ST.currentPersona];
   const groupKey = PERSONA_TO_GROUP[ST.currentPersona];
   if(groupKey){
     const g = PERSONA_GROUPS[groupKey];
-    // Default currentSubRole to currentPersona if not in this group's members
-    if(!g.members.includes(ST.currentSubRole)) ST.currentSubRole = ST.currentPersona;
-    const subMeta = PERSONA_META[ST.currentSubRole];
-    document.getElementById('persona-banner-title').innerHTML = `<span class="label-icon">${g.icon}</span> ${escapeHtml(g.label)} <span style="font-weight:500;color:var(--text-secondary);font-size:13px;margin-left:8px;">→ acting as <span class="persona-tag ${subMeta.tag}" style="font-size:11.5px;">${subMeta.icon} ${escapeHtml(subMeta.label)}</span></span>`;
-    document.getElementById('persona-banner-desc').textContent = g.desc;
+    document.getElementById('persona-banner-title').innerHTML = `<span class="label-icon">${meta.icon}</span> ${escapeHtml(meta.label)} <button class="btn ghost sm" style="margin-left:10px;font-size:11px;padding:3px 10px;vertical-align:middle;" onclick="backToSubPicker('${escapeAttr(groupKey)}')">← ${escapeHtml(g.label)}</button>`;
   } else {
-    ST.currentSubRole = null;
-    const meta = PERSONA_META[ST.currentPersona];
     document.getElementById('persona-banner-title').innerHTML = `<span class="label-icon">${meta.icon}</span> Persona: ${escapeHtml(meta.label)}`;
-    document.getElementById('persona-banner-desc').textContent = meta.desc;
   }
+  document.getElementById('persona-banner-desc').textContent = meta.desc;
   renderPersonaBannerTesters();
 
   // Filter
@@ -3479,74 +3518,58 @@ function renderPersonaBannerTesters(){
   const el = document.getElementById('persona-banner-testers');
   if(!el) return;
 
-  // Helper: render one strip for a single persona key
-  const renderStrip = (personaKey, labelOverride, isActive) => {
-    const testers = (ST.assignments[personaKey] || []).slice();
-    testers.sort((a,b) => {
-      if(a.is_primary !== b.is_primary) return a.is_primary ? -1 : 1;
-      if(a.is_si !== b.is_si) return a.is_si ? 1 : -1;
-      return (a.name||'').localeCompare(b.name||'');
-    });
-    const real = testers.filter(t => !t.is_si);
-    const si   = testers.filter(t => t.is_si);
-    const meta = PERSONA_META[personaKey];
-    const label = labelOverride || (meta ? `${meta.icon} ${meta.short}` : personaKey);
-    const activeStyle = isActive ? 'background:linear-gradient(135deg,#eff6ff,#f5f3ff);border-left:3px solid var(--blue-500);padding:8px 12px;border-radius:8px;margin:0 0 8px 0;' : 'padding:6px 0;';
-    if(testers.length === 0){
-      return `<div class="tester-strip" style="${activeStyle}">
-        <span class="label">${escapeHtml(label)} (0):</span>
-        <span style="font-size:11.5px;color:var(--text-muted);font-style:italic;">none assigned</span>
-      </div>`;
-    }
-    const realChips = real.map(t => {
-      const cls = t.is_primary ? 'primary' : t._added ? 'added' : '';
-      return `<span class="tester-chip ${cls}" title="${escapeAttr(t.email)}${t.is_primary?' · Primary':t.is_backup?' · Backup':''}">${escapeHtml(shortName(t.name))} <span class="agency">${escapeHtml(t.agency||'')}</span></span>`;
-    }).join('');
-    const siChip = si.length > 0
-      ? `<span class="tester-chip si" title="${si.map(t=>t.name).join(', ')}">SI Proxies (${si.length})</span>`
-      : '';
-    return `<div class="tester-strip" style="${activeStyle}">
-      <span class="label">${escapeHtml(label)} (${real.length}):</span>
-      ${realChips}${siChip}
-    </div>`;
-  };
+  const testers = (ST.assignments[pk] || []).slice();
+  testers.sort((a,b) => {
+    if(a.is_primary !== b.is_primary) return a.is_primary ? -1 : 1;
+    if(a.is_si !== b.is_si) return a.is_si ? 1 : -1;
+    return (a.name||'').localeCompare(b.name||'');
+  });
+  const real = testers.filter(t => !t.is_si);
+  const si   = testers.filter(t => t.is_si);
 
-  // If current persona is part of a group, render a sub-role picker + one strip per member
-  const groupKey = PERSONA_TO_GROUP[pk];
   const manageBtn = ST.isAdmin
-    ? `<div style="margin-top:8px;text-align:right;"><button class="btn ghost sm" onclick="showView('assignments',document.querySelector('.nav-item[onclick*=assignments]'))">⚙ Manage assignments</button></div>`
+    ? `<button class="btn ghost sm" style="margin-left:auto;" onclick="showView('assignments',document.querySelector('.nav-item[onclick*=assignments]'))">⚙ Manage</button>`
     : '';
 
-  if(groupKey){
-    const g = PERSONA_GROUPS[groupKey];
-    const active = ST.currentSubRole || g.members[0];
-    // Sub-role picker buttons
-    const subRolePicker = `
-      <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px;padding-bottom:10px;border-bottom:1px dashed var(--border);">
-        <span style="font-size:10.5px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-right:4px;">I'm testing as:</span>
-        ${g.members.map(mk => {
-          const m = PERSONA_META[mk];
-          const isActive = mk === active;
-          return `<button class="sub-role-pill ${isActive?'active':''}" onclick="setSubRole('${escapeAttr(mk)}')">${m.icon} ${escapeHtml(m.short)}</button>`;
-        }).join('')}
-      </div>`;
-    el.innerHTML = subRolePicker
-      + g.members.map(mk => renderStrip(mk, null, mk === active)).join('')
-      + manageBtn;
-  } else {
-    el.innerHTML = renderStrip(pk, `Assigned Testers`, false) + manageBtn;
+  if(testers.length === 0){
+    el.innerHTML = `<div class="tester-strip">
+      <span class="label">Assigned Testers:</span>
+      <span style="font-size:11.5px;color:var(--text-muted);font-style:italic;">none assigned</span>
+      ${manageBtn}
+    </div>`;
+    return;
   }
-}
-function setSubRole(memberKey){
-  // Switching sub-role within a group — update currentPersona AND currentSubRole, then re-render
-  ST.currentPersona = memberKey;
-  ST.currentSubRole = memberKey;
-  renderTestCases();
+  const realChips = real.map(t => {
+    const cls = t.is_primary ? 'primary' : t._added ? 'added' : '';
+    return `<span class="tester-chip ${cls}" title="${escapeAttr(t.email)}${t.is_primary?' · Primary':t.is_backup?' · Backup':''}">${escapeHtml(shortName(t.name))} <span class="agency">${escapeHtml(t.agency||'')}</span></span>`;
+  }).join('');
+  const siChip = si.length > 0
+    ? `<span class="tester-chip si" title="${si.map(t=>t.name).join(', ')}">SI Proxies (${si.length})</span>`
+    : '';
+  el.innerHTML = `<div class="tester-strip">
+    <span class="label">Assigned Testers (${real.length}):</span>
+    ${realChips}${siChip}
+    ${manageBtn}
+  </div>`;
 }
 function shortName(full){
   if(!full) return '';
   // Strip parenthetical e.g. "Edward Starks (HEP Program Office)" → "Edward Starks"
   return full.replace(/\s*\(.+?\)\s*$/,'').trim();
+}
+function pickSubPersona(memberKey){
+  // User clicked one of the sub-pills inside the combined-pill picker — drill into that persona
+  ST.groupChoicePending = null;
+  ST.currentPersona = memberKey;
+  renderTestCases();
+}
+function backToSubPicker(groupKey){
+  // User clicked the back-link in the banner — return to the sub-pill picker for the group
+  const g = PERSONA_GROUPS[groupKey];
+  if(!g) return;
+  ST.groupChoicePending = groupKey;
+  ST.currentPersona = g.members[0];  // anchor — used only for active-pill highlight
+  renderTestCases();
 }
 
 function tcStatusPill(s){
@@ -3568,15 +3591,7 @@ function renderTCTeamLine(persona, tcUid){
   </div>`;
 }
 function renderUserResultsStrip(persona, tcUid){
-  // If this persona is part of a group, gather results from ALL member personas
-  const groupKey = PERSONA_TO_GROUP[persona];
-  const personas = groupKey ? PERSONA_GROUPS[groupKey].members : [persona];
-  let all = [];
-  personas.forEach(pk => {
-    getAllUserResults(pk, tcUid).forEach(r => {
-      all.push({ ...r, _sourcePersona: pk });
-    });
-  });
+  const all = getAllUserResults(persona, tcUid);
   if(all.length === 0) return '';
   // Sort: my own first, then by date desc
   const me = (ST.email||'').toLowerCase();
@@ -3592,11 +3607,7 @@ function renderUserResultsStrip(persona, tcUid){
     const tip = r.status==='SignedOff' && r.signed_off_by_email
       ? `Signed off by ${r.signed_off_by_email} on ${r.signed_off_date||r.date||''}`
       : `${r.status} on ${r.date||'—'}`;
-    // Show sub-role label only when we're in a group
-    const roleSuffix = groupKey
-      ? ` <span style="font-size:9.5px;opacity:.75;font-weight:500;">· ${escapeHtml(PERSONA_META[r._sourcePersona]?.short || r._sourcePersona)}</span>`
-      : '';
-    return `<span class="ur ${r.status}" title="${escapeAttr(tip)} · ${escapeAttr(PERSONA_META[r._sourcePersona]?.label || '')}">${icon[r.status]||'•'} ${escapeHtml(name)}${isMe?' (you)':''}${roleSuffix}</span>`;
+    return `<span class="ur ${r.status}" title="${escapeAttr(tip)}">${icon[r.status]||'•'} ${escapeHtml(name)}${isMe?' (you)':''}</span>`;
   }).join('');
   return `<div class="tc-user-results">${items}</div>`;
 }
